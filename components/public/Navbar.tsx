@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getWhatsAppUrl } from "@/lib/utils/formatters";
 
@@ -19,10 +19,23 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", handler);
   }, []);
 
+  function scrollToFacilities(e: React.MouseEvent) {
+    e.preventDefault();
+    const el = document.getElementById("facilities");
+    if (el) {
+      const top = el.getBoundingClientRect().top + window.scrollY - 72;
+      window.scrollTo({ top, behavior: "smooth" });
+    } else {
+      window.location.href = "/#facilities";
+    }
+    setOpen(false);
+  }
+
   const navLinks = [
-    { href: "/#facilities", label: "Facilities" },
-    { href: "/#about", label: "About" },
-    { href: "/#contact", label: "Contact" },
+    { href: "/", label: "Home", icon: Home },
+    { href: "/#facilities", label: "Facilities", scroll: true },
+    { href: "/#about", label: "About", scroll: "about" },
+    { href: "/#contact", label: "Contact", scroll: "contact" },
   ];
 
   return (
@@ -38,18 +51,34 @@ export function Navbar() {
 
           {/* LEFT — Desktop nav / Mobile hamburger */}
           <div className="flex items-center">
-            <nav className="hidden md:flex items-center gap-7">
-              {navLinks.map((l) => (
-                <Link
-                  key={l.href}
-                  href={l.href}
-                  className="text-sm font-medium text-stone-600 hover:text-stone-900 transition-colors relative group"
-                >
-                  {l.label}
-                  <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-amber-600 transition-all duration-300 group-hover:w-full" />
-                </Link>
-              ))}
-            </nav>
+          <nav className="hidden md:flex items-center gap-6">
+            {/* Home */}
+            <Link
+              href="/"
+              className="flex items-center gap-1.5 text-sm font-medium text-stone-600 hover:text-stone-900 transition-colors relative group"
+            >
+              <Home className="w-3.5 h-3.5" />
+              Home
+              <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-amber-600 transition-all duration-300 group-hover:w-full" />
+            </Link>
+            {["facilities", "about", "contact"].map((id) => (
+              <a
+                key={id}
+                href={`/#${id}`}
+                onClick={(e) => {
+                  const el = document.getElementById(id);
+                  if (el) {
+                    e.preventDefault();
+                    window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 72, behavior: "smooth" });
+                  }
+                }}
+                className="capitalize text-sm font-medium text-stone-600 hover:text-stone-900 transition-colors relative group cursor-pointer"
+              >
+                {id === "contact" ? "Contact" : id.charAt(0).toUpperCase() + id.slice(1)}
+                <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-amber-600 transition-all duration-300 group-hover:w-full" />
+              </a>
+            ))}
+          </nav>
             <button
               className="md:hidden p-2 -ml-1 rounded-md text-stone-600 hover:text-stone-900 transition-colors"
               onClick={() => setOpen(!open)}
@@ -100,7 +129,7 @@ export function Navbar() {
               className="text-white font-semibold shadow-sm hover:shadow-md transition-all hover:scale-[1.02]"
               style={{ background: "linear-gradient(135deg, #8b6914, #d4a82e)" }}
             >
-              <Link href="/#facilities">Book Now</Link>
+              <a href="/#facilities" onClick={scrollToFacilities}>Book Now</a>
             </Button>
           </div>
         </div>
@@ -113,15 +142,30 @@ export function Navbar() {
         }`}
       >
         <div className="border-t border-stone-100 bg-white px-4 py-4 space-y-1">
-          {navLinks.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              onClick={() => setOpen(false)}
-              className="block text-sm font-medium text-stone-700 hover:text-amber-700 py-2.5 border-b border-stone-50 last:border-0 transition-colors"
+          <Link
+            href="/"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2 text-sm font-medium text-stone-700 hover:text-amber-700 py-2.5 border-b border-stone-50 transition-colors"
+          >
+            <Home className="w-4 h-4" />
+            Home
+          </Link>
+          {["facilities", "about", "contact"].map((id) => (
+            <a
+              key={id}
+              href={`/#${id}`}
+              onClick={(e) => {
+                const el = document.getElementById(id);
+                if (el) {
+                  e.preventDefault();
+                  window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 72, behavior: "smooth" });
+                }
+                setOpen(false);
+              }}
+              className="block capitalize text-sm font-medium text-stone-700 hover:text-amber-700 py-2.5 border-b border-stone-50 last:border-0 transition-colors cursor-pointer"
             >
-              {l.label}
-            </Link>
+              {id.charAt(0).toUpperCase() + id.slice(1)}
+            </a>
           ))}
           <div className="pt-2">
             <Button

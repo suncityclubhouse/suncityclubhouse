@@ -413,12 +413,13 @@ export async function getFacilityAvailability(params: {
       result[date] = "available";
     } else if (
       dayBookings.some((b) =>
-        ["full_day", "monthly", "quarterly"].includes(b.slot_type)
+        ["half_day", "full_day", "monthly", "quarterly"].includes(b.slot_type)
       )
     ) {
       result[date] = "booked";
     } else {
-      result[date] = dayBookings.length >= 8 ? "booked" : "partial";
+      // For hourly — mark booked if 6+ slots taken (conservative threshold)
+      result[date] = dayBookings.length >= 6 ? "booked" : "partial";
     }
   }
 
