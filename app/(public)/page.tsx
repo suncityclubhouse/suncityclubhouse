@@ -4,6 +4,7 @@ import { ArrowRight, Star, Shield, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FacilityCard } from "@/components/public/FacilityCard";
 import { FacilityCardSkeleton } from "@/components/shared/LoadingSkeleton";
+import { Footer } from "@/components/public/Footer";
 import { getFacilities } from "@/actions/facilities";
 import { Suspense } from "react";
 
@@ -204,6 +205,8 @@ export default function LandingPage() {
           </Button>
         </div>
       </section>
+
+      <Footer />
     </div>
   );
 }

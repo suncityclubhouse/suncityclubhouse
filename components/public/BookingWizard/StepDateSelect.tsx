@@ -2,22 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { DayPicker } from "react-day-picker";
+import "react-day-picker/style.css";
 import { Button } from "@/components/ui/button";
 import { getFacilityAvailability } from "@/actions/bookings";
 import { getBlockedDates } from "@/actions/facilities";
-import { toDateString, isDateInPast } from "@/lib/utils/dates";
-import { cn } from "@/lib/utils/formatters";
-import { format, addMonths, isToday } from "date-fns";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { toDateString } from "@/lib/utils/dates";
+import { format, addMonths } from "date-fns";
+import { CalendarDays, CheckCircle2 } from "lucide-react";
 import type { FacilityWithMedia } from "@/types/database";
 import type { BookingWizardState } from "@/types";
-
-// Legend colors
-const LEGEND = [
-  { color: "bg-emerald-500", label: "Available" },
-  { color: "bg-amber-400", label: "Partially Booked" },
-  { color: "bg-red-400", label: "Fully Booked" },
-];
 
 interface StepDateSelectProps {
   facility: FacilityWithMedia;
@@ -32,31 +25,25 @@ export function StepDateSelect({ facility, state, onStateChange, onNext }: StepD
   const [disabledDates, setDisabledDates] = useState<Date[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Load availability for the current month view
   useEffect(() => {
-    const loadAvailability = async () => {
+    const load = async () => {
       setLoading(true);
       try {
-        // Generate all dates in the visible month + next month
         const dates: string[] = [];
         const start = new Date(month.getFullYear(), month.getMonth(), 1);
         const end = new Date(month.getFullYear(), month.getMonth() + 2, 0);
         for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
           dates.push(toDateString(new Date(d)));
         }
-
         const [avail, blocked] = await Promise.all([
           getFacilityAvailability({ facilityId: facility.id, dates }),
           getBlockedDates(facility.id),
         ]);
-
         setAvailability(avail);
-
-        // Convert blocked date ranges to individual dates
         const blockedDays: Date[] = [];
         for (const b of blocked) {
-          const s = new Date(b.start_date);
-          const e = new Date(b.end_date);
+          const s = new Date(b.start_date + "T00:00:00");
+          const e = new Date(b.end_date + "T00:00:00");
           for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
             blockedDays.push(new Date(d));
           }
@@ -66,112 +53,185 @@ export function StepDateSelect({ facility, state, onStateChange, onNext }: StepD
         setLoading(false);
       }
     };
-    loadAvailability();
+    load();
   }, [month, facility.id]);
 
-  const handleSelect = (date: Date | undefined) => {
-    if (!date) return;
-    onStateChange({ selectedDate: date });
-  };
+  const bookedDates = Object.entries(availability)
+    .filter(([, v]) => v === "booked")
+    .map(([d]) => new Date(d + "T00:00:00"));
 
-  const canProceed = !!state.selectedDate;
-
-  // Custom day rendering to show availability colors
-  const modifiers = {
-    available: Object.entries(availability)
-      .filter(([, v]) => v === "available")
-      .map(([d]) => new Date(d + "T00:00:00")),
-    partial: Object.entries(availability)
-      .filter(([, v]) => v === "partial")
-      .map(([d]) => new Date(d + "T00:00:00")),
-    booked: Object.entries(availability)
-      .filter(([, v]) => v === "booked")
-      .map(([d]) => new Date(d + "T00:00:00")),
-    blocked: disabledDates,
-  };
+  const allDisabled = [...disabledDates, ...bookedDates];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div>
         <h2 className="text-xl font-serif font-semibold text-stone-900">Select a Date</h2>
         <p className="text-sm text-stone-500 mt-1">Choose your preferred booking date</p>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-6">
-        {/* Calendar */}
-        <div className="bg-white border border-stone-200 rounded-xl p-4 flex-1">
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
+        {/* Calendar box */}
+        <div className="bg-white border border-stone-200 rounded-2xl p-5 shadow-sm flex-1 min-w-0">
           {loading && (
-            <div className="text-center py-2 text-xs text-stone-400">Loading availability…</div>
+            <p className="text-xs text-stone-400 text-center mb-2 animate-pulse">Loading availability…</p>
           )}
+
+          {/* Injected styles scoped to our calendar wrapper */}
           <style>{`
-            .rdp-day_selected { background-color: #8b6914 !important; color: white !important; }
-            .rdp-day_today { border: 2px solid #d4a82e; }
-            .rdp-day_available::after { content: ''; display: block; width: 5px; height: 5px; border-radius: 50%; background: #22c55e; margin: 0 auto; margin-top: 2px; }
-            .rdp-day_partial::after  { content: ''; display: block; width: 5px; height: 5px; border-radius: 50%; background: #f59e0b; margin: 0 auto; margin-top: 2px; }
-            .rdp-day_booked::after   { content: ''; display: block; width: 5px; height: 5px; border-radius: 50%; background: #ef4444; margin: 0 auto; margin-top: 2px; }
+            .sc-cal .rdp-root {
+              --rdp-accent-color: #8b6914;
+              --rdp-accent-background-color: #f9edcc;
+              --rdp-day-width: 40px;
+              --rdp-day-height: 40px;
+              font-family: inherit;
+              width: 100%;
+            }
+            .sc-cal .rdp-month_caption {
+              font-family: 'Playfair Display', serif;
+              font-size: 1rem;
+              font-weight: 600;
+              color: #1c1917;
+              margin-bottom: 8px;
+            }
+            .sc-cal .rdp-weekday {
+              font-size: 0.7rem;
+              font-weight: 600;
+              color: #a8a29e;
+              text-transform: uppercase;
+            }
+            .sc-cal .rdp-day button {
+              border-radius: 8px;
+              font-size: 0.875rem;
+              font-weight: 500;
+              color: #44403c;
+              width: 100%;
+              height: 100%;
+              transition: background 0.15s, color 0.15s;
+            }
+            .sc-cal .rdp-day button:hover:not(:disabled) {
+              background: #f9edcc;
+              color: #8b6914;
+            }
+            .sc-cal .rdp-selected button {
+              background: #8b6914 !important;
+              color: white !important;
+              font-weight: 700;
+              box-shadow: 0 2px 8px rgba(139,105,20,0.3);
+            }
+            .sc-cal .rdp-today button {
+              border: 2px solid #d4a82e;
+              color: #8b6914;
+              font-weight: 700;
+            }
+            .sc-cal .rdp-disabled button {
+              opacity: 0.3;
+              cursor: not-allowed;
+            }
+            .sc-cal .rdp-nav button {
+              border-radius: 8px;
+              padding: 4px 8px;
+              color: #57534e;
+              border: 1px solid #e7e5e4;
+              background: white;
+            }
+            .sc-cal .rdp-nav button:hover {
+              background: #f5f5f4;
+            }
+            /* Availability dots */
+            .sc-cal .day-available button::after,
+            .sc-cal .day-partial button::after,
+            .sc-cal .day-booked button::after {
+              content: '';
+              display: block;
+              width: 5px;
+              height: 5px;
+              border-radius: 50%;
+              margin: 1px auto 0;
+            }
+            .sc-cal .day-available button::after { background: #22c55e; }
+            .sc-cal .day-partial button::after  { background: #f59e0b; }
+            .sc-cal .day-booked button::after   { background: #ef4444; }
+            .sc-cal .rdp-selected.day-available button::after,
+            .sc-cal .rdp-selected.day-partial button::after,
+            .sc-cal .rdp-selected.day-booked button::after { display: none; }
           `}</style>
-          <DayPicker
-            mode="single"
-            selected={state.selectedDate ?? undefined}
-            onSelect={handleSelect}
-            month={month}
-            onMonthChange={setMonth}
-            modifiers={modifiers}
-            modifiersClassNames={{
-              available: "rdp-day_available",
-              partial: "rdp-day_partial",
-              booked: "rdp-day_booked",
-            }}
-            disabled={[
-              { before: new Date() },
-              ...disabledDates,
-              ...modifiers.booked,
-            ]}
-            startMonth={new Date()}
-            endMonth={addMonths(new Date(), 6)}
-          />
+
+          <div className="sc-cal">
+            <DayPicker
+              mode="single"
+              selected={state.selectedDate ?? undefined}
+              onSelect={(date) => date && onStateChange({ selectedDate: date })}
+              month={month}
+              onMonthChange={setMonth}
+              startMonth={new Date()}
+              endMonth={addMonths(new Date(), 6)}
+              disabled={[{ before: new Date() }, ...allDisabled]}
+              modifiers={{
+                "day-available": Object.entries(availability)
+                  .filter(([, v]) => v === "available")
+                  .map(([d]) => new Date(d + "T00:00:00")),
+                "day-partial": Object.entries(availability)
+                  .filter(([, v]) => v === "partial")
+                  .map(([d]) => new Date(d + "T00:00:00")),
+                "day-booked": bookedDates,
+              }}
+              modifiersClassNames={{
+                "day-available": "day-available",
+                "day-partial": "day-partial",
+                "day-booked": "day-booked",
+              }}
+            />
+          </div>
         </div>
 
         {/* Right panel */}
-        <div className="space-y-4 lg:w-56">
+        <div className="lg:w-52 space-y-4 w-full">
           {/* Legend */}
           <div className="bg-white border border-stone-200 rounded-xl p-4">
-            <h4 className="text-xs font-semibold text-stone-600 uppercase tracking-wider mb-3">
-              Availability Legend
-            </h4>
-            <div className="space-y-2">
-              {LEGEND.map((l) => (
-                <div key={l.label} className="flex items-center gap-2 text-sm text-stone-600">
-                  <span className={cn("w-2 h-2 rounded-full flex-shrink-0", l.color)} />
+            <p className="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-3">Legend</p>
+            <div className="space-y-2.5">
+              {[
+                { dot: "bg-emerald-500", label: "Available" },
+                { dot: "bg-amber-400",   label: "Partially Booked" },
+                { dot: "bg-red-400",     label: "Fully Booked" },
+                { dot: "bg-stone-300",   label: "Unavailable" },
+              ].map((l) => (
+                <div key={l.label} className="flex items-center gap-2.5 text-sm text-stone-600">
+                  <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${l.dot}`} />
                   {l.label}
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Selected date display */}
-          {state.selectedDate && (
+          {/* Selected date */}
+          {state.selectedDate ? (
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-              <p className="text-xs font-semibold text-amber-700 uppercase tracking-wider mb-1">
-                Selected
-              </p>
-              <p className="text-sm font-semibold text-stone-900">
-                {format(state.selectedDate, "EEEE")}
-              </p>
-              <p className="text-lg font-bold text-amber-700">
-                {format(state.selectedDate, "d MMMM yyyy")}
-              </p>
+              <div className="flex items-center gap-2 mb-2">
+                <CheckCircle2 className="w-4 h-4 text-amber-600" />
+                <p className="text-xs font-semibold text-amber-700 uppercase tracking-wider">Selected Date</p>
+              </div>
+              <p className="text-sm font-medium text-stone-600">{format(state.selectedDate, "EEEE")}</p>
+              <p className="text-lg font-bold text-stone-900">{format(state.selectedDate, "d MMMM yyyy")}</p>
+            </div>
+          ) : (
+            <div className="bg-stone-50 border border-stone-200 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-1">
+                <CalendarDays className="w-4 h-4 text-stone-400" />
+                <p className="text-xs font-semibold text-stone-400 uppercase tracking-wider">No date selected</p>
+              </div>
+              <p className="text-sm text-stone-400">Click a date on the calendar</p>
             </div>
           )}
         </div>
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex justify-end pt-2">
         <Button
           onClick={onNext}
-          disabled={!canProceed}
+          disabled={!state.selectedDate}
+          className="text-white px-6 disabled:opacity-40"
           style={{ backgroundColor: "#8b6914" }}
-          className="text-white hover:opacity-90 disabled:opacity-40"
         >
           Continue to Package Selection →
         </Button>
