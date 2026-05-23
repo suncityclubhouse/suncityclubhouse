@@ -24,7 +24,12 @@ const NAV_ITEMS = [
   { href: "/dashboard/revenue", label: "Revenue", icon: TrendingUp },
 ];
 
-export function AdminSidebar() {
+interface AdminSidebarProps {
+  mobileOpen: boolean;
+  setMobileOpen: (open: boolean) => void;
+}
+
+export function AdminSidebar({ mobileOpen, setMobileOpen }: AdminSidebarProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
 
@@ -34,8 +39,11 @@ export function AdminSidebar() {
   return (
     <aside
       className={cn(
-        "relative flex flex-col bg-stone-900 text-stone-300 transition-all duration-300 ease-in-out flex-shrink-0",
-        collapsed ? "w-16" : "w-60"
+        "absolute inset-y-0 left-0 z-50 md:relative flex flex-col bg-stone-900 text-stone-300 transition-all duration-300 ease-in-out flex-shrink-0",
+        // Mobile visibility
+        mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
+        // Desktop width
+        collapsed ? "md:w-16 w-60" : "w-60"
       )}
     >
       {/* Logo */}
@@ -57,6 +65,7 @@ export function AdminSidebar() {
             <li key={href}>
               <Link
                 href={href}
+                onClick={() => setMobileOpen(false)}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
                   isActive(href, exact)
@@ -88,10 +97,10 @@ export function AdminSidebar() {
         </form>
       </div>
 
-      {/* Collapse toggle */}
+      {/* Collapse toggle (Desktop only) */}
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-3 top-20 bg-stone-800 border border-stone-700 text-stone-400 rounded-full p-1 hover:text-white transition-colors z-10"
+        className="hidden md:flex absolute -right-3 top-20 bg-stone-800 border border-stone-700 text-stone-400 rounded-full p-1 hover:text-white transition-colors z-10"
         aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
       >
         {collapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
