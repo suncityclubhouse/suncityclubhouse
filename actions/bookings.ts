@@ -326,12 +326,21 @@ export async function updateBookingStatus(params: {
   adminNotes?: string;
   rejectionReason?: string;
 }): Promise<ActionResult> {
-  // Verify admin is authenticated
   const serverClient = await createClient();
   const { data: { user } } = await serverClient.auth.getUser();
   if (!user) return { success: false, error: "Unauthorized" };
 
   const db = createAdminClient();
+
+  // approved_by / cancelled_by have FK → admins(id).
+  // Check if the logged-in user exists in admins; fall back to null if not seeded.
+  const { data: adminRecord } = await db
+    .from("admins")
+    .select("id")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const adminId: string | null = adminRecord?.id ?? null;
 
   const update: Record<string, unknown> = {
     status: params.status,
@@ -339,14 +348,14 @@ export async function updateBookingStatus(params: {
   };
 
   if (params.status === "confirmed") {
-    update.approved_by = user.id;
+    update.approved_by = adminId;
     update.approved_at = new Date().toISOString();
   }
   if (params.status === "rejected") {
     update.rejection_reason = params.rejectionReason ?? null;
   }
   if (params.status === "cancelled") {
-    update.cancelled_by = user.id;
+    update.cancelled_by = adminId;
     update.cancelled_at = new Date().toISOString();
   }
 
@@ -355,10 +364,7 @@ export async function updateBookingStatus(params: {
     .update(update)
     .eq("id", params.bookingId);
 
-  if (error) {
-    return { success: false, error: error.message };
-  }
-
+  if (error) return { success: false, error: error.message };
   return { success: true };
 }
 
