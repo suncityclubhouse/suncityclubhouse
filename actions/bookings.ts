@@ -427,6 +427,37 @@ export async function getFacilityAvailability(params: {
 }
 
 // ============================================================
+// GET BOOKED TIME SLOTS for a facility on a specific date
+// ============================================================
+export async function getBookedTimeSlots(params: {
+  facilityId: string;
+  date: string; // "yyyy-MM-dd"
+}): Promise<{ start_time: string; end_time: string }[]> {
+  const db = createAdminClient();
+
+  const { data: bookings } = await db
+    .from("bookings")
+    .select("start_time, end_time")
+    .eq("facility_id", params.facilityId)
+    .eq("booking_date", params.date)
+    .not("status", "in", "(rejected,cancelled,expired)");
+
+  const { data: tempRes } = await db
+    .from("temporary_reservations")
+    .select("start_time, end_time")
+    .eq("facility_id", params.facilityId)
+    .eq("booking_date", params.date)
+    .gt("expires_at", new Date().toISOString());
+
+  const slots = [
+    ...(bookings ?? []),
+    ...(tempRes ?? []),
+  ].filter(b => b.start_time && b.end_time) as { start_time: string; end_time: string }[];
+
+  return slots;
+}
+
+// ============================================================
 // DASHBOARD KPIs
 // ============================================================
 

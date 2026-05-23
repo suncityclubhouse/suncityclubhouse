@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { PricingCard } from "@/components/public/PricingCard";
 import { createTemporaryReservation } from "@/actions/reservations";
+import { getBookedTimeSlots } from "@/actions/bookings";
 import { formatDisplayDate, toDateString } from "@/lib/utils/dates";
 import { generateHourlySlots } from "@/lib/utils/slots";
 import { cn, formatINR } from "@/lib/utils/formatters";
@@ -23,7 +24,28 @@ interface StepSlotSelectProps {
 export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack }: StepSlotSelectProps) {
   const [selected, setSelected] = useState<FacilityPackage | null>(null);
   const [selectedHourlySlot, setSelectedHourlySlot] = useState<{ start: string; end: string } | null>(null);
+  const [bookedSlots, setBookedSlots] = useState<{ start_time: string; end_time: string }[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+
+  useEffect(() => {
+    async function loadBookedSlots() {
+      if (!state.selectedDate) return;
+      setLoadingSlots(true);
+      try {
+        const slots = await getBookedTimeSlots({
+          facilityId: facility.id,
+          date: toDateString(state.selectedDate),
+        });
+        setBookedSlots(slots);
+      } catch (err) {
+        console.error("Failed to load booked slots", err);
+      } finally {
+        setLoadingSlots(false);
+      }
+    }
+    loadBookedSlots();
+  }, [facility.id, state.selectedDate]);
 
   const packages = facility.facility_packages.filter((p) => p.is_active);
   const hourlyPackages = packages.filter((p) => p.type === "hourly");
@@ -125,22 +147,37 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
               {/* Hourly time slots grid */}
               {selected?.type === "hourly" && (
                 <div className="mt-4 bg-stone-50 rounded-xl p-4">
-                  <p className="text-sm font-medium text-stone-700 mb-3">Choose a time slot:</p>
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-sm font-medium text-stone-700">Choose a time slot:</p>
+                    {loadingSlots && <Loader2 className="w-4 h-4 animate-spin text-stone-400" />}
+                  </div>
                   <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-                    {hourlySlots.map((slot) => (
-                      <button
-                        key={slot.startTime}
-                        onClick={() => handleHourlySlotSelect({ start: slot.startTime, end: slot.endTime })}
-                        className={cn(
-                          "py-2 px-2 text-xs rounded-lg border font-medium transition-all text-center",
-                          selectedHourlySlot?.start === slot.startTime
-                            ? "bg-amber-600 border-amber-600 text-white"
-                            : "border-stone-200 bg-white hover:border-amber-400 text-stone-700"
-                        )}
-                      >
-                        {slot.label.split("–")[0].trim()}
-                      </button>
-                    ))}
+                    {hourlySlots.map((slot) => {
+                      const isBooked = bookedSlots.some(
+                        (b) =>
+                          (slot.startTime >= b.start_time && slot.startTime < b.end_time) ||
+                          (slot.endTime > b.start_time && slot.endTime <= b.end_time) ||
+                          (slot.startTime <= b.start_time && slot.endTime >= b.end_time)
+                      );
+                      
+                      return (
+                        <button
+                          key={slot.startTime}
+                          disabled={isBooked}
+                          onClick={() => handleHourlySlotSelect({ start: slot.startTime, end: slot.endTime })}
+                          className={cn(
+                            "py-2 px-2 text-xs rounded-lg border font-medium transition-all text-center",
+                            isBooked
+                              ? "bg-stone-200 border-stone-200 text-stone-400 cursor-not-allowed line-through opacity-70"
+                              : selectedHourlySlot?.start === slot.startTime
+                                ? "bg-amber-600 border-amber-600 text-white"
+                                : "border-stone-200 bg-white hover:border-amber-400 text-stone-700"
+                          )}
+                        >
+                          {slot.label.split("–")[0].trim()}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
