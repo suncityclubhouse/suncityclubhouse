@@ -24,7 +24,7 @@ export async function getFacilities(includeInactive = false): Promise<Facility[]
   const db = createAdminClient();
   let query = db
     .from("facilities")
-    .select("*")
+    .select("*, facility_packages(id, price, type, is_active)")
     .eq("society_id", SOCIETY_ID)
     .order("display_order", { ascending: true });
 
@@ -44,31 +44,32 @@ export async function getFacilityBySlug(slug: string): Promise<FacilityWithMedia
   const db = createAdminClient();
   const { data } = await db
     .from("facilities")
-    .select(`
-      *,
-      facility_media(* ORDER BY display_order ASC),
-      facility_packages(* ORDER BY display_order ASC)
-    `)
+    .select("*, facility_media(*), facility_packages(*)")
     .eq("slug", slug)
     .eq("society_id", SOCIETY_ID)
     .single();
 
-  return (data as unknown as FacilityWithMedia) ?? null;
+  if (!data) return null;
+  // Sort in JS — Supabase JS doesn't support ORDER BY inside nested selects
+  const result = data as any;
+  result.facility_media = (result.facility_media ?? []).sort((a: any, b: any) => a.display_order - b.display_order);
+  result.facility_packages = (result.facility_packages ?? []).sort((a: any, b: any) => a.display_order - b.display_order);
+  return result as FacilityWithMedia;
 }
 
 export async function getFacilityById(id: string): Promise<FacilityWithMedia | null> {
   const db = createAdminClient();
   const { data } = await db
     .from("facilities")
-    .select(`
-      *,
-      facility_media(* ORDER BY display_order ASC),
-      facility_packages(* ORDER BY display_order ASC)
-    `)
+    .select("*, facility_media(*), facility_packages(*)")
     .eq("id", id)
     .single();
 
-  return (data as unknown as FacilityWithMedia) ?? null;
+  if (!data) return null;
+  const result = data as any;
+  result.facility_media = (result.facility_media ?? []).sort((a: any, b: any) => a.display_order - b.display_order);
+  result.facility_packages = (result.facility_packages ?? []).sort((a: any, b: any) => a.display_order - b.display_order);
+  return result as FacilityWithMedia;
 }
 
 // ============================================================
