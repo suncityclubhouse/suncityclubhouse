@@ -45,7 +45,14 @@ export async function createBooking(params: {
     };
   }
 
-  // 2. Double-booking prevention: use Supabase function to check availability
+  // 2. Release the user's own temp reservation FIRST so it doesn't
+  //    conflict with the availability check (which also checks temp_reservations)
+  await db
+    .from("temporary_reservations")
+    .delete()
+    .eq("session_token", params.sessionToken);
+
+  // 3. Double-booking prevention: use Supabase function to check availability
   const { data: isAvailable, error: checkError } = await db.rpc(
     "check_slot_availability",
     {
@@ -66,7 +73,7 @@ export async function createBooking(params: {
   if (!isAvailable) {
     return {
       success: false,
-      error: "This slot was just booked by someone else. Please select a different slot.",
+      error: "This slot was just booked by someone else. Please select a different date or slot.",
     };
   }
 
@@ -115,11 +122,7 @@ export async function createBooking(params: {
     return { success: false, error: "Failed to create booking. Please try again." };
   }
 
-  // 5. Release the temporary reservation (slot now owned by this booking)
-  await db
-    .from("temporary_reservations")
-    .delete()
-    .eq("session_token", params.sessionToken);
+  // 5. Temp reservation was already deleted before availability check above
 
   // 6. Fetch facility name for emails
   const { data: facility } = await db
@@ -393,7 +396,7 @@ export async function getFacilityAvailability(params: {
     .select("booking_date, slot_type, start_time, end_time, status")
     .eq("facility_id", params.facilityId)
     .in("booking_date", params.dates)
-    .not("status", "in", '("rejected","cancelled","expired")');
+    .not("status", "in", "(rejected,cancelled,expired)");
 
   const result: Record<string, "available" | "partial" | "booked"> = {};
 
