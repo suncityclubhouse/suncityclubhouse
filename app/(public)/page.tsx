@@ -2,7 +2,8 @@ export const dynamic = "force-dynamic";
 
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Star, Shield, Clock } from "lucide-react";
+import Image from "next/image";
+import { ArrowRight, Star, Shield, Clock, Award, Users, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FacilityCard } from "@/components/public/FacilityCard";
 import { FacilityCardSkeleton } from "@/components/shared/LoadingSkeleton";
@@ -11,28 +12,10 @@ import { getFacilities } from "@/actions/facilities";
 import { Suspense } from "react";
 
 export const metadata: Metadata = {
-  title: "Clubhouse — Premium Facility Booking",
+  title: "Suncity Clubhouse — Premium Facility Booking by Mahavir Group",
   description:
-    "Book banquet halls, sports courts, guest rooms, swimming pool, and more at our premium clubhouse. Instant online booking.",
+    "Book banquet halls, sports courts, guest rooms, swimming pool, and more at Suncity Clubhouse — a Mahavir Group development. Experience. Quality. Trust.",
 };
-
-const FEATURES = [
-  {
-    icon: Clock,
-    title: "Instant Booking",
-    desc: "Book any facility in minutes with our seamless online flow",
-  },
-  {
-    icon: Shield,
-    title: "Secure Payments",
-    desc: "UPI-based payments with payment proof verification",
-  },
-  {
-    icon: Star,
-    title: "Premium Facilities",
-    desc: "Well-maintained, professionally managed spaces for every occasion",
-  },
-];
 
 async function FacilitiesGrid() {
   const facilities = await getFacilities();
@@ -49,10 +32,7 @@ async function FacilitiesGrid() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {facilities.map((facility) => (
-        <FacilityCard
-          key={facility.id}
-          facility={facility as any}
-        />
+        <FacilityCard key={facility.id} facility={facility as any} />
       ))}
     </div>
   );
@@ -61,44 +41,47 @@ async function FacilitiesGrid() {
 export default function LandingPage() {
   return (
     <div>
-      {/* ─── HERO ──────────────────────────────────────────── */}
-      <section className="hero-pattern relative min-h-[88vh] flex items-center justify-center overflow-hidden">
+      {/* ─── HERO ─────────────────────────────────────────────── */}
+      <section className="hero-pattern relative min-h-[90vh] flex items-center justify-center overflow-hidden">
         {/* Decorative rings */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full border border-white/5" />
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full border border-white/5 animate-pulse" />
           <div className="absolute top-1/3 left-1/3 w-64 h-64 rounded-full border border-white/5" />
+          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full border border-amber-600/5" />
         </div>
 
-        <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
+        <div className="relative z-10 text-center px-4 max-w-5xl mx-auto">
           {/* Tag */}
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 text-amber-300 text-xs font-medium px-3 py-1.5 rounded-full mb-6">
+          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 text-amber-300 text-xs font-medium px-4 py-1.5 rounded-full mb-6 animate-fade-in">
             <Star className="w-3 h-3 fill-amber-300" />
-            Premium Clubhouse Facilities
+            A Mahavir Group Development — Experience. Quality. Trust.
           </div>
 
           {/* Headline */}
-          <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl font-bold text-white leading-tight mb-6">
-            Book Your{" "}
-            <span className="text-gold-gradient" style={{
-              background: "linear-gradient(135deg, #d4a82e, #f9edcc, #d4a82e)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
-            }}>
-              Perfect Venue
+          <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl font-bold text-white leading-tight mb-4">
+            Suncity{" "}
+            <span
+              style={{
+                background: "linear-gradient(135deg, #d4a82e, #f9edcc, #d4a82e)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
+            >
+              Clubhouse
             </span>
           </h1>
 
           <p className="text-lg sm:text-xl text-stone-300 max-w-2xl mx-auto leading-relaxed mb-10">
-            From intimate gatherings to grand celebrations — browse, book, and celebrate at our
-            world-class clubhouse facilities. No account needed.
+            Book premium facilities for your events, sports, and celebrations.
+            Seamless online booking — no registration required.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
               asChild
               size="lg"
-              className="text-white font-semibold px-8 py-6 text-base rounded-xl"
+              className="text-white font-semibold px-8 py-6 text-base rounded-xl shadow-lg hover:shadow-amber-900/30 hover:scale-[1.02] transition-all"
               style={{ background: "linear-gradient(135deg, #8b6914, #d4a82e)" }}
             >
               <Link href="#facilities">
@@ -110,62 +93,153 @@ export default function LandingPage() {
               asChild
               size="lg"
               variant="outline"
-              className="border-white/30 text-white hover:bg-white/10 px-8 py-6 text-base rounded-xl bg-transparent"
+              className="border-white/30 text-white hover:bg-white/10 px-8 py-6 text-base rounded-xl bg-transparent transition-all"
             >
               <Link href="#about">Learn More</Link>
             </Button>
           </div>
 
           {/* Stats */}
-          <div className="flex flex-wrap justify-center gap-8 mt-14 text-center">
+          <div className="flex flex-wrap justify-center gap-10 mt-16 text-center">
             {[
-              { num: "6+", label: "Premium Facilities" },
+              { num: "25+", label: "Years of Excellence" },
               { num: "500+", label: "Events Hosted" },
               { num: "100%", label: "Secure Booking" },
             ].map((s) => (
-              <div key={s.label}>
-                <p className="text-3xl font-bold text-white">{s.num}</p>
-                <p className="text-sm text-stone-400 mt-0.5">{s.label}</p>
+              <div key={s.label} className="group">
+                <p className="text-3xl font-bold text-white group-hover:text-amber-300 transition-colors">{s.num}</p>
+                <p className="text-sm text-stone-400 mt-1">{s.label}</p>
               </div>
             ))}
           </div>
         </div>
 
         {/* Bottom fade */}
-        <div className="absolute bottom-0 inset-x-0 h-24 bg-gradient-to-t from-white to-transparent" />
+        <div className="absolute bottom-0 inset-x-0 h-32 bg-gradient-to-t from-white to-transparent" />
       </section>
 
-      {/* ─── FEATURES ─────────────────────────────────────── */}
-      <section id="about" className="py-16 bg-stone-50">
+      {/* ─── ABOUT / MAHAVIR GROUP ───────────────────────────── */}
+      <section id="about" className="py-24 bg-white scroll-animate">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {FEATURES.map(({ icon: Icon, title, desc }) => (
-              <div key={title} className="text-center">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4"
-                  style={{ backgroundColor: "#f9edcc" }}>
-                  <Icon className="w-6 h-6" style={{ color: "#8b6914" }} />
-                </div>
-                <h3 className="font-serif text-lg font-semibold text-stone-900 mb-2">{title}</h3>
-                <p className="text-sm text-stone-500 leading-relaxed">{desc}</p>
+
+          {/* Section label */}
+          <p className="text-xs font-bold uppercase tracking-widest mb-3 text-center" style={{ color: "#d97706" }}>
+            About Us
+          </p>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            {/* Left — Text */}
+            <div>
+              <h2 className="font-serif text-4xl lg:text-5xl font-light text-stone-900 mb-6 leading-tight">
+                A Legacy of{" "}
+                <span className="font-bold relative">
+                  Excellence
+                  <span
+                    className="absolute -bottom-1 left-0 w-full h-0.5"
+                    style={{ background: "linear-gradient(90deg, #d4a82e, transparent)" }}
+                  />
+                </span>
+              </h2>
+
+              <p className="text-stone-600 text-lg leading-relaxed mb-6">
+                Suncity Clubhouse is the crown jewel of Suncity — a premium township developed by{" "}
+                <a
+                  href="https://mahavirgroupindia.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-stone-800 hover:text-amber-700 transition-colors"
+                >
+                  Mahavir Group
+                </a>
+                , Chhattisgarh's most trusted real estate developer with over 25 years of building landmarks that define modern living.
+              </p>
+
+              <p className="text-stone-500 leading-relaxed mb-8">
+                Our clubhouse offers world-class recreational and event facilities for residents and their guests —
+                professionally managed, beautifully maintained, and available to book in minutes from your phone.
+              </p>
+
+              {/* Tagline */}
+              <div
+                className="inline-flex items-center gap-3 px-5 py-3 rounded-xl border"
+                style={{ borderColor: "#d4a82e30", backgroundColor: "#fdf8ed" }}
+              >
+                <Image
+                  src="/mahavir-logo.png"
+                  alt="Mahavir Group"
+                  width={90}
+                  height={28}
+                  className="h-6 w-auto object-contain opacity-80"
+                />
+                <span className="text-xs font-semibold text-stone-500 tracking-widest uppercase">
+                  Experience · Quality · Trust
+                </span>
               </div>
-            ))}
+            </div>
+
+            {/* Right — Stats grid */}
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                {
+                  icon: Award,
+                  num: "25+",
+                  label: "Years of Excellence",
+                  desc: "Decades of trusted real estate development across Chhattisgarh",
+                },
+                {
+                  icon: MapPin,
+                  num: "Premium",
+                  label: "Township",
+                  desc: "Suncity is a landmark development in the heart of the city",
+                },
+                {
+                  icon: Users,
+                  num: "500+",
+                  label: "Happy Families",
+                  desc: "Residents who call Suncity their home",
+                },
+                {
+                  icon: Shield,
+                  num: "100%",
+                  label: "Secure Booking",
+                  desc: "Payment proof verified by our admin team before confirmation",
+                },
+              ].map(({ icon: Icon, num, label, desc }) => (
+                <div
+                  key={label}
+                  className="group p-5 rounded-2xl border border-stone-100 hover:border-amber-200 hover:shadow-md transition-all bg-stone-50 hover:bg-amber-50/30"
+                >
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
+                    style={{ backgroundColor: "#f9edcc" }}
+                  >
+                    <Icon className="w-5 h-5" style={{ color: "#8b6914" }} />
+                  </div>
+                  <p className="text-2xl font-bold text-stone-900 mb-0.5">{num}</p>
+                  <p className="text-sm font-semibold text-stone-700 mb-1">{label}</p>
+                  <p className="text-xs text-stone-400 leading-relaxed">{desc}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ─── FACILITIES GRID ──────────────────────────────── */}
-      <section id="facilities" className="py-20">
+      {/* ─── FACILITIES GRID ──────────────────────────────────── */}
+      <section id="facilities" className="py-24 bg-stone-50 scroll-animate">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Section header */}
-          <div className="text-center mb-12">
-            <p className="text-sm font-medium uppercase tracking-widest mb-2" style={{ color: "#8b6914" }}>
+          <div className="text-center mb-14">
+            <p
+              className="text-xs font-bold uppercase tracking-widest mb-3"
+              style={{ color: "#d97706" }}
+            >
               Our Spaces
             </p>
             <h2 className="font-serif text-4xl font-semibold text-stone-900 mb-4">
               Premium Facilities
             </h2>
-            <div className="divider-gold w-24 mx-auto" />
-            <p className="text-stone-500 max-w-xl mx-auto mt-4">
+            <div className="divider-gold w-24 mx-auto mb-4" />
+            <p className="text-stone-500 max-w-xl mx-auto">
               Every facility is professionally maintained and available for booking online.
               No registration required — just select, book, and pay.
             </p>
@@ -185,26 +259,98 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ─── CTA BANNER ───────────────────────────────────── */}
-      <section id="contact" className="py-20 bg-stone-900">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
-          <h2 className="font-serif text-4xl font-bold text-white mb-4">
-            Ready to Book?
-          </h2>
-          <p className="text-stone-400 mb-8 text-lg">
-            Choose a facility, pick your date, and complete booking in under 3 minutes.
-          </p>
-          <Button
-            asChild
-            size="lg"
-            className="text-white font-semibold px-10 py-6 text-base rounded-xl"
-            style={{ background: "linear-gradient(135deg, #8b6914, #d4a82e)" }}
+      {/* ─── HOW IT WORKS ─────────────────────────────────────── */}
+      <section className="py-20 bg-white scroll-animate">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "#d97706" }}>
+              Simple Process
+            </p>
+            <h2 className="font-serif text-3xl font-semibold text-stone-900">How It Works</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              { step: "01", icon: Clock, title: "Choose a Facility", desc: "Browse our premium facilities and select the one that fits your event." },
+              { step: "02", icon: Star, title: "Pick Your Date & Slot", desc: "Select your preferred date and time slot from real-time availability." },
+              { step: "03", icon: Shield, title: "Pay & Confirm", desc: "Upload your UPI payment proof. Our team reviews and confirms within hours." },
+            ].map(({ step, icon: Icon, title, desc }) => (
+              <div key={step} className="text-center group">
+                <div className="relative inline-block mb-5">
+                  <div
+                    className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto group-hover:scale-110 transition-transform"
+                    style={{ backgroundColor: "#f9edcc" }}
+                  >
+                    <Icon className="w-7 h-7" style={{ color: "#8b6914" }} />
+                  </div>
+                  <span
+                    className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold"
+                    style={{ background: "linear-gradient(135deg, #8b6914, #d4a82e)" }}
+                  >
+                    {step}
+                  </span>
+                </div>
+                <h3 className="font-serif text-lg font-semibold text-stone-900 mb-2">{title}</h3>
+                <p className="text-sm text-stone-500 leading-relaxed">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── CTA BANNER ───────────────────────────────────────── */}
+      <section
+        id="contact"
+        className="py-24 relative overflow-hidden scroll-animate"
+        style={{ backgroundColor: "#1a2f3d" }}
+      >
+        {/* Decorative gradient */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: "radial-gradient(ellipse at 30% 50%, rgba(212,168,46,0.1) 0%, transparent 60%), radial-gradient(ellipse at 70% 50%, rgba(49,74,89,0.3) 0%, transparent 60%)",
+          }}
+        />
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 text-center">
+          <div
+            className="inline-flex items-center gap-2 mb-6 px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-widest"
+            style={{ backgroundColor: "rgba(212,168,46,0.15)", color: "#d4a82e", border: "1px solid rgba(212,168,46,0.2)" }}
           >
-            <Link href="#facilities">
-              Book Now — It&apos;s Free to Browse
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Link>
-          </Button>
+            <Star className="w-3 h-3 fill-current" />
+            Ready to Book?
+          </div>
+          <h2 className="font-serif text-4xl md:text-5xl font-bold text-white mb-5 leading-tight">
+            Your Perfect Venue{" "}
+            <span style={{ color: "#d4a82e" }}>Awaits</span>
+          </h2>
+          <p className="text-stone-400 mb-10 text-lg max-w-xl mx-auto leading-relaxed">
+            Book any facility at Suncity Clubhouse in under 3 minutes.
+            No account needed. Available 24/7.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button
+              asChild
+              size="lg"
+              className="text-white font-semibold px-10 py-6 text-base rounded-xl shadow-lg hover:shadow-amber-900/30 hover:scale-[1.02] transition-all"
+              style={{ background: "linear-gradient(135deg, #8b6914, #d4a82e)" }}
+            >
+              <Link href="#facilities">
+                Book Now — Free to Browse
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Link>
+            </Button>
+          </div>
+          {/* Mahavir Group credit */}
+          <div className="mt-12 flex items-center justify-center gap-3 opacity-40">
+            <div className="h-px w-12 bg-white/30" />
+            <Image
+              src="/mahavir-logo.png"
+              alt="Mahavir Group"
+              width={80}
+              height={24}
+              className="h-5 w-auto object-contain brightness-0 invert"
+            />
+            <div className="h-px w-12 bg-white/30" />
+          </div>
         </div>
       </section>
 

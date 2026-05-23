@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { getFacilityById } from "@/actions/facilities";
 import { FacilityForm } from "@/components/admin/FacilityForm";
 import { PackageManager } from "@/components/admin/PackageManager";
+import { MediaManager } from "@/components/admin/MediaManager";
 
 export const metadata: Metadata = { title: "Edit Facility | Admin" };
 
@@ -37,6 +38,20 @@ export default async function EditFacilityPage({ params }: Props) {
         <PackageManager
           facilityId={facility.id}
           initialPackages={facility.facility_packages ?? []}
+        />
+      </div>
+
+      {/* Media gallery */}
+      <div>
+        <div className="mb-3">
+          <h2 className="font-serif text-lg font-semibold text-stone-900">Photo Gallery</h2>
+          <p className="text-sm text-stone-500 mt-0.5">
+            Upload photos and videos that users see when they view this facility. The first image is the cover.
+          </p>
+        </div>
+        <MediaManager
+          facilityId={facility.id}
+          initialMedia={facility.facility_media ?? []}
         />
       </div>
     </div>

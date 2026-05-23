@@ -13,11 +13,11 @@ export function Footer() {
     <footer className="bg-stone-900 text-stone-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-          {/* Brand */}
           <div>
-            <h3 className="font-serif text-xl text-white mb-3">Clubhouse</h3>
+            <h3 className="font-serif text-xl text-white mb-1">Suncity Clubhouse</h3>
+            <p className="text-xs text-amber-400/70 mb-3 tracking-wider">A Mahavir Group Development</p>
             <p className="text-sm text-stone-400 leading-relaxed">
-              Premium facility bookings for our community. Banquet halls, sports courts,
+              Premium facility bookings for residents of Suncity. Banquet halls, sports courts,
               guest rooms and more — all in one place.
             </p>
           </div>
@@ -71,11 +71,16 @@ export function Footer() {
 
         <div className="mt-10 pt-6 border-t border-stone-800 flex flex-col sm:flex-row justify-between items-center gap-3">
           <p className="text-xs text-stone-500">
-            © {year} Clubhouse. All rights reserved.
+            © {year} Suncity Clubhouse. A Mahavir Group Development. All rights reserved.
           </p>
-          <p className="text-xs text-stone-600">
-            Powered by modern tech. Built with care.
-          </p>
+          <a
+            href="https://mahavirgroupindia.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-stone-600 hover:text-amber-400 transition-colors"
+          >
+            mahavirgroupindia.com
+          </a>
         </div>
       </div>
     </footer>
