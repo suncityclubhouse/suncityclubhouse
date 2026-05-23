@@ -32,7 +32,7 @@ export function Footer() {
                 { href: "/#facilities", label: "Our Facilities" },
                 { href: "/#about", label: "About Us" },
                 { href: "/#contact", label: "Contact" },
-                { href: "/dashboard/login", label: "Admin Login" },
+                { href: "/login", label: "Admin Login" },
               ].map((l) => (
                 <li key={l.href}>
                   <Link
