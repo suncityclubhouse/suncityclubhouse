@@ -1,3 +1,5 @@
+"use client";
+
 import { Check } from "lucide-react";
 import { formatINR } from "@/lib/utils/formatters";
 import { getSlotTypeLabel } from "@/lib/utils/slots";
