@@ -71,29 +71,22 @@ export function StepPayment({ bookingId, bookingRef, expiresAt, totalAmount, onS
 
     setUploading(true);
     try {
-      const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!;
-      const preset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!;
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("folder", "clubhouse/payments");
 
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", preset);
-      formData.append("folder", "clubhouse/payments");
-
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!res.ok) throw new Error("Upload failed");
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
       const data = await res.json();
 
-      setUploadedUrl(data.secure_url);
-      setUploadedPublicId(data.public_id);
-      form.setValue("paymentProofUrl", data.secure_url);
-      form.setValue("paymentPublicId", data.public_id);
+      if (!res.ok || !data.url) throw new Error(data.error ?? "Upload failed");
+
+      setUploadedUrl(data.url);
+      setUploadedPublicId(data.publicId ?? "");
+      form.setValue("paymentProofUrl", data.url);
+      form.setValue("paymentPublicId", data.publicId ?? "");
       toast.success("Screenshot uploaded successfully!");
-    } catch {
-      toast.error("Failed to upload. Please try again.");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to upload. Please try again.");
     } finally {
       setUploading(false);
     }
