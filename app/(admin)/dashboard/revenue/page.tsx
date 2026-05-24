@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: "Revenue | Admin" };
 async function RevenueContent() {
   const db = createAdminClient();
 
-  // Last 12 months revenue
+  // Last 12 months revenue — confirmed + completed both count as earned revenue
   const months = Array.from({ length: 12 }, (_, i) => {
     const d = new Date();
     d.setMonth(d.getMonth() - (11 - i));
@@ -24,30 +24,35 @@ async function RevenueContent() {
 
   const revenueTrend = await Promise.all(
     months.map(async ({ month, startDate, endDate }) => {
-      const { data } = await db
+      const { data, error } = await db
         .from("bookings")
         .select("total_amount")
-        .eq("status", "confirmed")
+        .in("status", ["confirmed", "completed"])
         .gte("booking_date", startDate)
         .lte("booking_date", endDate);
-      const revenue = (data ?? []).reduce((s, b) => s + (b.total_amount ?? 0), 0);
+      if (error) console.error("[Revenue] trend query:", error);
+      // Number() required — Supabase returns NUMERIC columns as strings
+      const revenue = (data ?? []).reduce((s, b) => s + Number(b.total_amount ?? 0), 0);
       return { month, revenue };
     })
   );
 
-  // Per-facility revenue
-  const { data: confirmed } = await db
+  // Per-facility revenue — confirmed + completed
+  const { data: bookings, error: facError } = await db
     .from("bookings")
     .select("total_amount, facility_id, facilities(name)")
-    .eq("status", "confirmed");
+    .in("status", ["confirmed", "completed"]);
+
+  if (facError) console.error("[Revenue] facility query:", facError);
 
   const facilityRevenue: Record<string, { name: string; revenue: number; bookings: number }> = {};
-  for (const b of confirmed ?? []) {
+  for (const b of bookings ?? []) {
     const fid = b.facility_id;
     if (!facilityRevenue[fid]) {
       facilityRevenue[fid] = { name: (b as any).facilities?.name ?? fid, revenue: 0, bookings: 0 };
     }
-    facilityRevenue[fid].revenue += b.total_amount ?? 0;
+    // Number() to avoid NUMERIC string concatenation bug
+    facilityRevenue[fid].revenue += Number(b.total_amount ?? 0);
     facilityRevenue[fid].bookings++;
   }
 
@@ -90,11 +95,9 @@ async function RevenueContent() {
       </div>
 
       {/* 12-month chart */}
-      <div>
-        <RevenueChart data={revenueTrend} />
-      </div>
+      <RevenueChart data={revenueTrend} />
 
-      {/* Per-facility breakdown */}
+      {/* Per-facility breakdown table */}
       <div className="bg-white border border-stone-200 rounded-xl p-5">
         <h3 className="font-medium text-stone-900 mb-4">Revenue by Facility</h3>
         <div className="overflow-x-auto">
@@ -108,20 +111,23 @@ async function RevenueContent() {
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-50">
-              {facilityList.map((f) => (
-                <tr key={f.name} className="hover:bg-stone-50">
-                  <td className="py-3 px-3 font-medium text-stone-900">{f.name}</td>
-                  <td className="py-3 px-3 text-right text-stone-600">{f.bookings}</td>
-                  <td className="py-3 px-3 text-right font-semibold text-stone-900">{formatINR(f.revenue)}</td>
-                  <td className="py-3 px-3 text-right text-stone-500">
-                    {totalRevenue > 0 ? `${Math.round((f.revenue / totalRevenue) * 100)}%` : "—"}
+              {facilityList.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="py-8 text-center text-stone-400">
+                    No revenue data yet
                   </td>
                 </tr>
-              ))}
-              {facilityList.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="py-8 text-center text-stone-400">No revenue data yet</td>
-                </tr>
+              ) : (
+                facilityList.map((f) => (
+                  <tr key={f.name} className="hover:bg-stone-50">
+                    <td className="py-3 px-3 font-medium text-stone-900">{f.name}</td>
+                    <td className="py-3 px-3 text-right text-stone-600">{f.bookings}</td>
+                    <td className="py-3 px-3 text-right font-semibold text-stone-900">{formatINR(f.revenue)}</td>
+                    <td className="py-3 px-3 text-right text-stone-500">
+                      {totalRevenue > 0 ? `${Math.round((f.revenue / totalRevenue) * 100)}%` : "—"}
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
