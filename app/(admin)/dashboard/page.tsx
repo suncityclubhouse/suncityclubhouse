@@ -43,7 +43,7 @@ async function DashboardContent() {
         .eq("status", "confirmed")
         .gte("booking_date", startDate)
         .lte("booking_date", endDate);
-      const revenue = (data ?? []).reduce((s, b) => s + (b.total_amount ?? 0), 0);
+      const revenue = (data ?? []).reduce((s, b) => s + Number(b.total_amount ?? 0), 0);
       return { month, revenue };
     })
   );

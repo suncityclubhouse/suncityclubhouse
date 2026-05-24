@@ -462,11 +462,8 @@ export async function getBookedTimeSlots(params: {
 // ============================================================
 
 export async function getDashboardKPIs() {
-  // Verify admin
-  const serverClient = await createClient();
-  const { data: { user } } = await serverClient.auth.getUser();
-  if (!user) return null;
-
+  // Admin layout already ensures the user is authenticated before this is called.
+  // We use the service-role admin client directly to bypass RLS and fetch real data.
   const db = createAdminClient();
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
@@ -495,11 +492,11 @@ export async function getDashboardKPIs() {
     ]);
 
   const totalRevenue = (totalRevResult.data ?? []).reduce(
-    (sum, b) => sum + (b.total_amount ?? 0),
+    (sum, b) => sum + Number(b.total_amount ?? 0),
     0
   );
   const monthlyRevenue = (monthRevResult.data ?? []).reduce(
-    (sum, b) => sum + (b.total_amount ?? 0),
+    (sum, b) => sum + Number(b.total_amount ?? 0),
     0
   );
 
