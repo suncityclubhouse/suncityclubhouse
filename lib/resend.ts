@@ -141,12 +141,13 @@ export async function sendBookingRejectedEmail(params: {
 export async function sendAdminNewBookingEmail(params: {
   to: string;
   bookingRef: string;
+  bookingId: string;
   customerName: string;
   facilityName: string;
   bookingDate: string;
   totalAmount: number;
 }) {
-  const { to, bookingRef, customerName, facilityName, bookingDate, totalAmount } = params;
+  const { to, bookingRef, bookingId, customerName, facilityName, bookingDate, totalAmount } = params;
   return getResend().emails.send({
     from: FROM,
     to,
@@ -161,7 +162,7 @@ export async function sendAdminNewBookingEmail(params: {
           <tr><td style="padding:8px;border:1px solid #e5e7eb;background:#f9fafb;">Date</td><td style="padding:8px;border:1px solid #e5e7eb;">${bookingDate}</td></tr>
           <tr><td style="padding:8px;border:1px solid #e5e7eb;background:#f9fafb;">Amount</td><td style="padding:8px;border:1px solid #e5e7eb;">₹${totalAmount.toLocaleString("en-IN")}</td></tr>
         </table>
-        <a href="${APP_URL}/dashboard/bookings/${bookingRef}" style="display:inline-block;padding:12px 24px;background:#8B6914;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;">View in Dashboard</a>
+        <a href="${APP_URL}/dashboard/bookings/${bookingId}" style="display:inline-block;padding:12px 24px;background:#8B6914;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;">Review Booking</a>
       </div>
     `,
   });

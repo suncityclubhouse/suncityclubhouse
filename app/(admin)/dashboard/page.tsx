@@ -40,7 +40,7 @@ async function DashboardContent() {
       const { data } = await db
         .from("bookings")
         .select("total_amount")
-        .eq("status", "confirmed")
+        .in("status", ["confirmed", "completed"])
         .gte("booking_date", startDate)
         .lte("booking_date", endDate);
       const revenue = (data ?? []).reduce((s, b) => s + Number(b.total_amount ?? 0), 0);
@@ -52,7 +52,7 @@ async function DashboardContent() {
   const { data: facilityData } = await db
     .from("bookings")
     .select("facility_id, facilities(name)")
-    .not("status", "in", '("rejected","cancelled","expired")');
+    .not("status", "in", "(rejected,cancelled,expired)");
 
   const facilityCount: Record<string, { count: number; name: string }> = {};
   for (const b of facilityData ?? []) {

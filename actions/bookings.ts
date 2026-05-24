@@ -9,6 +9,8 @@ import {
   sendPaymentUploadedEmail,
   sendAdminNewBookingEmail,
   sendAdminPaymentUploadedEmail,
+  sendBookingConfirmedEmail,
+  sendBookingRejectedEmail,
 } from "@/lib/resend";
 import type { Booking, BookingStatus } from "@/types/database";
 import type { ActionResult, BookingFilters } from "@/types";
@@ -151,6 +153,7 @@ export async function createBooking(params: {
       facilityName,
       bookingDate: params.bookingDate,
       totalAmount: params.totalAmount,
+      bookingId: booking.id,
     }),
   ]).catch((err) => console.error("[createBooking] email error:", err));
 
@@ -358,6 +361,9 @@ export async function updateBookingStatus(params: {
     update.cancelled_by = adminId;
     update.cancelled_at = new Date().toISOString();
   }
+  if (params.status === "completed") {
+    update.completed_at = new Date().toISOString();
+  }
 
   const { error } = await db
     .from("bookings")
@@ -365,6 +371,40 @@ export async function updateBookingStatus(params: {
     .eq("id", params.bookingId);
 
   if (error) return { success: false, error: error.message };
+
+  // Send email notifications server-side (never from client)
+  if (params.status === "confirmed" || params.status === "rejected") {
+    const { data: bookingData } = await db
+      .from("bookings")
+      .select("customer_email, customer_name, booking_ref, booking_date, start_time, end_time, facility:facilities(name)")
+      .eq("id", params.bookingId)
+      .single();
+
+    if (bookingData) {
+      const facilityName = (bookingData as any).facility?.name ?? "Facility";
+      if (params.status === "confirmed") {
+        sendBookingConfirmedEmail({
+          to: bookingData.customer_email,
+          name: bookingData.customer_name,
+          bookingRef: bookingData.booking_ref,
+          facilityName,
+          bookingDate: bookingData.booking_date,
+          startTime: bookingData.start_time ?? undefined,
+          endTime: bookingData.end_time ?? undefined,
+        }).catch((e) => console.error("[updateBookingStatus] confirm email:", e));
+      }
+      if (params.status === "rejected") {
+        sendBookingRejectedEmail({
+          to: bookingData.customer_email,
+          name: bookingData.customer_name,
+          bookingRef: bookingData.booking_ref,
+          facilityName,
+          reason: params.rejectionReason,
+        }).catch((e) => console.error("[updateBookingStatus] reject email:", e));
+      }
+    }
+  }
+
   return { success: true };
 }
 
@@ -466,18 +506,20 @@ export async function getDashboardKPIs() {
   // We use the service-role admin client directly to bypass RLS and fetch real data.
   const db = createAdminClient();
   const now = new Date();
+  const today = now.toISOString().split("T")[0];
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
 
+  // Revenue counts confirmed + completed bookings (completed = event already happened)
   const [totalRevResult, monthRevResult, totalBookResult, pendingResult, upcomingResult] =
     await Promise.all([
       db
         .from("bookings")
         .select("total_amount")
-        .eq("status", "confirmed"),
+        .in("status", ["confirmed", "completed"]),
       db
         .from("bookings")
         .select("total_amount")
-        .eq("status", "confirmed")
+        .in("status", ["confirmed", "completed"])
         .gte("booking_date", monthStart),
       db.from("bookings").select("id", { count: "exact", head: true }),
       db
@@ -487,9 +529,16 @@ export async function getDashboardKPIs() {
       db
         .from("bookings")
         .select("id", { count: "exact", head: true })
-        .eq("status", "confirmed")
-        .gte("booking_date", now.toISOString().split("T")[0]),
+        .in("status", ["confirmed", "completed"])
+        .gte("booking_date", today),
     ]);
+
+  // Log any errors so they appear in server/Vercel logs
+  if (totalRevResult.error) console.error("[KPI] totalRev:", totalRevResult.error);
+  if (monthRevResult.error) console.error("[KPI] monthRev:", monthRevResult.error);
+  if (totalBookResult.error) console.error("[KPI] totalBook:", totalBookResult.error);
+  if (pendingResult.error) console.error("[KPI] pending:", pendingResult.error);
+  if (upcomingResult.error) console.error("[KPI] upcoming:", upcomingResult.error);
 
   const totalRevenue = (totalRevResult.data ?? []).reduce(
     (sum, b) => sum + Number(b.total_amount ?? 0),
@@ -500,11 +549,13 @@ export async function getDashboardKPIs() {
     0
   );
 
-  // Most booked facility
-  const { data: facilityBookings } = await db
+  // Most booked facility (exclude rejected/cancelled/expired)
+  const { data: facilityBookings, error: facError } = await db
     .from("bookings")
     .select("facility_id, facilities(name)")
-    .not("status", "in", '("rejected","cancelled","expired")');
+    .not("status", "in", "(rejected,cancelled,expired)");
+
+  if (facError) console.error("[KPI] facilityBookings:", facError);
 
   const facilityCount: Record<string, { count: number; name: string }> = {};
   for (const b of facilityBookings ?? []) {
@@ -523,7 +574,7 @@ export async function getDashboardKPIs() {
     totalBookings: totalBookResult.count ?? 0,
     pendingApprovals: pendingResult.count ?? 0,
     upcomingBookings: upcomingResult.count ?? 0,
-    occupancyRate: 0, // calculated in component
+    occupancyRate: 0,
     mostBookedFacility: mostBooked?.name ?? null,
   };
 }

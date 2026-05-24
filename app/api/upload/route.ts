@@ -1,20 +1,13 @@
 import { cloudinary } from "@/lib/cloudinary";
-import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 /**
  * POST /api/upload
  * Accepts a multipart FormData with a `file` field.
  * Uploads directly to Cloudinary server-side and returns { url, publicId }.
- * Requires admin authentication.
+ * Public endpoint — used by customers uploading payment proof screenshots.
  */
 export async function POST(request: Request) {
-  // Auth check
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
 
   try {
     const formData = await request.formData();

@@ -8,10 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { updateBookingStatus } from "@/actions/bookings";
-import {
-  sendBookingConfirmedEmail,
-  sendBookingRejectedEmail,
-} from "@/lib/resend";
 import type { Booking } from "@/types/database";
 
 interface BookingActionsPanelProps {
@@ -22,10 +18,12 @@ export function BookingActionsPanel({ booking }: BookingActionsPanelProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [rejectOpen, setRejectOpen] = useState(false);
+  const [cancelOpen, setCancelOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
 
   const canApprove = booking.status === "pending_approval";
   const canReject = booking.status === "pending_approval";
+  // Admin can cancel at any stage before it's completed/rejected/expired
   const canCancel = ["awaiting_payment", "pending_approval", "confirmed"].includes(booking.status);
   const canComplete = booking.status === "confirmed";
 
@@ -41,30 +39,15 @@ export function BookingActionsPanel({ booking }: BookingActionsPanelProps) {
         return;
       }
 
-      // Send email notifications
-      if (status === "confirmed") {
-        await sendBookingConfirmedEmail({
-          to: booking.customer_email,
-          name: booking.customer_name,
-          bookingRef: booking.booking_ref,
-          facilityName: booking.facility?.name ?? "Facility",
-          bookingDate: booking.booking_date,
-          startTime: booking.start_time ?? undefined,
-          endTime: booking.end_time ?? undefined,
-        }).catch(() => {});
-      }
-      if (status === "rejected") {
-        await sendBookingRejectedEmail({
-          to: booking.customer_email,
-          name: booking.customer_name,
-          bookingRef: booking.booking_ref,
-          facilityName: booking.facility?.name ?? "Facility",
-          reason: rejectionReason,
-        }).catch(() => {});
-      }
-
-      toast.success(`Booking ${status}`);
+      const messages: Record<string, string> = {
+        confirmed: "✅ Booking approved — confirmation email sent to customer",
+        rejected: "❌ Booking rejected — customer has been notified by email",
+        cancelled: "Booking cancelled",
+        completed: "✓ Booking marked as completed",
+      };
+      toast.success(messages[status] ?? `Booking ${status}`);
       setRejectOpen(false);
+      setCancelOpen(false);
       router.refresh();
     } catch {
       toast.error("Something went wrong");
@@ -96,17 +79,6 @@ export function BookingActionsPanel({ booking }: BookingActionsPanelProps) {
           Reject
         </Button>
       )}
-      {canCancel && !canApprove && (
-        <Button
-          variant="outline"
-          onClick={() => perform("cancelled")}
-          disabled={loading}
-          className="gap-2 text-stone-600"
-        >
-          <Ban className="w-4 h-4" />
-          Cancel
-        </Button>
-      )}
       {canComplete && (
         <Button
           variant="outline"
@@ -114,27 +86,41 @@ export function BookingActionsPanel({ booking }: BookingActionsPanelProps) {
           disabled={loading}
           className="gap-2 text-violet-700 border-violet-200 hover:bg-violet-50"
         >
-          <CheckCheck className="w-4 h-4" />
+          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCheck className="w-4 h-4" />}
           Mark Completed
         </Button>
       )}
+      {canCancel && (
+        <Button
+          variant="outline"
+          onClick={() => setCancelOpen(true)}
+          disabled={loading}
+          className="gap-2 text-stone-600 hover:bg-stone-50"
+        >
+          <Ban className="w-4 h-4" />
+          Cancel Booking
+        </Button>
+      )}
 
+      {/* Reject dialog */}
       <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Reject Booking</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
-            <p className="text-sm text-stone-500">This reason will be emailed to the customer:</p>
+            <p className="text-sm text-stone-500">
+              This reason will be emailed to <strong>{booking.customer_name}</strong>:
+            </p>
             <Textarea
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
-              placeholder="e.g. Payment amount mismatch…"
+              placeholder="e.g. Payment amount mismatch, UTR not found…"
               rows={3}
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRejectOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setRejectOpen(false)}>Back</Button>
             <Button
               variant="destructive"
               disabled={rejectReason.length < 10 || loading}
@@ -142,6 +128,32 @@ export function BookingActionsPanel({ booking }: BookingActionsPanelProps) {
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
               Confirm Rejection
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cancel confirmation dialog */}
+      <Dialog open={cancelOpen} onOpenChange={setCancelOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cancel Booking</DialogTitle>
+          </DialogHeader>
+          <div className="py-2">
+            <p className="text-sm text-stone-600">
+              Are you sure you want to cancel booking <strong>{booking.booking_ref}</strong> for{" "}
+              <strong>{booking.customer_name}</strong>? This action cannot be undone.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCancelOpen(false)}>Back</Button>
+            <Button
+              variant="destructive"
+              disabled={loading}
+              onClick={() => perform("cancelled")}
+            >
+              {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              Yes, Cancel Booking
             </Button>
           </DialogFooter>
         </DialogContent>
