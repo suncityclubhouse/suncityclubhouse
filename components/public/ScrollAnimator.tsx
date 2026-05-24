@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 /**
  * Adds .js-ready to <body> (enables CSS animations) and then uses
@@ -10,6 +11,8 @@ import { useEffect } from "react";
  * initial load or browser back-navigation.
  */
 export function ScrollAnimator() {
+  const pathname = usePathname();
+
   useEffect(() => {
     // Mark body as JS-ready so CSS animations kick in
     document.body.classList.add("js-ready");
@@ -35,7 +38,7 @@ export function ScrollAnimator() {
       // Remove js-ready on unmount so back-navigation starts clean
       document.body.classList.remove("js-ready");
     };
-  }, []);
+  }, [pathname]);
 
   return null;
 }
