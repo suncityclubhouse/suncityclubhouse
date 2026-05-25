@@ -42,12 +42,20 @@ export default function LandingPage() {
   return (
     <div>
       {/* ─── HERO ─────────────────────────────────────────────── */}
-      <section className="hero-pattern relative min-h-[90vh] flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
+        {/* Parallax Background Image */}
+        <div 
+          className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat md:bg-fixed"
+          style={{ backgroundImage: "url('/bg_img.jpg')" }}
+        />
+        {/* Dark overlay for text readability and premium feel */}
+        <div className="absolute inset-0 z-0 bg-black/30 bg-gradient-to-t from-stone-900/60 via-black/20 to-black/40" />
+
         {/* Decorative rings */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full border border-white/5 animate-pulse" />
-          <div className="absolute top-1/3 left-1/3 w-64 h-64 rounded-full border border-white/5" />
-          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full border border-amber-600/5" />
+        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full border border-white/10 animate-pulse" />
+          <div className="absolute top-1/3 left-1/3 w-64 h-64 rounded-full border border-white/10" />
+          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full border border-amber-600/20" />
         </div>
 
         <div className="relative z-10 text-center px-4 max-w-5xl mx-auto">
@@ -115,7 +123,7 @@ export default function LandingPage() {
         </div>
 
         {/* Bottom fade */}
-        <div className="absolute bottom-0 inset-x-0 h-32 bg-gradient-to-t from-white to-transparent" />
+        <div className="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-white/80 to-transparent" />
       </section>
 
       {/* ─── ABOUT / MAHAVIR GROUP ───────────────────────────── */}
