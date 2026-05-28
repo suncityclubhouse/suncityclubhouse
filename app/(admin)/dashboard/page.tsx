@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import Link from "next/link";
 import {
   DollarSign,
   TrendingUp,
@@ -106,44 +107,61 @@ async function DashboardContent() {
     <div className="space-y-6">
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        <KPICard
-          title="Total Revenue"
-          value={kpis.totalRevenue}
-          isCurrency
-          icon={DollarSign}
-          className="col-span-1"
-        />
-        <KPICard
-          title="Monthly Revenue"
-          value={kpis.monthlyRevenue}
-          isCurrency
-          icon={TrendingUp}
-          accentColor="#16a34a"
-        />
-        <KPICard
-          title="Total Bookings"
-          value={kpis.totalBookings}
-          icon={BookOpen}
-          accentColor="#3b82f6"
-        />
-        <KPICard
-          title="Pending Approvals"
-          value={kpis.pendingApprovals}
-          icon={Clock}
-          accentColor="#f59e0b"
-        />
-        <KPICard
-          title="Upcoming Bookings"
-          value={kpis.upcomingBookings}
-          icon={CalendarCheck}
-          accentColor="#8b5cf6"
-        />
-        <KPICard
-          title="Most Booked"
-          value={kpis.mostBookedFacility ?? "—"}
-          icon={Star}
-          accentColor="#ec4899"
-        />
+        <Link href="/dashboard/revenue" className="block col-span-1 group">
+          <KPICard
+            title="Total Revenue"
+            value={kpis.totalRevenue}
+            isCurrency
+            icon={DollarSign}
+            className="h-full group-hover:shadow-md group-hover:border-amber-200 transition-all cursor-pointer"
+          />
+        </Link>
+        <Link href="/dashboard/revenue" className="block group">
+          <KPICard
+            title="Monthly Revenue"
+            value={kpis.monthlyRevenue}
+            isCurrency
+            icon={TrendingUp}
+            accentColor="#16a34a"
+            className="h-full group-hover:shadow-md group-hover:border-green-200 transition-all cursor-pointer"
+          />
+        </Link>
+        <Link href="/dashboard/bookings" className="block group">
+          <KPICard
+            title="Total Bookings"
+            value={kpis.totalBookings}
+            icon={BookOpen}
+            accentColor="#3b82f6"
+            className="h-full group-hover:shadow-md group-hover:border-blue-200 transition-all cursor-pointer"
+          />
+        </Link>
+        <Link href="/dashboard/bookings?status=pending_approval" className="block group">
+          <KPICard
+            title="Pending Approvals"
+            value={kpis.pendingApprovals}
+            icon={Clock}
+            accentColor="#f59e0b"
+            className="h-full group-hover:shadow-md group-hover:border-amber-200 transition-all cursor-pointer"
+          />
+        </Link>
+        <Link href="/dashboard/bookings?status=confirmed" className="block group">
+          <KPICard
+            title="Upcoming Bookings"
+            value={kpis.upcomingBookings}
+            icon={CalendarCheck}
+            accentColor="#8b5cf6"
+            className="h-full group-hover:shadow-md group-hover:border-purple-200 transition-all cursor-pointer"
+          />
+        </Link>
+        <Link href="/dashboard/facilities" className="block group">
+          <KPICard
+            title="Most Booked"
+            value={kpis.mostBookedFacility ?? "—"}
+            icon={Star}
+            accentColor="#ec4899"
+            className="h-full group-hover:shadow-md group-hover:border-pink-200 transition-all cursor-pointer"
+          />
+        </Link>
       </div>
 
       {/* Charts */}
