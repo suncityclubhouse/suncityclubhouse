@@ -141,12 +141,12 @@ export default function LandingPage() {
           <source src="/bg-vid.mp4" type="video/mp4" />
         </video>
 
-        {/* Light overlay gradient for seamless blending and bright aesthetic */}
+        {/* Lighter overlay gradient to show the video clearly with seamless edges */}
         <div
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,0.45) 20%, rgba(255,255,255,0.35) 50%, rgba(255,255,255,0.45) 80%, rgba(250,250,249,1) 100%)",
+              "linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,0.25) 12%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.25) 88%, rgba(250,250,249,1) 100%)",
           }}
         />
 
@@ -154,12 +154,12 @@ export default function LandingPage() {
         <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-8 lg:px-8 py-20 md:py-28 text-center">
 
           {/* Section label */}
-          <p className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: "#b45309" }}>
+          <p className="text-xs font-bold uppercase tracking-widest mb-4 drop-shadow-[0_1px_2px_rgba(255,255,255,0.6)]" style={{ color: "#b45309" }}>
             About Us
           </p>
 
           {/* Heading */}
-          <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-light text-stone-900 mb-6 leading-tight">
+          <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-stone-900 mb-6 leading-tight drop-shadow-[0_2px_4px_rgba(255,255,255,0.8)]">
             A Legacy of{" "}
             <span className="font-bold relative inline-block">
               Excellence
@@ -171,13 +171,13 @@ export default function LandingPage() {
           </h2>
 
           {/* Body copy */}
-          <p className="text-stone-800 text-base sm:text-lg font-medium leading-relaxed mb-5 max-w-2xl mx-auto">
+          <p className="text-stone-900 text-base sm:text-lg font-semibold leading-relaxed mb-5 max-w-2xl mx-auto drop-shadow-[0_1px_3px_rgba(255,255,255,0.9)]">
             Suncity Clubhouse is the crown jewel of Suncity — a premium township developed by{" "}
             <a
               href="https://mahavirgroupindia.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="font-semibold text-amber-800 hover:text-amber-600 transition-colors underline-offset-2 hover:underline"
+              className="font-bold text-amber-900 hover:text-amber-700 transition-colors underline-offset-2 hover:underline"
             >
               Mahavir Group
             </a>
@@ -185,24 +185,24 @@ export default function LandingPage() {
             landmarks that define modern living.
           </p>
 
-          <p className="text-stone-600 text-sm sm:text-base leading-relaxed mb-10 max-w-xl mx-auto">
+          <p className="text-stone-800 text-sm sm:text-base font-semibold leading-relaxed mb-10 max-w-xl mx-auto drop-shadow-[0_1px_3px_rgba(255,255,255,0.9)]">
             Our clubhouse offers world-class recreational and event facilities for residents and their guests —
             professionally managed, beautifully maintained, and available to book in minutes from your phone.
           </p>
 
           {/* Mahavir Group tagline — light glassmorphism pill */}
           <div
-            className="inline-flex items-center gap-3 px-5 py-3 rounded-xl border shadow-sm backdrop-blur-md"
-            style={{ borderColor: "rgba(212,168,46,0.3)", backgroundColor: "rgba(253,248,237,0.85)" }}
+            className="inline-flex items-center gap-3 px-5 py-3 rounded-xl border shadow-md backdrop-blur-md"
+            style={{ borderColor: "rgba(212,168,46,0.35)", backgroundColor: "rgba(253,248,237,0.9)" }}
           >
             <Image
               src="/mahavir-logo.png"
               alt="Mahavir Group"
               width={90}
               height={28}
-              className="h-6 w-auto object-contain opacity-90"
+              className="h-6 w-auto object-contain opacity-95"
             />
-            <span className="text-xs font-semibold text-stone-600 tracking-widest uppercase">
+            <span className="text-xs font-semibold text-stone-700 tracking-widest uppercase">
               Experience · Quality · Trust
             </span>
           </div>
