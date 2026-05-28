@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Star, Shield, Clock, Award, Users, MapPin } from "lucide-react";
+import { ArrowRight, Star, Clock, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FacilityCard } from "@/components/public/FacilityCard";
 import { FacilityCardSkeleton } from "@/components/shared/LoadingSkeleton";
@@ -126,109 +126,82 @@ export default function LandingPage() {
         <div className="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-white/80 to-transparent" />
       </section>
 
-      {/* ─── ABOUT / MAHAVIR GROUP ───────────────────────────── */}
-      <section id="about" className="py-16 md:py-24 bg-white scroll-animate">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* ─── ABOUT / MAHAVIR GROUP ─── video bg, no stat cards ── */}
+      <section id="about" className="relative overflow-hidden scroll-animate" style={{ minHeight: "560px" }}>
+
+        {/* Looping background video */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+          aria-hidden="true"
+        >
+          <source src="/bg-vid.mp4" type="video/mp4" />
+        </video>
+
+        {/* Layered dark overlay — bottom is darker for text contrast */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(to bottom, rgba(10,10,10,0.55) 0%, rgba(10,10,10,0.65) 50%, rgba(10,10,10,0.72) 100%)",
+          }}
+        />
+
+        {/* Content */}
+        <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-8 lg:px-8 py-20 md:py-28 text-center">
 
           {/* Section label */}
-          <p className="text-xs font-bold uppercase tracking-widest mb-3 text-center" style={{ color: "#d97706" }}>
+          <p className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: "#d4a82e" }}>
             About Us
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center">
-            {/* Left — Text */}
-            <div>
-              <h2 className="font-serif text-4xl lg:text-5xl font-light text-stone-900 mb-6 leading-tight">
-                A Legacy of{" "}
-                <span className="font-bold relative">
-                  Excellence
-                  <span
-                    className="absolute -bottom-1 left-0 w-full h-0.5"
-                    style={{ background: "linear-gradient(90deg, #d4a82e, transparent)" }}
-                  />
-                </span>
-              </h2>
+          {/* Heading */}
+          <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-light text-white mb-6 leading-tight">
+            A Legacy of{" "}
+            <span className="font-bold relative inline-block">
+              Excellence
+              <span
+                className="absolute -bottom-1 left-0 w-full h-0.5"
+                style={{ background: "linear-gradient(90deg, transparent, #d4a82e, transparent)" }}
+              />
+            </span>
+          </h2>
 
-              <p className="text-stone-600 text-lg leading-relaxed mb-6">
-                Suncity Clubhouse is the crown jewel of Suncity — a premium township developed by{" "}
-                <a
-                  href="https://mahavirgroupindia.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-semibold text-stone-800 hover:text-amber-700 transition-colors"
-                >
-                  Mahavir Group
-                </a>
-                , Chhattisgarh's most trusted real estate developer with over 25 years of building landmarks that define modern living.
-              </p>
+          {/* Body copy */}
+          <p className="text-stone-300 text-base sm:text-lg leading-relaxed mb-5 max-w-2xl mx-auto">
+            Suncity Clubhouse is the crown jewel of Suncity — a premium township developed by{" "}
+            <a
+              href="https://mahavirgroupindia.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-amber-300 hover:text-amber-200 transition-colors underline-offset-2 hover:underline"
+            >
+              Mahavir Group
+            </a>
+            , Chhattisgarh&apos;s most trusted real estate developer with over 25 years of building
+            landmarks that define modern living.
+          </p>
 
-              <p className="text-stone-500 leading-relaxed mb-8">
-                Our clubhouse offers world-class recreational and event facilities for residents and their guests —
-                professionally managed, beautifully maintained, and available to book in minutes from your phone.
-              </p>
+          <p className="text-stone-400 text-sm sm:text-base leading-relaxed mb-10 max-w-xl mx-auto">
+            Our clubhouse offers world-class recreational and event facilities for residents and their guests —
+            professionally managed, beautifully maintained, and available to book in minutes from your phone.
+          </p>
 
-              {/* Tagline */}
-              <div
-                className="inline-flex items-center gap-3 px-5 py-3 rounded-xl border"
-                style={{ borderColor: "#d4a82e30", backgroundColor: "#fdf8ed" }}
-              >
-                <Image
-                  src="/mahavir-logo.png"
-                  alt="Mahavir Group"
-                  width={90}
-                  height={28}
-                  className="h-6 w-auto object-contain opacity-80"
-                />
-                <span className="text-xs font-semibold text-stone-500 tracking-widest uppercase">
-                  Experience · Quality · Trust
-                </span>
-              </div>
-            </div>
-
-            {/* Right — Stats grid */}
-            <div className="grid grid-cols-2 gap-4">
-              {[
-                {
-                  icon: Award,
-                  num: "25+",
-                  label: "Years of Excellence",
-                  desc: "Decades of trusted real estate development across Chhattisgarh",
-                },
-                {
-                  icon: MapPin,
-                  num: "Premium",
-                  label: "Township",
-                  desc: "Suncity is a landmark development in the heart of the city",
-                },
-                {
-                  icon: Users,
-                  num: "500+",
-                  label: "Happy Families",
-                  desc: "Residents who call Suncity their home",
-                },
-                {
-                  icon: Shield,
-                  num: "100%",
-                  label: "Secure Booking",
-                  desc: "Payment proof verified by our admin team before confirmation",
-                },
-              ].map(({ icon: Icon, num, label, desc }) => (
-                <div
-                  key={label}
-                  className="group p-5 rounded-2xl border border-stone-100 hover:border-amber-200 hover:shadow-md transition-all bg-stone-50 hover:bg-amber-50/30"
-                >
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
-                    style={{ backgroundColor: "#f9edcc" }}
-                  >
-                    <Icon className="w-5 h-5" style={{ color: "#8b6914" }} />
-                  </div>
-                  <p className="text-2xl font-bold text-stone-900 mb-0.5">{num}</p>
-                  <p className="text-sm font-semibold text-stone-700 mb-1">{label}</p>
-                  <p className="text-xs text-stone-400 leading-relaxed">{desc}</p>
-                </div>
-              ))}
-            </div>
+          {/* Mahavir Group tagline — glassmorphism pill */}
+          <div className="inline-flex items-center gap-3 px-5 py-3 rounded-xl backdrop-blur-md border border-white/15 bg-white/10">
+            <Image
+              src="/mahavir-logo.png"
+              alt="Mahavir Group"
+              width={90}
+              height={28}
+              className="h-6 w-auto object-contain brightness-0 invert opacity-85"
+            />
+            <span className="text-xs font-semibold text-white/70 tracking-widest uppercase">
+              Experience · Quality · Trust
+            </span>
           </div>
         </div>
       </section>
