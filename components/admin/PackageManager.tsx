@@ -28,11 +28,11 @@ import type { FacilityPackage } from "@/types/database";
 const packageSchema = z.object({
   name:          z.string().min(1, "Name required").max(80),
   type:          z.enum(["hourly", "half_day", "full_day", "monthly", "quarterly"]),
-  price:         z.coerce.number().min(0, "Price required"),
-  durationHours: z.coerce.number().int().min(1).optional(),
-  startTime:     z.string().optional(),
-  endTime:       z.string().optional(),
-  description:   z.string().max(300).optional(),
+  price:         z.preprocess((val) => (val === "" || val === undefined || val === null) ? undefined : Number(val), z.number({ required_error: "Price required" }).min(0, "Price required")),
+  durationHours: z.preprocess((val) => (val === "" || val === undefined || val === null) ? undefined : Number(val), z.number().int().min(1, "Must be at least 1").optional()),
+  startTime:     z.preprocess((val) => (val === "" ? undefined : val), z.string().optional()),
+  endTime:       z.preprocess((val) => (val === "" ? undefined : val), z.string().optional()),
+  description:   z.preprocess((val) => (val === "" ? undefined : val), z.string().max(300).optional()),
   isActive:      z.boolean().default(true),
   displayOrder:  z.coerce.number().int().min(0).default(0),
 });
@@ -211,6 +211,9 @@ export function PackageManager({ facilityId, initialPackages }: Props) {
                 <div className="space-y-1.5">
                   <Label>Duration (hours per slot)</Label>
                   <Input type="number" {...form.register("durationHours")} placeholder="1" min={1} />
+                  {form.formState.errors.durationHours && (
+                    <p className="text-xs text-red-500">{form.formState.errors.durationHours.message}</p>
+                  )}
                   <p className="text-xs text-stone-400">How many hours does 1 booking unit cover?</p>
                 </div>
               )}
@@ -221,10 +224,16 @@ export function PackageManager({ facilityId, initialPackages }: Props) {
                   <div className="space-y-1.5">
                     <Label>Start Time</Label>
                     <Input type="time" {...form.register("startTime")} />
+                    {form.formState.errors.startTime && (
+                      <p className="text-xs text-red-500">{form.formState.errors.startTime.message}</p>
+                    )}
                   </div>
                   <div className="space-y-1.5">
                     <Label>End Time</Label>
                     <Input type="time" {...form.register("endTime")} />
+                    {form.formState.errors.endTime && (
+                      <p className="text-xs text-red-500">{form.formState.errors.endTime.message}</p>
+                    )}
                   </div>
                 </>
               )}
@@ -233,6 +242,9 @@ export function PackageManager({ facilityId, initialPackages }: Props) {
               <div className="space-y-1.5">
                 <Label>Display Order</Label>
                 <Input type="number" {...form.register("displayOrder")} placeholder="0" min={0} />
+                {form.formState.errors.displayOrder && (
+                  <p className="text-xs text-red-500">{form.formState.errors.displayOrder.message}</p>
+                )}
                 <p className="text-xs text-stone-400">Lower = shown first</p>
               </div>
 
@@ -243,6 +255,9 @@ export function PackageManager({ facilityId, initialPackages }: Props) {
               <Label>Description (optional)</Label>
               <Textarea {...form.register("description")} rows={2}
                 placeholder="e.g. Includes setup time, available Mon–Sat" />
+              {form.formState.errors.description && (
+                <p className="text-xs text-red-500">{form.formState.errors.description.message}</p>
+              )}
             </div>
 
             {/* Active toggle */}

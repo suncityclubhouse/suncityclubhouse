@@ -22,7 +22,7 @@ export type FacilitySchema = z.infer<typeof facilitySchema>;
 export const facilityPackageSchema = z.object({
   name: z.string().min(1, "Package name required").max(100),
   type: z.enum(["hourly", "half_day", "full_day", "monthly", "quarterly"]),
-  price: z.number().positive("Price must be greater than 0"),
+  price: z.number().min(0, "Price must be at least 0"),
   durationHours: z.number().int().min(1).optional(),
   startTime: z
     .string()
