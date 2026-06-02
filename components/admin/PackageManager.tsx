@@ -28,7 +28,7 @@ import type { FacilityPackage } from "@/types/database";
 const packageSchema = z.object({
   name:          z.string().min(1, "Name required").max(80),
   type:          z.enum(["hourly", "half_day", "full_day", "monthly", "quarterly"]),
-  price:         z.preprocess((val) => (val === "" || val === undefined || val === null) ? undefined : Number(val), z.number({ invalid_type_error: "Price required" }).min(0, "Price required")),
+  price:         z.preprocess((val) => (val === "" || val === undefined || val === null) ? undefined : Number(val), z.number().min(0, "Price required")),
   durationHours: z.preprocess((val) => (val === "" || val === undefined || val === null) ? undefined : Number(val), z.number().int().min(1, "Must be at least 1").optional()),
   startTime:     z.preprocess((val) => (val === "" ? undefined : val), z.string().optional()),
   endTime:       z.preprocess((val) => (val === "" ? undefined : val), z.string().optional()),
