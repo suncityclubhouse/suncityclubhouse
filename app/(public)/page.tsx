@@ -146,7 +146,7 @@ export default function LandingPage() {
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,0.1) 8%, rgba(255,255,255,0) 25%, rgba(255,255,255,0) 75%, rgba(255,255,255,0.1) 92%, rgba(250,250,249,1) 100%)",
+              "linear-gradient(to bottom, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.05) 6%, rgba(255,255,255,0) 15%, rgba(255,255,255,0) 85%, rgba(255,255,255,0.05) 94%, rgba(250,250,249,0.85) 100%)",
           }}
         />
 
@@ -190,21 +190,23 @@ export default function LandingPage() {
             professionally managed, beautifully maintained, and available to book in minutes from your phone.
           </p>
 
-          {/* Mahavir Group tagline — light glassmorphism pill */}
+          {/* Mahavir Group logo — centred and prominent */}
           <div
-            className="inline-flex items-center gap-3 px-5 py-3 rounded-xl border shadow-md backdrop-blur-md"
-            style={{ borderColor: "rgba(212,168,46,0.35)", backgroundColor: "rgba(253,248,237,0.9)" }}
+            className="flex justify-center"
           >
-            <Image
-              src="/mahavir-logo.png"
-              alt="Mahavir Group"
-              width={90}
-              height={28}
-              className="h-6 w-auto object-contain opacity-95"
-            />
-            <span className="text-xs font-semibold text-stone-700 tracking-widest uppercase">
-              Experience · Quality · Trust
-            </span>
+            <div
+              className="inline-flex items-center justify-center px-8 py-5 rounded-2xl border shadow-lg backdrop-blur-md"
+              style={{ borderColor: "rgba(212,168,46,0.35)", backgroundColor: "rgba(253,248,237,0.92)" }}
+            >
+              <Image
+                src="/mahavir-logo.png"
+                alt="Mahavir Group"
+                width={220}
+                height={80}
+                className="w-auto object-contain"
+                style={{ maxHeight: "70px" }}
+              />
+            </div>
           </div>
         </div>
       </section>

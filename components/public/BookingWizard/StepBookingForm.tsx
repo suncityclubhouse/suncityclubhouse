@@ -54,7 +54,10 @@ export function StepBookingForm({ facility, state, onStateChange, onNext, onBack
         endTime: state.endTime ?? undefined,
         baseAmount: state.totalAmount,
         totalAmount: state.totalAmount,
-        formValues: values,
+        formValues: {
+          ...values,
+          eventPurpose: values.eventPurpose || "Sports Booking",
+        },
       });
 
       if (!result.success) {
@@ -166,36 +169,6 @@ export function StepBookingForm({ facility, state, onStateChange, onNext, onBack
               />
             </div>
           )}
-        </div>
-
-        {/* Event details */}
-        <div className="bg-white border border-stone-200 rounded-xl p-5 space-y-4">
-          <h3 className="text-sm font-semibold text-stone-700 uppercase tracking-wider">Event Details</h3>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="eventPurpose">Event Purpose *</Label>
-            <Textarea
-              id="eventPurpose"
-              placeholder="e.g. Birthday party, Corporate meeting, Wedding reception…"
-              rows={3}
-              {...form.register("eventPurpose")}
-              aria-invalid={!!form.formState.errors.eventPurpose}
-            />
-            {form.formState.errors.eventPurpose && (
-              <p className="text-xs text-red-500">{form.formState.errors.eventPurpose.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="guestCount">Expected Guest Count (optional)</Label>
-            <Input
-              id="guestCount"
-              type="number"
-              min={1}
-              placeholder="Number of guests"
-              {...form.register("guestCount", { valueAsNumber: true })}
-            />
-          </div>
         </div>
 
         <div className="flex justify-between">

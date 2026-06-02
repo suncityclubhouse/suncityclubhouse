@@ -479,15 +479,17 @@ export async function getBookedTimeSlots(params: {
     .from("bookings")
     .select("start_time, end_time")
     .eq("facility_id", params.facilityId)
-    .eq("booking_date", params.date)
-    .not("status", "in", "(rejected,cancelled,expired)");
+    .not("status", "in", "(rejected,cancelled,expired)")
+    .lte("booking_date", params.date)
+    .or(`end_date.gte.${params.date},and(end_date.is.null,booking_date.eq.${params.date})`);
 
   const { data: tempRes } = await db
     .from("temporary_reservations")
     .select("start_time, end_time")
     .eq("facility_id", params.facilityId)
-    .eq("booking_date", params.date)
-    .gt("expires_at", new Date().toISOString());
+    .gt("expires_at", new Date().toISOString())
+    .lte("booking_date", params.date)
+    .or(`end_date.gte.${params.date},and(end_date.is.null,booking_date.eq.${params.date})`);
 
   const slots = [
     ...(bookings ?? []),

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, CalendarCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatINR } from "@/lib/utils/formatters";
 import type { Facility, FacilityPackage } from "@/types/database";
@@ -21,6 +21,7 @@ function getLowestPrice(packages?: Pick<FacilityPackage, "price" | "type">[]): n
 export function FacilityCard({ facility }: FacilityCardProps) {
   const startingPrice = getLowestPrice(facility.facility_packages);
   const detailUrl = `/facilities/${facility.slug}`;
+  const bookUrl = `/facilities/${facility.slug}/book`;
 
   return (
     <article className="group rounded-2xl overflow-hidden border border-stone-200 bg-white card-hover shadow-sm">
@@ -57,8 +58,8 @@ export function FacilityCard({ facility }: FacilityCardProps) {
           {facility.short_description ?? facility.description ?? "Premium facility available for booking."}
         </p>
 
-        <div className="flex items-center justify-between">
-          <div>
+        <div>
+          <div className="mb-3">
             {startingPrice ? (
               <p className="text-sm text-stone-500">
                 Starting at{" "}
@@ -70,17 +71,30 @@ export function FacilityCard({ facility }: FacilityCardProps) {
               <p className="text-sm text-stone-400 italic">Pricing on request</p>
             )}
           </div>
-          <Button
-            asChild
-            size="sm"
-            variant="outline"
-            className="border-stone-300 hover:border-amber-700 hover:text-amber-800 hover:bg-amber-50 transition-all gap-1"
-          >
-            <Link href={detailUrl}>
-              View Details
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              asChild
+              size="sm"
+              className="flex-1 text-white font-semibold gap-1 rounded-lg shadow-sm hover:shadow-md hover:scale-[1.02] transition-all"
+              style={{ background: "linear-gradient(135deg, #8b6914, #d4a82e)" }}
+            >
+              <Link href={bookUrl}>
+                <CalendarCheck className="w-3.5 h-3.5" />
+                Book Now
+              </Link>
+            </Button>
+            <Button
+              asChild
+              size="sm"
+              variant="outline"
+              className="flex-1 border-stone-300 hover:border-amber-700 hover:text-amber-800 hover:bg-amber-50 transition-all gap-1 rounded-lg"
+            >
+              <Link href={detailUrl}>
+                View Details
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </Button>
+          </div>
         </div>
       </div>
     </article>

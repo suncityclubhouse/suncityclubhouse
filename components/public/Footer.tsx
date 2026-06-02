@@ -32,6 +32,8 @@ export function Footer() {
                 { href: "/#facilities", label: "Our Facilities" },
                 { href: "/#about", label: "About Us" },
                 { href: "/#contact", label: "Contact" },
+                { href: "/privacy-policy", label: "Privacy Policy" },
+                { href: "/refund-policy", label: "Refund Policy" },
                 { href: "/login", label: "Admin Login" },
               ].map((l) => (
                 <li key={l.href}>

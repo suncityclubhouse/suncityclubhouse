@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
-import { StepDateSelect } from "./StepDateSelect";
 import { StepSlotSelect } from "./StepSlotSelect";
 import { StepBookingForm } from "./StepBookingForm";
 import { StepPayment } from "./StepPayment";
@@ -13,11 +12,10 @@ import type { BookingWizardState } from "@/types";
 import { cn } from "@/lib/utils/formatters";
 
 const STEPS = [
-  { num: 1, label: "Date" },
-  { num: 2, label: "Package" },
-  { num: 3, label: "Details" },
-  { num: 4, label: "Payment" },
-  { num: 5, label: "Done" },
+  { num: 1, label: "Package" },
+  { num: 2, label: "Details" },
+  { num: 3, label: "Payment" },
+  { num: 4, label: "Done" },
 ];
 
 interface BookingWizardProps {
@@ -29,7 +27,7 @@ export function BookingWizard({ facility }: BookingWizardProps) {
   const [state, setState] = useState<BookingWizardState>({
     facilityId: facility.id,
     facilitySlug: facility.slug,
-    selectedDate: null,
+    selectedDate: new Date(),
     selectedPackageId: null,
     slotType: null,
     startTime: null,
@@ -50,19 +48,19 @@ export function BookingWizard({ facility }: BookingWizardProps) {
 
   // Release reservation if user navigates back past step 2
   const handleBack = async () => {
-    if (step === 3 && state.sessionToken) {
+    if (step === 2 && state.sessionToken) {
       await releaseTemporaryReservation(state.sessionToken);
       updateState({ sessionToken: null, reservationExpiresAt: null });
     }
     setStep((s) => Math.max(1, s - 1));
   };
 
-  const goNext = () => setStep((s) => Math.min(5, s + 1));
+  const goNext = () => setStep((s) => Math.min(4, s + 1));
 
   return (
     <div className="space-y-6">
       {/* Step indicator */}
-      {step < 5 && (
+      {step < 4 && (
         <div className="flex items-center justify-center gap-0">
           {STEPS.map((s, i) => (
             <div key={s.num} className="flex items-center">
@@ -104,14 +102,6 @@ export function BookingWizard({ facility }: BookingWizardProps) {
       {/* Step content */}
       <div>
         {step === 1 && (
-          <StepDateSelect
-            facility={facility}
-            state={state}
-            onStateChange={updateState}
-            onNext={goNext}
-          />
-        )}
-        {step === 2 && (
           <StepSlotSelect
             facility={facility}
             state={state}
@@ -120,7 +110,7 @@ export function BookingWizard({ facility }: BookingWizardProps) {
             onBack={handleBack}
           />
         )}
-        {step === 3 && (
+        {step === 2 && (
           <StepBookingForm
             facility={facility}
             state={state}
@@ -132,7 +122,7 @@ export function BookingWizard({ facility }: BookingWizardProps) {
             onBack={handleBack}
           />
         )}
-        {step === 4 && bookingResult && (
+        {step === 3 && bookingResult && (
           <StepPayment
             bookingId={bookingResult.bookingId}
             bookingRef={bookingResult.bookingRef}
@@ -141,7 +131,7 @@ export function BookingWizard({ facility }: BookingWizardProps) {
             onSuccess={goNext}
           />
         )}
-        {step === 5 && bookingResult && (
+        {step === 4 && bookingResult && (
           <StepConfirmation
             bookingRef={bookingResult.bookingRef}
             facilityName={facility.name}

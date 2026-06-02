@@ -16,10 +16,7 @@ export const bookingFormSchema = z
     isResident: z.boolean(),
     houseNumber: z.string().optional(),
     referenceResident: z.string().optional(),
-    eventPurpose: z
-      .string()
-      .min(5, "Please describe the purpose of your event")
-      .max(200, "Purpose description too long"),
+    eventPurpose: z.string().optional(),
     guestCount: z
       .union([z.number().int().min(1).max(1000), z.nan()])
       .transform((v) => (isNaN(v as number) ? undefined : v))

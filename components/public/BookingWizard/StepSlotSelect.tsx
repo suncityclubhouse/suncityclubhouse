@@ -54,7 +54,8 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
 
   const handlePackageSelect = (pkg: FacilityPackage) => {
     setSelected(pkg);
-    if (pkg.type !== "hourly") {
+    const needsSlot = pkg.type === "hourly" || pkg.type === "monthly";
+    if (!needsSlot) {
       setSelectedHourlySlot(null);
       onStateChange({
         selectedPackageId: pkg.id,
@@ -63,11 +64,20 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
         endTime: pkg.end_time ?? null,
         totalAmount: pkg.price,
       });
+    } else {
+      setSelectedHourlySlot(null);
+      onStateChange({
+        selectedPackageId: pkg.id,
+        slotType: pkg.type,
+        startTime: null,
+        endTime: null,
+        totalAmount: pkg.price,
+      });
     }
   };
 
   const handleHourlySlotSelect = (slot: { start: string; end: string }) => {
-    if (!selected || selected.type !== "hourly") return;
+    if (!selected) return;
     setSelectedHourlySlot(slot);
     onStateChange({
       startTime: slot.start,
@@ -76,9 +86,10 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
     });
   };
 
+  const needsTimeSlot = selected?.type === "hourly" || selected?.type === "monthly";
   const canProceed =
     selected &&
-    (selected.type !== "hourly" || selectedHourlySlot !== null);
+    (!needsTimeSlot || selectedHourlySlot !== null);
 
   const handleContinue = async () => {
     if (!selected || !state.selectedDate) return;
@@ -88,8 +99,8 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
         facilityId: facility.id,
         bookingDate: toDateString(state.selectedDate),
         slotType: selected.type,
-        startTime: selected.type === "hourly" ? selectedHourlySlot?.start : selected.start_time ?? undefined,
-        endTime: selected.type === "hourly" ? selectedHourlySlot?.end : selected.end_time ?? undefined,
+        startTime: needsTimeSlot ? selectedHourlySlot?.start : selected.start_time ?? undefined,
+        endTime: needsTimeSlot ? selectedHourlySlot?.end : selected.end_time ?? undefined,
       });
 
       if (!res.success) {
@@ -113,11 +124,29 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
 
   return (
     <div className="space-y-5">
-      <div>
-        <h2 className="text-xl font-serif font-semibold text-stone-900">Select Package</h2>
-        <p className="text-sm text-stone-500 mt-1">
-          {state.selectedDate && formatDisplayDate(state.selectedDate)}
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-serif font-semibold text-stone-900">Select Package</h2>
+          <p className="text-sm text-stone-500 mt-1">
+            {state.selectedDate && formatDisplayDate(state.selectedDate)}
+          </p>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <label htmlFor="booking-date" className="text-sm font-medium text-stone-700">Date:</label>
+          <input
+            id="booking-date"
+            type="date"
+            min={toDateString(new Date())}
+            value={state.selectedDate ? toDateString(state.selectedDate) : toDateString(new Date())}
+            onChange={(e) => {
+              if (e.target.value) {
+                onStateChange({ selectedDate: new Date(e.target.value + "T00:00:00") });
+              }
+            }}
+            className="border border-stone-200 rounded-lg px-3 py-1.5 text-sm text-stone-700 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+          />
+        </div>
       </div>
 
       {packages.length === 0 ? (
@@ -143,44 +172,6 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
                   />
                 ))}
               </div>
-
-              {/* Hourly time slots grid */}
-              {selected?.type === "hourly" && (
-                <div className="mt-4 bg-stone-50 rounded-xl p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <p className="text-sm font-medium text-stone-700">Choose a time slot:</p>
-                    {loadingSlots && <Loader2 className="w-4 h-4 animate-spin text-stone-400" />}
-                  </div>
-                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-                    {hourlySlots.map((slot) => {
-                      const isBooked = bookedSlots.some(
-                        (b) =>
-                          (slot.startTime >= b.start_time && slot.startTime < b.end_time) ||
-                          (slot.endTime > b.start_time && slot.endTime <= b.end_time) ||
-                          (slot.startTime <= b.start_time && slot.endTime >= b.end_time)
-                      );
-                      
-                      return (
-                        <button
-                          key={slot.startTime}
-                          disabled={isBooked}
-                          onClick={() => handleHourlySlotSelect({ start: slot.startTime, end: slot.endTime })}
-                          className={cn(
-                            "py-2 px-2 text-xs rounded-lg border font-medium transition-all text-center",
-                            isBooked
-                              ? "bg-stone-200 border-stone-200 text-stone-400 cursor-not-allowed line-through opacity-70"
-                              : selectedHourlySlot?.start === slot.startTime
-                                ? "bg-amber-600 border-amber-600 text-white"
-                                : "border-stone-200 bg-white hover:border-amber-400 text-stone-700"
-                          )}
-                        >
-                          {slot.label.split("–")[0].trim()}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
             </div>
           )}
 
@@ -189,7 +180,7 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <Package className="w-4 h-4 text-stone-400" />
-                <h3 className="text-sm font-semibold text-stone-700">Day Packages</h3>
+                <h3 className="text-sm font-semibold text-stone-700">Packages</h3>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {otherPackages.map((pkg) => (
@@ -200,6 +191,49 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
                     onSelect={handlePackageSelect}
                   />
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Hourly time slots grid */}
+          {needsTimeSlot && selected && (
+            <div className="mt-4 bg-stone-50 rounded-xl p-4">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-sm font-medium text-stone-700">Choose a time slot:</p>
+                {loadingSlots && <Loader2 className="w-4 h-4 animate-spin text-stone-400" />}
+              </div>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                {hourlySlots.map((slot) => {
+                  const isBooked = bookedSlots.some(
+                    (b) => {
+                      const bStart = b.start_time.slice(0, 5);
+                      const bEnd = b.end_time.slice(0, 5);
+                      return (
+                        (slot.startTime >= bStart && slot.startTime < bEnd) ||
+                        (slot.endTime > bStart && slot.endTime <= bEnd) ||
+                        (slot.startTime <= bStart && slot.endTime >= bEnd)
+                      );
+                    }
+                  );
+                  
+                  return (
+                    <button
+                      key={slot.startTime}
+                      disabled={isBooked}
+                      onClick={() => handleHourlySlotSelect({ start: slot.startTime, end: slot.endTime })}
+                      className={cn(
+                        "py-2 px-2 text-xs rounded-lg border font-medium transition-all text-center",
+                        isBooked
+                          ? "bg-stone-200 border-stone-200 text-stone-400 cursor-not-allowed line-through opacity-70"
+                          : selectedHourlySlot?.start === slot.startTime
+                            ? "bg-amber-600 border-amber-600 text-white"
+                            : "border-stone-200 bg-white hover:border-amber-400 text-stone-700"
+                      )}
+                    >
+                      {slot.label.split("–")[0].trim()}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}

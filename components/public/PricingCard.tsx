@@ -30,11 +30,11 @@ export function PricingCard({ pkg, selected, onSelect }: PricingCardProps) {
       onClick={() => onSelect?.(pkg)}
       onKeyDown={(e) => e.key === "Enter" && onSelect?.(pkg)}
       className={cn(
-        "relative border rounded-xl p-5 transition-all",
-        isClickable && "cursor-pointer",
+        "relative border rounded-xl p-5 transition-all duration-200",
+        isClickable && "cursor-pointer hover:-translate-y-0.5 hover:shadow-md",
         selected
-          ? "border-amber-600 bg-amber-50 shadow-sm"
-          : "border-stone-200 bg-white hover:border-stone-300"
+          ? "border-amber-600 bg-amber-50 shadow-sm ring-1 ring-amber-600"
+          : "border-stone-200 bg-white hover:border-amber-400"
       )}
     >
       {selected && (
