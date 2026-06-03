@@ -5,10 +5,6 @@ import { createClient } from "@/lib/supabase/server";
 import { getReservationByToken } from "@/actions/reservations";
 import { getBookingExpiry } from "@/lib/utils/dates";
 import {
-  sendBookingSubmittedEmail,
-  sendPaymentUploadedEmail,
-  sendAdminNewBookingEmail,
-  sendAdminPaymentUploadedEmail,
   sendBookingConfirmedEmail,
   sendBookingRejectedEmail,
 } from "@/lib/resend";
@@ -135,27 +131,7 @@ export async function createBooking(params: {
 
   const facilityName = facility?.name ?? "Facility";
 
-  // 7. Send notifications (non-blocking)
-  Promise.all([
-    sendBookingSubmittedEmail({
-      to: formValues.customerEmail,
-      name: formValues.customerName,
-      bookingRef,
-      facilityName,
-      bookingDate: params.bookingDate,
-      totalAmount: params.totalAmount,
-      expiresAt: new Date(expiresAt).toLocaleString("en-IN"),
-    }),
-    sendAdminNewBookingEmail({
-      to: ADMIN_EMAIL,
-      bookingRef,
-      customerName: formValues.customerName,
-      facilityName,
-      bookingDate: params.bookingDate,
-      totalAmount: params.totalAmount,
-      bookingId: booking.id,
-    }),
-  ]).catch((err) => console.error("[createBooking] email error:", err));
+  // 7. Emails removed as per user request to save quota
 
   return {
     success: true,
@@ -222,21 +198,7 @@ export async function uploadPaymentProof(params: {
 
   const facilityName = facility?.name ?? "Facility";
 
-  // Send notifications
-  Promise.all([
-    sendPaymentUploadedEmail({
-      to: booking.customer_email,
-      name: booking.customer_name,
-      bookingRef: booking.booking_ref,
-      facilityName,
-    }),
-    sendAdminPaymentUploadedEmail({
-      to: ADMIN_EMAIL,
-      bookingRef: booking.booking_ref,
-      customerName: booking.customer_name,
-      facilityName,
-    }),
-  ]).catch((err) => console.error("[uploadPaymentProof] email error:", err));
+  // Emails removed as per user request to save quota
 
   return { success: true };
 }
@@ -383,7 +345,7 @@ export async function updateBookingStatus(params: {
     if (bookingData) {
       const facilityName = (bookingData as any).facility?.name ?? "Facility";
       if (params.status === "confirmed") {
-        sendBookingConfirmedEmail({
+        await sendBookingConfirmedEmail({
           to: bookingData.customer_email,
           name: bookingData.customer_name,
           bookingRef: bookingData.booking_ref,
@@ -394,7 +356,7 @@ export async function updateBookingStatus(params: {
         }).catch((e) => console.error("[updateBookingStatus] confirm email:", e));
       }
       if (params.status === "rejected") {
-        sendBookingRejectedEmail({
+        await sendBookingRejectedEmail({
           to: bookingData.customer_email,
           name: bookingData.customer_name,
           bookingRef: bookingData.booking_ref,
