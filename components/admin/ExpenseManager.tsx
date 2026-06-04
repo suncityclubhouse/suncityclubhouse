@@ -129,17 +129,34 @@ export function ExpenseManager({ initialExpenses, facilities, recurringTemplates
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+
+  const unloggedTemplates = recurringTemplates.filter((template) => {
+    // Check if there is an expense logged this month matching this template
+    const alreadyLogged = expenses.some((ex) => {
+      if (ex.is_recurring) return false;
+      if (ex.expense_category !== template.expense_category) return false;
+      if (ex.amount !== template.amount) return false;
+      if (ex.facility_id !== template.facility_id) return false;
+
+      const exDate = new Date(ex.expense_date);
+      return exDate.getMonth() === currentMonth && exDate.getFullYear() === currentYear;
+    });
+    return !alreadyLogged;
+  });
+
   return (
     <div className="space-y-8">
       {/* Quick Add Recurring Templates */}
-      {recurringTemplates.length > 0 && !isAdding && (
+      {unloggedTemplates.length > 0 && !isAdding && (
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-5">
           <h2 className="text-sm font-semibold text-amber-900 mb-3 flex items-center gap-2">
             <RotateCcw className="w-4 h-4" />
             Recurring Monthly Expenses
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-            {recurringTemplates.map((template) => (
+            {unloggedTemplates.map((template) => (
               <div key={template.id} className="bg-white border border-amber-200 rounded-lg p-3 flex flex-col justify-between">
                 <div>
                   <p className="font-medium text-stone-900">{template.expense_category}</p>
