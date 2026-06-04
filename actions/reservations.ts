@@ -27,20 +27,22 @@ export async function createTemporaryReservation(params: {
     .delete()
     .lt("expires_at", new Date().toISOString());
 
-  // Check for existing slot conflict with active reservations
-  if (params.startTime && params.endTime) {
-    const { data: conflicts } = await db
-      .from("temporary_reservations")
-      .select("id")
-      .eq("facility_id", params.facilityId)
-      .eq("booking_date", params.bookingDate)
-      .gt("expires_at", new Date().toISOString())
-      .lt("start_time", params.endTime)
-      .gt("end_time", params.startTime);
-
-    if (conflicts && conflicts.length > 0) {
-      return { success: false, error: "This slot is temporarily held by another user. Please try again in a few minutes." };
+  // Check for existing slot conflict with active bookings AND reservations
+  const { data: isAvailable, error: checkError } = await db.rpc(
+    "check_slot_availability",
+    {
+      p_facility_id: params.facilityId,
+      p_booking_date: params.bookingDate,
+      p_start_time: params.startTime ?? null,
+      p_end_time: params.endTime ?? null,
+      p_slot_type: params.slotType,
+      p_exclude_id: null,
+      p_end_date: params.endDate ?? null,
     }
+  );
+
+  if (checkError || !isAvailable) {
+    return { success: false, error: "This slot is no longer available or is temporarily held by another user. Please try again." };
   }
 
   const sessionToken = generateSessionToken();

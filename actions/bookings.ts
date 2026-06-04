@@ -60,6 +60,7 @@ export async function createBooking(params: {
       p_end_time: params.endTime ?? null,
       p_slot_type: params.slotType,
       p_exclude_id: null,
+      p_end_date: params.endDate ?? null,
     }
   );
 
@@ -399,22 +400,43 @@ export async function getFacilityAvailability(params: {
 }): Promise<Record<string, "available" | "partial" | "booked">> {
   const db = createAdminClient();
 
+  const minDate = params.dates[0];
+  const maxDate = params.dates[params.dates.length - 1];
+
   const { data: bookings } = await db
     .from("bookings")
-    .select("booking_date, slot_type, start_time, end_time, status")
+    .select("booking_date, end_date, slot_type, start_time, end_time, status")
     .eq("facility_id", params.facilityId)
-    .in("booking_date", params.dates)
-    .not("status", "in", "(rejected,cancelled,expired)");
+    .not("status", "in", "(rejected,cancelled,expired)")
+    .lte("booking_date", maxDate);
+
+  const { data: tempRes } = await db
+    .from("temporary_reservations")
+    .select("booking_date, end_date, slot_type, start_time, end_time")
+    .eq("facility_id", params.facilityId)
+    .gt("expires_at", new Date().toISOString())
+    .lte("booking_date", maxDate);
+
+  const validBookings = [
+    ...(bookings ?? []),
+    ...(tempRes ?? [])
+  ].filter((b: any) => {
+    const bEnd = b.end_date || b.booking_date;
+    return bEnd >= minDate;
+  });
 
   const result: Record<string, "available" | "partial" | "booked"> = {};
 
   for (const date of params.dates) {
-    const dayBookings = (bookings ?? []).filter((b) => b.booking_date === date);
+    const dayBookings = validBookings.filter((b: any) => {
+      const bEnd = b.end_date || b.booking_date;
+      return date >= b.booking_date && date <= bEnd;
+    });
 
     if (dayBookings.length === 0) {
       result[date] = "available";
     } else if (
-      dayBookings.some((b) =>
+      dayBookings.some((b: any) =>
         ["half_day", "full_day", "monthly", "quarterly"].includes(b.slot_type)
       )
     ) {
@@ -439,24 +461,25 @@ export async function getBookedTimeSlots(params: {
 
   const { data: bookings } = await db
     .from("bookings")
-    .select("start_time, end_time")
+    .select("booking_date, end_date, start_time, end_time")
     .eq("facility_id", params.facilityId)
     .not("status", "in", "(rejected,cancelled,expired)")
-    .lte("booking_date", params.date)
-    .or(`end_date.gte.${params.date},and(end_date.is.null,booking_date.eq.${params.date})`);
+    .lte("booking_date", params.date);
 
   const { data: tempRes } = await db
     .from("temporary_reservations")
-    .select("start_time, end_time")
+    .select("booking_date, end_date, start_time, end_time")
     .eq("facility_id", params.facilityId)
     .gt("expires_at", new Date().toISOString())
-    .lte("booking_date", params.date)
-    .or(`end_date.gte.${params.date},and(end_date.is.null,booking_date.eq.${params.date})`);
+    .lte("booking_date", params.date);
 
   const slots = [
     ...(bookings ?? []),
     ...(tempRes ?? []),
-  ].filter(b => b.start_time && b.end_time) as { start_time: string; end_time: string }[];
+  ].filter((b: any) => {
+    const bEnd = b.end_date || b.booking_date;
+    return params.date >= b.booking_date && params.date <= bEnd && b.start_time && b.end_time;
+  }) as { start_time: string; end_time: string }[];
 
   return slots;
 }
