@@ -11,6 +11,7 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  Receipt,
 } from "lucide-react";
 import { useState } from "react";
 import { adminLogout } from "@/actions/admin";
@@ -22,6 +23,7 @@ const NAV_ITEMS = [
   { href: "/dashboard/facilities", label: "Facilities", icon: Building2 },
   { href: "/dashboard/calendar", label: "Calendar", icon: CalendarDays },
   { href: "/dashboard/revenue", label: "Revenue", icon: TrendingUp },
+  { href: "/dashboard/expenses", label: "Expenses", icon: Receipt },
 ];
 
 interface AdminSidebarProps {

@@ -182,6 +182,19 @@ export interface Notification {
   created_at: string;
 }
 
+export interface Expense {
+  id: string;
+  society_id: string;
+  facility_id: string | null;
+  expense_category: string;
+  amount: number;
+  description: string | null;
+  expense_date: string;
+  is_recurring: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 // ---- Joined/enriched types used in UI ----
 
 export interface FacilityWithMedia extends Facility {

@@ -37,6 +37,51 @@ export default async function FacilityDetailPage({ params }: Props) {
   const activePackages = facility.facility_packages.filter((p) => p.is_active);
   const media = facility.facility_media;
 
+  const bookingCta = (
+    <div className="bg-white border border-stone-200 rounded-2xl p-6 shadow-sm space-y-5">
+      <div>
+        <p className="text-sm text-stone-500 mb-1">Starting from</p>
+        {activePackages.length > 0 ? (
+          <p className="text-3xl font-bold text-stone-900">
+            ₹{Math.min(...activePackages.map((p) => p.price)).toLocaleString("en-IN")}
+          </p>
+        ) : (
+          <p className="text-stone-400 text-sm italic">Contact for pricing</p>
+        )}
+      </div>
+
+      <Separator />
+
+      {/* Quick info */}
+      <div className="space-y-2.5 text-sm text-stone-600">
+        {facility.max_capacity && (
+          <div className="flex items-center gap-2">
+            <Users className="w-4 h-4 text-stone-400" />
+            Up to {facility.max_capacity} guests
+          </div>
+        )}
+        <div className="flex items-center gap-2">
+          <Clock className="w-4 h-4 text-stone-400" />
+          Online booking — no registration needed
+        </div>
+      </div>
+
+      <Button
+        asChild
+        className="w-full py-5 text-base font-semibold text-white rounded-xl"
+        style={{ backgroundColor: "#8b6914" }}
+      >
+        <Link href={`/facilities/${facility.slug}/book`}>
+          Book Now
+        </Link>
+      </Button>
+
+      <p className="text-xs text-center text-stone-400">
+        Slot confirmed only after payment verification
+      </p>
+    </div>
+  );
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       {/* Breadcrumb */}
@@ -50,18 +95,25 @@ export default async function FacilityDetailPage({ params }: Props) {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left column — gallery + details */}
-        <div className="lg:col-span-2 space-y-8">
+        <div className="lg:col-span-2 flex flex-col space-y-8">
           {/* Gallery */}
-          {media.length > 0 ? (
-            <FacilityGallery media={media} facilityName={facility.name} />
-          ) : (
-            <div className="aspect-video bg-stone-100 rounded-2xl flex items-center justify-center">
-              <span className="text-stone-300 text-6xl font-serif">{facility.name.charAt(0)}</span>
-            </div>
-          )}
+          <div className="order-1">
+            {media.length > 0 ? (
+              <FacilityGallery media={media} facilityName={facility.name} />
+            ) : (
+              <div className="aspect-video bg-stone-100 rounded-2xl flex items-center justify-center">
+                <span className="text-stone-300 text-6xl font-serif">{facility.name.charAt(0)}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Mobile CTA */}
+          <div className="order-2 lg:hidden">
+            {bookingCta}
+          </div>
 
           {/* Facility info */}
-          <div>
+          <div className="order-3">
             <div className="flex flex-wrap gap-4 items-start justify-between mb-4">
               <div>
                 <span className="text-xs font-medium uppercase tracking-widest text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full capitalize">
@@ -106,7 +158,7 @@ export default async function FacilityDetailPage({ params }: Props) {
 
           {/* Pricing section */}
           {activePackages.length > 0 && (
-            <div>
+            <div className="order-4">
               <h2 className="font-serif text-2xl font-semibold text-stone-900 mb-5">Pricing & Packages</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {activePackages.map((pkg) => (
@@ -117,49 +169,10 @@ export default async function FacilityDetailPage({ params }: Props) {
           )}
         </div>
 
-        {/* Right column — sticky booking CTA */}
-        <div className="lg:col-span-1">
-          <div className="sticky top-24 bg-white border border-stone-200 rounded-2xl p-6 shadow-sm space-y-5">
-            <div>
-              <p className="text-sm text-stone-500 mb-1">Starting from</p>
-              {activePackages.length > 0 ? (
-                <p className="text-3xl font-bold text-stone-900">
-                  ₹{Math.min(...activePackages.map((p) => p.price)).toLocaleString("en-IN")}
-                </p>
-              ) : (
-                <p className="text-stone-400 text-sm italic">Contact for pricing</p>
-              )}
-            </div>
-
-            <Separator />
-
-            {/* Quick info */}
-            <div className="space-y-2.5 text-sm text-stone-600">
-              {facility.max_capacity && (
-                <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-stone-400" />
-                  Up to {facility.max_capacity} guests
-                </div>
-              )}
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-stone-400" />
-                Online booking — no registration needed
-              </div>
-            </div>
-
-            <Button
-              asChild
-              className="w-full py-5 text-base font-semibold text-white rounded-xl"
-              style={{ backgroundColor: "#8b6914" }}
-            >
-              <Link href={`/facilities/${facility.slug}/book`}>
-                Book This Facility
-              </Link>
-            </Button>
-
-            <p className="text-xs text-center text-stone-400">
-              Slot confirmed only after payment verification
-            </p>
+        {/* Right column — sticky booking CTA (Desktop only) */}
+        <div className="hidden lg:block lg:col-span-1">
+          <div className="sticky top-24">
+            {bookingCta}
           </div>
         </div>
       </div>

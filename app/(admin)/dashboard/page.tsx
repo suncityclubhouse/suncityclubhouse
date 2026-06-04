@@ -103,10 +103,23 @@ async function DashboardContent() {
 
   const pending = (pendingData ?? []) as any[];
 
+  // Fetch Expenses
+  const d = new Date();
+  const startOfMonth = new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split("T")[0];
+  const { data: allExpensesData } = await db.from("expenses").select("amount, expense_date").eq("society_id", process.env.NEXT_PUBLIC_SOCIETY_ID!);
+  
+  const totalExpenses = (allExpensesData ?? []).reduce((acc, ex) => acc + Number(ex.amount), 0);
+  const monthlyExpenses = (allExpensesData ?? [])
+    .filter(ex => ex.expense_date >= startOfMonth)
+    .reduce((acc, ex) => acc + Number(ex.amount), 0);
+
+  const netProfit = kpis.totalRevenue - totalExpenses;
+  const netProfitMonthly = kpis.monthlyRevenue - monthlyExpenses;
+
   return (
     <div className="space-y-6">
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Link href="/dashboard/revenue" className="block col-span-1 group">
           <KPICard
             title="Total Revenue"
@@ -116,6 +129,26 @@ async function DashboardContent() {
             className="h-full group-hover:shadow-md group-hover:border-amber-200 transition-all cursor-pointer"
           />
         </Link>
+        <Link href="/dashboard/expenses" className="block group">
+          <KPICard
+            title="Total Expenses"
+            value={totalExpenses}
+            isCurrency
+            icon={BookOpen}
+            accentColor="#ef4444"
+            className="h-full group-hover:shadow-md group-hover:border-red-200 transition-all cursor-pointer"
+          />
+        </Link>
+        <div className="block group">
+          <KPICard
+            title="Net Profit"
+            value={netProfit}
+            isCurrency
+            icon={TrendingUp}
+            accentColor={netProfit >= 0 ? "#16a34a" : "#ef4444"}
+            className="h-full group-hover:shadow-md transition-all cursor-default"
+          />
+        </div>
         <Link href="/dashboard/revenue" className="block group">
           <KPICard
             title="Monthly Revenue"
