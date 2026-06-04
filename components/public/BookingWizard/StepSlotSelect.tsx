@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { PricingCard } from "@/components/public/PricingCard";
 import { createTemporaryReservation } from "@/actions/reservations";
 import { getBookedTimeSlots } from "@/actions/bookings";
-import { formatDisplayDate, toDateString } from "@/lib/utils/dates";
+import { formatDisplayDate, toDateString, calculateEndDate } from "@/lib/utils/dates";
 import { generateHourlySlots } from "@/lib/utils/slots";
 import { cn, formatINR } from "@/lib/utils/formatters";
 import { Clock, Package, Loader2 } from "lucide-react";
@@ -55,6 +55,9 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
   const handlePackageSelect = (pkg: FacilityPackage) => {
     setSelected(pkg);
     const needsSlot = pkg.type === "hourly" || pkg.type === "monthly";
+    const endDate = state.selectedDate
+      ? calculateEndDate(state.selectedDate, pkg.type)
+      : null;
     if (!needsSlot) {
       setSelectedHourlySlot(null);
       onStateChange({
@@ -62,6 +65,7 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
         slotType: pkg.type,
         startTime: pkg.start_time ?? null,
         endTime: pkg.end_time ?? null,
+        endDate,
         totalAmount: pkg.price,
       });
     } else {
@@ -71,6 +75,7 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
         slotType: pkg.type,
         startTime: null,
         endTime: null,
+        endDate,
         totalAmount: pkg.price,
       });
     }
@@ -95,12 +100,14 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
     if (!selected || !state.selectedDate) return;
     setLoading(true);
     try {
+      const endDate = calculateEndDate(state.selectedDate, selected.type) ?? undefined;
       const res = await createTemporaryReservation({
         facilityId: facility.id,
         bookingDate: toDateString(state.selectedDate),
         slotType: selected.type,
         startTime: needsTimeSlot ? selectedHourlySlot?.start : selected.start_time ?? undefined,
         endTime: needsTimeSlot ? selectedHourlySlot?.end : selected.end_time ?? undefined,
+        endDate,
       });
 
       if (!res.success) {
@@ -113,6 +120,7 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
         reservationExpiresAt: res.data!.expiresAt,
         selectedPackageId: selected.id,
         slotType: selected.type,
+        endDate: endDate ?? null,
       });
       onNext();
     } catch {

@@ -52,6 +52,7 @@ export function StepBookingForm({ facility, state, onStateChange, onNext, onBack
         bookingDate: toDateString(state.selectedDate),
         startTime: state.startTime ?? undefined,
         endTime: state.endTime ?? undefined,
+        endDate: state.endDate ?? undefined,
         baseAmount: state.totalAmount,
         totalAmount: state.totalAmount,
         formValues: {

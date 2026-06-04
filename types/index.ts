@@ -12,6 +12,7 @@ export interface BookingWizardState {
   slotType: SlotType | null;
   startTime: string | null;
   endTime: string | null;
+  endDate: string | null;          // For monthly/quarterly: "yyyy-MM-dd"
   totalAmount: number;
   sessionToken: string | null;    // from temporary reservation
   reservationExpiresAt: string | null;

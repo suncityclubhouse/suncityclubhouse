@@ -3,7 +3,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { getReservationByToken } from "@/actions/reservations";
-import { getBookingExpiry } from "@/lib/utils/dates";
+import { getBookingExpiry, calculateEndDate } from "@/lib/utils/dates";
 import {
   sendBookingConfirmedEmail,
   sendBookingRejectedEmail,
@@ -86,7 +86,10 @@ export async function createBooking(params: {
   const expiresAt = getBookingExpiry();
   const { formValues } = params;
 
-  // 4. Insert booking
+  // 4. Compute end_date for multi-day types (server-side safety net)
+  const endDate = params.endDate ?? calculateEndDate(params.bookingDate, params.slotType);
+
+  // 5. Insert booking
   const { data: booking, error: insertError } = await db
     .from("bookings")
     .insert({
@@ -105,7 +108,7 @@ export async function createBooking(params: {
       booking_date: params.bookingDate,
       start_time: params.startTime ?? null,
       end_time: params.endTime ?? null,
-      end_date: params.endDate ?? null,
+      end_date: endDate,
       slot_type: params.slotType,
       base_amount: params.baseAmount,
       discount_amount: 0,

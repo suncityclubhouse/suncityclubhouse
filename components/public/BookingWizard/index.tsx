@@ -32,6 +32,7 @@ export function BookingWizard({ facility }: BookingWizardProps) {
     slotType: null,
     startTime: null,
     endTime: null,
+    endDate: null,
     totalAmount: 0,
     sessionToken: null,
     reservationExpiresAt: null,
