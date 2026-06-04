@@ -39,4 +39,4 @@ create policy "Admins can delete expenses of their society"
 create trigger set_expenses_updated_at
     before update on public.expenses
     for each row
-    execute function public.handle_updated_at();
+    execute function trigger_set_updated_at();
