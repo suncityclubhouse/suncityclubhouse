@@ -6,8 +6,11 @@ import { useState, useEffect } from "react";
 import { Menu, X, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getWhatsAppUrl } from "@/lib/utils/formatters";
+import { motion, AnimatePresence } from "framer-motion";
 
 const WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "";
+
+const smoothEase = [0.16, 1, 0.3, 1] as const;
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
@@ -31,15 +34,11 @@ export function Navbar() {
     setOpen(false);
   }
 
-  const navLinks = [
-    { href: "/", label: "Home", icon: Home },
-    { href: "/#facilities", label: "Facilities", scroll: true },
-    { href: "/#about", label: "About", scroll: "about" },
-    { href: "/#contact", label: "Contact", scroll: "contact" },
-  ];
-
   return (
-    <header
+    <motion.header
+      initial={{ y: -20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.5, ease: smoothEase }}
       className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
         scrolled
           ? "bg-white/97 backdrop-blur-md shadow-md border-b border-stone-100"
@@ -84,7 +83,29 @@ export function Navbar() {
               onClick={() => setOpen(!open)}
               aria-label="Toggle menu"
             >
-              {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              <AnimatePresence mode="wait" initial={false}>
+                {open ? (
+                  <motion.div
+                    key="close"
+                    initial={{ rotate: -90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: 90, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <X className="w-5 h-5" />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="menu"
+                    initial={{ rotate: 90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: -90, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Menu className="w-5 h-5" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </button>
           </div>
 
@@ -135,51 +156,76 @@ export function Navbar() {
         </div>
       </div>
 
-      {/* Mobile / Tablet drawer — animated */}
-      <div
-        className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${
-          open ? "max-h-80 opacity-100" : "max-h-0 opacity-0"
-        }`}
-      >
-        <div className="border-t border-stone-100 bg-white px-4 py-4 space-y-1">
-          <Link
-            href="/"
-            onClick={() => setOpen(false)}
-            className="flex items-center gap-2 text-sm font-medium text-stone-700 hover:text-amber-700 py-2.5 border-b border-stone-50 transition-colors"
+      {/* Mobile / Tablet drawer — Framer Motion animated */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: smoothEase }}
+            className="lg:hidden overflow-hidden"
           >
-            <Home className="w-4 h-4" />
-            Home
-          </Link>
-          {["facilities", "about", "contact"].map((id) => (
-            <a
-              key={id}
-              href={`/#${id}`}
-              onClick={(e) => {
-                const el = document.getElementById(id);
-                if (el) {
-                  e.preventDefault();
-                  window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 72, behavior: "smooth" });
-                }
-                setOpen(false);
-              }}
-              className="block capitalize text-sm font-medium text-stone-700 hover:text-amber-700 py-2.5 border-b border-stone-50 last:border-0 transition-colors cursor-pointer"
-            >
-              {id.charAt(0).toUpperCase() + id.slice(1)}
-            </a>
-          ))}
-          <div className="pt-2">
-            <Button
-              asChild
-              className="w-full text-white font-semibold"
-              style={{ background: "linear-gradient(135deg, #8b6914, #d4a82e)" }}
-            >
-              <Link href="/#facilities" onClick={() => setOpen(false)}>
-                Book a Facility
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </div>
-    </header>
+            <div className="border-t border-stone-100 bg-white px-4 py-4 space-y-1">
+              {[
+                { id: "home", label: "Home", href: "/", isLink: true },
+                { id: "facilities", label: "Facilities" },
+                { id: "about", label: "About" },
+                { id: "contact", label: "Contact" },
+              ].map((item, i) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, x: -16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: 0.05 + i * 0.06, ease: smoothEase }}
+                >
+                  {item.isLink ? (
+                    <Link
+                      href={item.href!}
+                      onClick={() => setOpen(false)}
+                      className="flex items-center gap-2 text-sm font-medium text-stone-700 hover:text-amber-700 py-2.5 border-b border-stone-50 transition-colors"
+                    >
+                      <Home className="w-4 h-4" />
+                      {item.label}
+                    </Link>
+                  ) : (
+                    <a
+                      href={`/#${item.id}`}
+                      onClick={(e) => {
+                        const el = document.getElementById(item.id);
+                        if (el) {
+                          e.preventDefault();
+                          window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 72, behavior: "smooth" });
+                        }
+                        setOpen(false);
+                      }}
+                      className="block text-sm font-medium text-stone-700 hover:text-amber-700 py-2.5 border-b border-stone-50 last:border-0 transition-colors cursor-pointer"
+                    >
+                      {item.label}
+                    </a>
+                  )}
+                </motion.div>
+              ))}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.3, ease: smoothEase }}
+                className="pt-2"
+              >
+                <Button
+                  asChild
+                  className="w-full text-white font-semibold"
+                  style={{ background: "linear-gradient(135deg, #8b6914, #d4a82e)" }}
+                >
+                  <Link href="/#facilities" onClick={() => setOpen(false)}>
+                    Book a Facility
+                  </Link>
+                </Button>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.header>
   );
 }

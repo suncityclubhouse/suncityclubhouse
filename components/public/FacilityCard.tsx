@@ -6,11 +6,13 @@ import { ArrowRight, CalendarCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatINR } from "@/lib/utils/formatters";
 import type { Facility, FacilityPackage } from "@/types/database";
+import { motion } from "framer-motion";
 
 interface FacilityCardProps {
   facility: Facility & {
     facility_packages?: Pick<FacilityPackage, "price" | "type">[];
   };
+  index?: number;
 }
 
 function getLowestPrice(packages?: Pick<FacilityPackage, "price" | "type">[]): number | null {
@@ -18,13 +20,22 @@ function getLowestPrice(packages?: Pick<FacilityPackage, "price" | "type">[]): n
   return Math.min(...packages.map((p) => p.price));
 }
 
-export function FacilityCard({ facility }: FacilityCardProps) {
+const smoothEase = [0.16, 1, 0.3, 1] as const;
+
+export function FacilityCard({ facility, index = 0 }: FacilityCardProps) {
   const startingPrice = getLowestPrice(facility.facility_packages);
   const detailUrl = `/facilities/${facility.slug}`;
   const bookUrl = `/facilities/${facility.slug}/book`;
 
   return (
-    <article className="group rounded-2xl overflow-hidden border border-stone-200 bg-white card-hover shadow-sm">
+    <motion.article
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.15 }}
+      transition={{ duration: 0.55, ease: smoothEase, delay: index * 0.1 }}
+      whileHover={{ y: -6, transition: { duration: 0.25 } }}
+      className="group rounded-2xl overflow-hidden border border-stone-200 bg-white shadow-sm hover:shadow-xl transition-shadow duration-300"
+    >
       {/* Thumbnail */}
       <div className="relative h-52 overflow-hidden bg-stone-100">
         {facility.thumbnail_url ? (
@@ -97,6 +108,6 @@ export function FacilityCard({ facility }: FacilityCardProps) {
           </div>
         </div>
       </div>
-    </article>
+    </motion.article>
   );
 }

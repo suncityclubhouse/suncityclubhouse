@@ -39,6 +39,7 @@ export function Footer() {
                 <li key={l.href}>
                   <Link
                     href={l.href}
+                    prefetch={l.href === "/login" ? true : undefined}
                     className="text-sm text-stone-400 hover:text-white transition-colors"
                   >
                     {l.label}

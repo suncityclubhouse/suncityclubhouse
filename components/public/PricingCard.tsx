@@ -5,6 +5,7 @@ import { formatINR } from "@/lib/utils/formatters";
 import { getSlotTypeLabel } from "@/lib/utils/slots";
 import type { FacilityPackage } from "@/types/database";
 import { cn } from "@/lib/utils/formatters";
+import { motion } from "framer-motion";
 
 interface PricingCardProps {
   pkg: FacilityPackage;
@@ -24,14 +25,17 @@ export function PricingCard({ pkg, selected, onSelect }: PricingCardProps) {
       : null;
 
   return (
-    <div
+    <motion.div
       role={isClickable ? "button" : undefined}
       tabIndex={isClickable ? 0 : undefined}
       onClick={() => onSelect?.(pkg)}
       onKeyDown={(e) => e.key === "Enter" && onSelect?.(pkg)}
+      whileHover={isClickable ? { scale: 1.02, y: -2 } : undefined}
+      whileTap={isClickable ? { scale: 0.98 } : undefined}
+      transition={{ duration: 0.2 }}
       className={cn(
         "group relative border rounded-xl p-5 transition-all duration-200",
-        isClickable && "cursor-pointer hover:-translate-y-0.5 hover:shadow-md",
+        isClickable && "cursor-pointer hover:shadow-md",
         selected
           ? "border-amber-600 bg-amber-50 shadow-sm ring-1 ring-amber-600"
           : "border-stone-200 bg-white hover:border-amber-400"
@@ -78,6 +82,6 @@ export function PricingCard({ pkg, selected, onSelect }: PricingCardProps) {
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
