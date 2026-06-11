@@ -79,8 +79,8 @@ export function StepDateSelect({ facility, state, onStateChange, onNext }: StepD
           {/* Injected styles scoped to our calendar wrapper */}
           <style>{`
             .sc-cal .rdp-root {
-              --rdp-accent-color: #8b6914;
-              --rdp-accent-background-color: #f9edcc;
+              --rdp-accent-color: #1d4ed8;
+              --rdp-accent-background-color: #dbeafe;
               --rdp-day-width: 40px;
               --rdp-day-height: 40px;
               font-family: inherit;
@@ -90,37 +90,37 @@ export function StepDateSelect({ facility, state, onStateChange, onNext }: StepD
               font-family: 'Playfair Display', serif;
               font-size: 1rem;
               font-weight: 600;
-              color: #1c1917;
+              color: #0f172a;
               margin-bottom: 8px;
             }
             .sc-cal .rdp-weekday {
               font-size: 0.7rem;
               font-weight: 600;
-              color: #a8a29e;
+              color: #94a3b8;
               text-transform: uppercase;
             }
             .sc-cal .rdp-day button {
               border-radius: 8px;
               font-size: 0.875rem;
               font-weight: 500;
-              color: #44403c;
+              color: #334155;
               width: 100%;
               height: 100%;
               transition: background 0.15s, color 0.15s;
             }
             .sc-cal .rdp-day button:hover:not(:disabled) {
-              background: #f9edcc;
-              color: #8b6914;
+              background: #dbeafe;
+              color: #1d4ed8;
             }
             .sc-cal .rdp-selected button {
-              background: #8b6914 !important;
+              background: #1d4ed8 !important;
               color: white !important;
               font-weight: 700;
-              box-shadow: 0 2px 8px rgba(139,105,20,0.3);
+              box-shadow: 0 2px 8px rgba(29,78,216,0.3);
             }
             .sc-cal .rdp-today button {
-              border: 2px solid #d4a82e;
-              color: #8b6914;
+              border: 2px solid #3b82f6;
+              color: #1d4ed8;
               font-weight: 700;
             }
             .sc-cal .rdp-disabled button {
@@ -130,12 +130,12 @@ export function StepDateSelect({ facility, state, onStateChange, onNext }: StepD
             .sc-cal .rdp-nav button {
               border-radius: 8px;
               padding: 4px 8px;
-              color: #57534e;
-              border: 1px solid #e7e5e4;
+              color: #475569;
+              border: 1px solid #e2e8f0;
               background: white;
             }
             .sc-cal .rdp-nav button:hover {
-              background: #f5f5f4;
+              background: #f1f5f9;
             }
             /* Availability dots */
             .sc-cal .day-available button::after,
@@ -206,10 +206,10 @@ export function StepDateSelect({ facility, state, onStateChange, onNext }: StepD
 
           {/* Selected date */}
           {state.selectedDate ? (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
               <div className="flex items-center gap-2 mb-2">
-                <CheckCircle2 className="w-4 h-4 text-amber-600" />
-                <p className="text-xs font-semibold text-amber-700 uppercase tracking-wider">Selected Date</p>
+                <CheckCircle2 className="w-4 h-4 text-blue-600" />
+                <p className="text-xs font-semibold text-blue-700 uppercase tracking-wider">Selected Date</p>
               </div>
               <p className="text-sm font-medium text-stone-600">{format(state.selectedDate, "EEEE")}</p>
               <p className="text-lg font-bold text-stone-900">{format(state.selectedDate, "d MMMM yyyy")}</p>
@@ -231,7 +231,7 @@ export function StepDateSelect({ facility, state, onStateChange, onNext }: StepD
           onClick={onNext}
           disabled={!state.selectedDate}
           className="text-white px-6 disabled:opacity-40"
-          style={{ backgroundColor: "#8b6914" }}
+          style={{ background: "linear-gradient(135deg, #1d4ed8, #3b82f6)" }}
         >
           Continue to Package Selection →
         </Button>

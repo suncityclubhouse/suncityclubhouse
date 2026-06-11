@@ -37,8 +37,8 @@ export function PricingCard({ pkg, selected, onSelect }: PricingCardProps) {
         "group relative border rounded-xl p-5 transition-all duration-200",
         isClickable && "cursor-pointer hover:shadow-md",
         selected
-          ? "border-amber-600 bg-amber-50 shadow-sm ring-1 ring-amber-600"
-          : "border-stone-200 bg-white hover:border-amber-400"
+          ? "border-blue-600 bg-blue-50 shadow-sm ring-1 ring-blue-600"
+          : "border-slate-200 bg-white hover:border-blue-400"
       )}
     >
       <div className="flex gap-3">
@@ -48,8 +48,8 @@ export function PricingCard({ pkg, selected, onSelect }: PricingCardProps) {
               className={cn(
                 "w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200",
                 selected
-                  ? "border-amber-600 bg-amber-600"
-                  : "border-stone-300 bg-white group-hover:border-amber-400"
+                  ? "border-blue-600 bg-blue-600"
+                  : "border-slate-300 bg-white group-hover:border-blue-400"
               )}
             >
               {selected && <Check className="w-3.5 h-3.5 text-white stroke-[3]" />}
@@ -60,25 +60,25 @@ export function PricingCard({ pkg, selected, onSelect }: PricingCardProps) {
         <div className="flex-grow">
           <div className="flex items-start justify-between gap-2 mb-2">
             <div>
-              <h4 className="font-semibold text-stone-900">{pkg.name}</h4>
-              <span className="text-xs text-stone-500 capitalize bg-stone-100 px-2 py-0.5 rounded-full mt-1 inline-block">
+              <h4 className="font-semibold text-slate-900">{pkg.name}</h4>
+              <span className="text-xs text-slate-500 capitalize bg-slate-100 px-2 py-0.5 rounded-full mt-1 inline-block">
                 {typeLabel}
               </span>
             </div>
             <div className="text-right flex-shrink-0">
-              <p className="text-xl font-bold text-stone-900">{formatINR(pkg.price)}</p>
+              <p className="text-xl font-bold text-slate-900">{formatINR(pkg.price)}</p>
               {pkg.type === "hourly" && (
-                <p className="text-xs text-stone-400">/hour</p>
+                <p className="text-xs text-slate-400">/hour</p>
               )}
             </div>
           </div>
 
           {timingLabel && (
-            <p className="text-xs text-stone-500 mt-2">{timingLabel}</p>
+            <p className="text-xs text-slate-500 mt-2">{timingLabel}</p>
           )}
 
           {pkg.description && (
-            <p className="text-sm text-stone-500 mt-2 leading-relaxed">{pkg.description}</p>
+            <p className="text-sm text-slate-500 mt-2 leading-relaxed">{pkg.description}</p>
           )}
         </div>
       </div>

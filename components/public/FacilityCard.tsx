@@ -34,10 +34,10 @@ export function FacilityCard({ facility, index = 0 }: FacilityCardProps) {
       viewport={{ once: true, amount: 0.15 }}
       transition={{ duration: 0.55, ease: smoothEase, delay: index * 0.1 }}
       whileHover={{ y: -6, transition: { duration: 0.25 } }}
-      className="group rounded-2xl overflow-hidden border border-stone-200 bg-white shadow-sm hover:shadow-xl transition-shadow duration-300"
+      className="group rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-sm hover:shadow-xl transition-shadow duration-300"
     >
       {/* Thumbnail */}
-      <div className="relative h-52 overflow-hidden bg-stone-100">
+      <div className="relative h-52 overflow-hidden bg-slate-100">
         {facility.thumbnail_url ? (
           <Image
             src={facility.thumbnail_url}
@@ -47,39 +47,39 @@ export function FacilityCard({ facility, index = 0 }: FacilityCardProps) {
             className="object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-stone-100">
-            <span className="text-stone-300 text-4xl font-serif">
+          <div className="w-full h-full flex items-center justify-center bg-slate-100">
+            <span className="text-slate-300 text-4xl font-serif">
               {facility.name.charAt(0)}
             </span>
           </div>
         )}
 
         {/* Category tag */}
-        <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-xs font-medium text-stone-600 px-2.5 py-1 rounded-full capitalize">
+        <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-xs font-medium text-slate-600 px-2.5 py-1 rounded-full capitalize">
           {facility.category}
         </span>
       </div>
 
       {/* Content */}
       <div className="p-5">
-        <h3 className="font-serif text-lg font-semibold text-stone-900 mb-1 group-hover:text-amber-800 transition-colors">
+        <h3 className="font-serif text-lg font-semibold text-slate-900 mb-1 group-hover:text-blue-700 transition-colors">
           {facility.name}
         </h3>
-        <p className="text-sm text-stone-500 line-clamp-2 mb-4 leading-relaxed">
+        <p className="text-sm text-slate-500 line-clamp-2 mb-4 leading-relaxed">
           {facility.short_description ?? facility.description ?? "Premium facility available for booking."}
         </p>
 
         <div>
           <div className="mb-3">
             {startingPrice ? (
-              <p className="text-sm text-stone-500">
+              <p className="text-sm text-slate-500">
                 Starting at{" "}
-                <span className="text-base font-semibold text-stone-900">
+                <span className="text-base font-semibold text-slate-900">
                   {formatINR(startingPrice)}
                 </span>
               </p>
             ) : (
-              <p className="text-sm text-stone-400 italic">Pricing on request</p>
+              <p className="text-sm text-slate-400 italic">Pricing on request</p>
             )}
           </div>
           <div className="flex items-center gap-2">
@@ -87,7 +87,7 @@ export function FacilityCard({ facility, index = 0 }: FacilityCardProps) {
               asChild
               size="sm"
               className="flex-1 text-white font-semibold gap-1 rounded-lg shadow-sm hover:shadow-md hover:scale-[1.02] transition-all"
-              style={{ background: "linear-gradient(135deg, #8b6914, #d4a82e)" }}
+              style={{ background: "linear-gradient(135deg, #1d4ed8, #3b82f6)" }}
             >
               <Link href={bookUrl}>
                 <CalendarCheck className="w-3.5 h-3.5" />
@@ -98,7 +98,7 @@ export function FacilityCard({ facility, index = 0 }: FacilityCardProps) {
               asChild
               size="sm"
               variant="outline"
-              className="flex-1 border-stone-300 hover:border-amber-700 hover:text-amber-800 hover:bg-amber-50 transition-all gap-1 rounded-lg"
+              className="flex-1 border-slate-300 hover:border-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-all gap-1 rounded-lg"
             >
               <Link href={detailUrl}>
                 View Details

@@ -32,7 +32,7 @@ export function FacilityGallery({ media, facilityName }: FacilityGalleryProps) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: smoothEase }}
-        className="relative rounded-2xl overflow-hidden bg-stone-100 aspect-video"
+        className="relative rounded-2xl overflow-hidden bg-slate-100 aspect-video"
       >
         <AnimatePresence mode="wait">
           <motion.div
@@ -80,14 +80,14 @@ export function FacilityGallery({ media, facilityName }: FacilityGalleryProps) {
               className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white shadow-md p-2 rounded-full transition-all hover:scale-110 z-10"
               aria-label="Previous"
             >
-              <ChevronLeft className="w-4 h-4 text-stone-700" />
+              <ChevronLeft className="w-4 h-4 text-slate-700" />
             </button>
             <button
               onClick={next}
               className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white shadow-md p-2 rounded-full transition-all hover:scale-110 z-10"
               aria-label="Next"
             >
-              <ChevronRight className="w-4 h-4 text-stone-700" />
+              <ChevronRight className="w-4 h-4 text-slate-700" />
             </button>
           </>
         )}
@@ -113,12 +113,12 @@ export function FacilityGallery({ media, facilityName }: FacilityGalleryProps) {
               className={cn(
                 "relative flex-shrink-0 w-20 h-14 rounded-lg overflow-hidden border-2 transition-all",
                 i === activeIndex
-                  ? "border-amber-600 opacity-100 scale-105"
+                  ? "border-blue-600 opacity-100 scale-105"
                   : "border-transparent opacity-60 hover:opacity-90"
               )}
             >
               {item.media_type === "video" ? (
-                <div className="w-full h-full bg-stone-800 flex items-center justify-center">
+                <div className="w-full h-full bg-slate-800 flex items-center justify-center">
                   <Play className="w-4 h-4 text-white" />
                 </div>
               ) : (

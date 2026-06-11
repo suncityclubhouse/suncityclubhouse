@@ -18,7 +18,7 @@ export function HeroSection() {
         style={{ backgroundImage: "url('/bg_img.jpg')" }}
       />
       {/* Dark overlay for text readability and premium feel */}
-      <div className="absolute inset-0 z-0 bg-black/30 bg-gradient-to-t from-stone-900/60 via-black/20 to-black/40" />
+      <div className="absolute inset-0 z-0 bg-black/30 bg-gradient-to-t from-slate-900/60 via-black/20 to-black/40" />
 
       {/* Decorative floating rings */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
@@ -29,7 +29,7 @@ export function HeroSection() {
           <div className="absolute top-1/3 left-1/3 w-64 h-64 rounded-full border border-white/10" />
         </FloatingElement>
         <FloatingElement y={15} duration={7} delay={0.5}>
-          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full border border-amber-600/20" />
+          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full border border-blue-400/20" />
         </FloatingElement>
       </div>
 
@@ -39,9 +39,9 @@ export function HeroSection() {
           initial={{ opacity: 0, y: 20, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.7, ease: smoothEase, delay: 0.2 }}
-          className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 text-amber-300 text-xs font-medium px-4 py-1.5 rounded-full mb-6"
+          className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 text-blue-200 text-xs font-medium px-4 py-1.5 rounded-full mb-6"
         >
-          <Star className="w-3 h-3 fill-amber-300" />
+          <Star className="w-3 h-3 fill-blue-200" />
           A Mahavir Group Development — Experience. Quality. Trust.
         </motion.div>
 
@@ -55,7 +55,7 @@ export function HeroSection() {
           Suncity{" "}
           <span
             style={{
-              background: "linear-gradient(135deg, #d4a82e, #f9edcc, #d4a82e)",
+              background: "linear-gradient(135deg, #60a5fa, #bfdbfe, #60a5fa)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
@@ -69,7 +69,7 @@ export function HeroSection() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: smoothEase, delay: 0.6 }}
-          className="text-base sm:text-lg md:text-xl text-stone-300 max-w-2xl mx-auto leading-relaxed mb-10"
+          className="text-base sm:text-lg md:text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed mb-10"
         >
           Book premium facilities for your events, sports, and celebrations.
           Seamless online booking — no registration required.
@@ -84,8 +84,8 @@ export function HeroSection() {
           <Button
             asChild
             size="lg"
-            className="text-white font-semibold px-8 py-6 text-base rounded-xl shadow-lg hover:shadow-amber-900/30 hover:scale-[1.02] transition-all"
-            style={{ background: "linear-gradient(135deg, #8b6914, #d4a82e)" }}
+            className="text-white font-semibold px-8 py-6 text-base rounded-xl shadow-lg hover:shadow-blue-900/30 hover:scale-[1.02] transition-all"
+            style={{ background: "linear-gradient(135deg, #1d4ed8, #3b82f6)" }}
           >
             <Link href="#facilities">
               Browse Facilities
@@ -121,10 +121,10 @@ export function HeroSection() {
               transition={{ duration: 0.6, ease: smoothEase, delay: 1.2 + i * 0.15 }}
               className="group"
             >
-              <p className="text-3xl font-bold text-white group-hover:text-amber-300 transition-colors">
+              <p className="text-3xl font-bold text-white group-hover:text-blue-300 transition-colors">
                 {s.num}
               </p>
-              <p className="text-sm text-stone-400 mt-1">{s.label}</p>
+              <p className="text-sm text-slate-400 mt-1">{s.label}</p>
             </motion.div>
           ))}
         </motion.div>

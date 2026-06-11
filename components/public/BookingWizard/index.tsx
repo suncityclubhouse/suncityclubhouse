@@ -70,10 +70,10 @@ export function BookingWizard({ facility }: BookingWizardProps) {
                   className={cn(
                     "w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold border-2 transition-all",
                     step === s.num
-                      ? "border-amber-600 bg-amber-600 text-white"
+                      ? "border-blue-600 bg-blue-600 text-white"
                       : step > s.num
-                      ? "border-amber-600 bg-amber-50 text-amber-700"
-                      : "border-stone-300 bg-white text-stone-400"
+                      ? "border-blue-600 bg-blue-50 text-blue-700"
+                      : "border-slate-300 bg-white text-slate-400"
                   )}
                 >
                   {step > s.num ? "✓" : s.num}
@@ -81,7 +81,7 @@ export function BookingWizard({ facility }: BookingWizardProps) {
                 <span
                   className={cn(
                     "text-xs mt-1 font-medium hidden sm:block",
-                    step === s.num ? "text-amber-700" : "text-stone-400"
+                    step === s.num ? "text-blue-700" : "text-slate-400"
                   )}
                 >
                   {s.label}
@@ -91,7 +91,7 @@ export function BookingWizard({ facility }: BookingWizardProps) {
                 <div
                   className={cn(
                     "h-0.5 w-10 sm:w-16 mx-1 transition-all",
-                    step > s.num ? "bg-amber-600" : "bg-stone-200"
+                    step > s.num ? "bg-blue-600" : "bg-slate-200"
                   )}
                 />
               )}

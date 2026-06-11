@@ -152,7 +152,7 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
                 onStateChange({ selectedDate: new Date(e.target.value + "T00:00:00") });
               }
             }}
-            className="border border-stone-200 rounded-lg px-3 py-1.5 text-sm text-stone-700 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+            className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
       </div>
@@ -232,10 +232,10 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
                       className={cn(
                         "py-2 px-2 text-xs rounded-lg border font-medium transition-all text-center",
                         isBooked
-                          ? "bg-stone-200 border-stone-200 text-stone-400 cursor-not-allowed line-through opacity-70"
+                          ? "bg-slate-200 border-slate-200 text-slate-400 cursor-not-allowed line-through opacity-70"
                           : selectedHourlySlot?.start === slot.startTime
-                            ? "bg-amber-600 border-amber-600 text-white"
-                            : "border-stone-200 bg-white hover:border-amber-400 text-stone-700"
+                            ? "bg-blue-600 border-blue-600 text-white"
+                            : "border-slate-200 bg-white hover:border-blue-400 text-slate-700"
                       )}
                     >
                       {slot.label.split("–")[0].trim()}
@@ -250,7 +250,7 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
 
       {/* Summary */}
       {canProceed && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between">
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-center justify-between">
           <div>
             <p className="text-sm text-stone-600">Total Amount</p>
             <p className="text-xl font-bold text-stone-900">{formatINR(state.totalAmount)}</p>
@@ -263,7 +263,7 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
         <Button
           onClick={handleContinue}
           disabled={!canProceed || loading}
-          style={{ backgroundColor: "#8b6914" }}
+          style={{ background: "linear-gradient(135deg, #1d4ed8, #3b82f6)" }}
           className="text-white hover:opacity-90 disabled:opacity-40"
         >
           {loading ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Reserving…</> : "Continue →"}

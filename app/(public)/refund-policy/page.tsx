@@ -55,7 +55,7 @@ export default function RefundPolicyPage() {
         <p className="text-stone-500 max-w-xl mx-auto text-base md:text-lg">
           Understand our cancellation terms and refund process.
         </p>
-        <div className="divider-gold w-24 mx-auto mt-6" />
+        <div className="divider-blue w-24 mx-auto mt-6" />
       </section>
 
       {/* Policy content */}

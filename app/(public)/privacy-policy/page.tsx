@@ -53,7 +53,7 @@ export default function PrivacyPolicyPage() {
         <p className="text-stone-500 max-w-xl mx-auto text-base md:text-lg">
           Your trust is important to us. Learn how we handle your data.
         </p>
-        <div className="divider-gold w-24 mx-auto mt-6" />
+        <div className="divider-blue w-24 mx-auto mt-6" />
       </section>
 
       {/* Policy content */}

@@ -141,12 +141,12 @@ export function StepPayment({ bookingId, bookingRef, expiresAt, totalAmount, onS
       </div>
 
       {/* Timer */}
-      <div className={`rounded-xl p-4 border ${isExpired ? "bg-red-50 border-red-200" : "bg-amber-50 border-amber-200"}`}>
+      <div className={`rounded-xl p-4 border ${isExpired ? "bg-red-50 border-red-200" : "bg-blue-50 border-blue-200"}`}>
         <div className="flex items-center justify-between mb-2">
-          <span className={`text-sm font-medium ${isExpired ? "text-red-700" : "text-amber-700"}`}>
+          <span className={`text-sm font-medium ${isExpired ? "text-red-700" : "text-blue-700"}`}>
             {isExpired ? "⚠️ Booking Expired" : "⏱ Time Remaining to Pay"}
           </span>
-          <span className={`font-mono text-xl font-bold ${isExpired ? "text-red-700" : secondsLeft < 120 ? "text-red-600" : "text-amber-700"}`}>
+          <span className={`font-mono text-xl font-bold ${isExpired ? "text-red-700" : secondsLeft < 120 ? "text-red-600" : "text-blue-700"}`}>
             {formatCountdown(secondsLeft)}
           </span>
         </div>
@@ -187,7 +187,7 @@ export function StepPayment({ bookingId, bookingRef, expiresAt, totalAmount, onS
                         <span className="font-medium text-stone-900 text-sm">{UPI_ID}</span>
                         <button
                           onClick={copyUPI}
-                          className="text-amber-600 hover:text-amber-800 p-1 rounded"
+                          className="text-blue-600 hover:text-blue-800 p-1 rounded"
                           aria-label="Copy UPI ID"
                         >
                           {copied ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
@@ -232,10 +232,10 @@ export function StepPayment({ bookingId, bookingRef, expiresAt, totalAmount, onS
                 onClick={() => fileInputRef.current?.click()}
                 className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
                   dragOver
-                    ? "border-amber-500 bg-amber-50"
+                    ? "border-blue-500 bg-blue-50"
                     : uploadedUrl
                     ? "border-emerald-400 bg-emerald-50"
-                    : "border-stone-300 hover:border-amber-400 hover:bg-stone-50"
+                    : "border-slate-300 hover:border-blue-400 hover:bg-slate-50"
                 }`}
               >
                 <input
@@ -248,7 +248,7 @@ export function StepPayment({ bookingId, bookingRef, expiresAt, totalAmount, onS
 
                 {uploading ? (
                   <div className="flex flex-col items-center gap-2">
-                    <Loader2 className="w-8 h-8 text-amber-600 animate-spin" />
+                    <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
                     <p className="text-sm text-stone-500">Uploading…</p>
                   </div>
                 ) : uploadedUrl ? (
@@ -291,7 +291,7 @@ export function StepPayment({ bookingId, bookingRef, expiresAt, totalAmount, onS
               type="submit"
               disabled={uploading || !uploadedUrl}
               className="w-full text-white"
-              style={{ backgroundColor: "#8b6914" }}
+              style={{ background: "linear-gradient(135deg, #1d4ed8, #3b82f6)" }}
             >
               {uploading ? (
                 <><Loader2 className="w-4 h-4 animate-spin mr-2" />Submitting…</>

@@ -49,7 +49,7 @@ export default function PoliciesPage() {
         <p className="text-stone-500 max-w-xl mx-auto text-base md:text-lg">
           Your trust is important to us. Please review our policies below.
         </p>
-        <div className="divider-gold w-24 mx-auto mt-6" />
+        <div className="divider-blue w-24 mx-auto mt-6" />
       </section>
 
       {/* Policy content */}
@@ -160,7 +160,7 @@ export default function PoliciesPage() {
           </div>
 
           {/* Divider */}
-          <div className="divider-gold w-full" />
+          <div className="divider-blue w-full" />
 
           {/* ── Refund & Cancellation Policy ── */}
           <div>
