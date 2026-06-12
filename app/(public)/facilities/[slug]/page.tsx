@@ -95,12 +95,12 @@ export default async function FacilityDetailPage({ params }: Props) {
           </div>
 
           {/* Mobile CTA */}
-          <div className="order-2 lg:hidden">
+          <div className="order-3 lg:hidden mt-8">
             {bookingCta}
           </div>
 
           {/* Facility info */}
-          <div className="order-3">
+          <div className="order-2">
             <div className="flex flex-wrap gap-4 items-start justify-between mb-4">
               <div>
                 <span className="text-xs font-medium uppercase tracking-widest text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full capitalize">

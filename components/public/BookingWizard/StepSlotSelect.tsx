@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { PricingCard } from "@/components/public/PricingCard";
@@ -32,6 +32,8 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
   const [rangeEnd, setRangeEnd] = useState<string | null>(null);
   // "selecting" = user clicked start but not end yet
   const [selectingEnd, setSelectingEnd] = useState(false);
+
+
 
   useEffect(() => {
     async function loadBookedSlots() {
@@ -223,6 +225,16 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
   const needsTimeSlot = selected?.type === "hourly" || selected?.type === "monthly";
   const hasValidRange = rangeStart !== null && rangeEnd !== null;
   const canProceed = selected && (!needsTimeSlot || hasValidRange);
+
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (canProceed && bottomRef.current) {
+      setTimeout(() => {
+        bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }, 100);
+    }
+  }, [canProceed, rangeEnd, selected?.id]);
 
   // Resident pricing — read from shared wizard state (set by the popup)
   const isResident = state.isResident;
@@ -463,7 +475,7 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
         </div>
       )}
 
-      <div className="flex justify-between">
+      <div ref={bottomRef} className="flex justify-between mt-4">
         <Button variant="outline" onClick={onBack}>← Back</Button>
         <Button
           onClick={handleContinue}
