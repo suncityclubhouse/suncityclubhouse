@@ -14,6 +14,7 @@ export interface BookingWizardState {
   endTime: string | null;
   endDate: string | null;          // For monthly/quarterly: "yyyy-MM-dd"
   totalAmount: number;
+  isResident: boolean;             // from step 1 resident toggle
   sessionToken: string | null;    // from temporary reservation
   reservationExpiresAt: string | null;
 }

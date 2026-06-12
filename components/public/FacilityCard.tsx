@@ -15,15 +15,9 @@ interface FacilityCardProps {
   index?: number;
 }
 
-function getLowestPrice(packages?: Pick<FacilityPackage, "price" | "type">[]): number | null {
-  if (!packages || packages.length === 0) return null;
-  return Math.min(...packages.map((p) => p.price));
-}
-
 const smoothEase = [0.16, 1, 0.3, 1] as const;
 
 export function FacilityCard({ facility, index = 0 }: FacilityCardProps) {
-  const startingPrice = getLowestPrice(facility.facility_packages);
   const detailUrl = `/facilities/${facility.slug}`;
   const bookUrl = `/facilities/${facility.slug}/book`;
 
@@ -70,18 +64,7 @@ export function FacilityCard({ facility, index = 0 }: FacilityCardProps) {
         </p>
 
         <div>
-          <div className="mb-3">
-            {startingPrice ? (
-              <p className="text-sm text-slate-500">
-                Starting at{" "}
-                <span className="text-base font-semibold text-slate-900">
-                  {formatINR(startingPrice)}
-                </span>
-              </p>
-            ) : (
-              <p className="text-sm text-slate-400 italic">Pricing on request</p>
-            )}
-          </div>
+
           <div className="flex items-center gap-2">
             <Button
               asChild

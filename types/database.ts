@@ -88,6 +88,7 @@ export interface FacilityPackage {
   name: string;
   type: PackageType;
   price: number;
+  resident_price: number | null;
   duration_hours: number | null;
   start_time: string | null;
   end_time: string | null;
@@ -143,6 +144,7 @@ export interface Booking {
   payment_uploaded_at: string | null;
   payment_verified_at: string | null;
   payment_verified_by: string | null;
+  resident_verification_token: string | null;
   // Admin
   admin_notes: string | null;
   rejection_reason: string | null;

@@ -29,6 +29,7 @@ const packageSchema = z.object({
   name:          z.string().min(1, "Name required").max(80),
   type:          z.enum(["hourly", "half_day", "full_day", "monthly", "quarterly"]),
   price:         z.preprocess((val) => (val === "" || val === undefined || val === null) ? undefined : Number(val), z.number().min(0, "Price required")),
+  residentPrice: z.preprocess((val) => (val === "" || val === undefined || val === null) ? undefined : Number(val), z.number().min(0).optional().nullable()),
   durationHours: z.preprocess((val) => (val === "" || val === undefined || val === null) ? undefined : Number(val), z.number().int().min(1, "Must be at least 1").optional()),
   startTime:     z.preprocess((val) => (val === "" ? undefined : val), z.string().optional()),
   endTime:       z.preprocess((val) => (val === "" ? undefined : val), z.string().optional()),
@@ -69,7 +70,7 @@ export function PackageManager({ facilityId, initialPackages }: Props) {
   const form = useForm<PackageFormValues>({
     resolver: zodResolver(packageSchema) as any,
     defaultValues: {
-      name: "", type: "hourly", price: 0,
+      name: "", type: "hourly", price: 0, residentPrice: undefined,
       isActive: true, displayOrder: packages.length,
     },
   });
@@ -78,7 +79,7 @@ export function PackageManager({ facilityId, initialPackages }: Props) {
 
   const openNew = () => {
     form.reset({
-      name: "", type: "hourly", price: 0,
+      name: "", type: "hourly", price: 0, residentPrice: undefined,
       isActive: true, displayOrder: packages.length,
     });
     setEditingId(null);
@@ -90,6 +91,7 @@ export function PackageManager({ facilityId, initialPackages }: Props) {
       name:          pkg.name,
       type:          pkg.type as any,
       price:         pkg.price,
+      residentPrice: pkg.resident_price ?? undefined,
       durationHours: pkg.duration_hours ?? undefined,
       startTime:     pkg.start_time ?? undefined,
       endTime:       pkg.end_time ?? undefined,
@@ -199,11 +201,21 @@ export function PackageManager({ facilityId, initialPackages }: Props) {
 
               {/* Price */}
               <div className="space-y-1.5">
-                <Label>Price (₹) *</Label>
+                <Label>Standard Price (₹) *</Label>
                 <Input type="number" {...form.register("price")} placeholder="0" min={0} />
                 {form.formState.errors.price && (
                   <p className="text-xs text-red-500">{form.formState.errors.price.message}</p>
                 )}
+              </div>
+
+              {/* Resident Price */}
+              <div className="space-y-1.5">
+                <Label>Resident Price (optional, ₹)</Label>
+                <Input type="number" {...form.register("residentPrice")} placeholder="Discounted price" min={0} />
+                {form.formState.errors.residentPrice && (
+                  <p className="text-xs text-red-500">{form.formState.errors.residentPrice.message}</p>
+                )}
+                <p className="text-xs text-stone-400">Leave blank if same as standard</p>
               </div>
 
               {/* Duration hours — only for hourly */}
@@ -329,9 +341,16 @@ export function PackageManager({ facilityId, initialPackages }: Props) {
               </div>
 
               {/* Price */}
-              <p className="font-bold text-stone-900 text-sm flex-shrink-0">
-                ₹{Number(pkg.price).toLocaleString("en-IN")}
-              </p>
+              <div className="flex flex-col items-end flex-shrink-0 text-right">
+                <p className="font-bold text-stone-900 text-sm">
+                  ₹{Number(pkg.price).toLocaleString("en-IN")}
+                </p>
+                {pkg.resident_price !== null && pkg.resident_price !== pkg.price && (
+                  <p className="text-xs text-emerald-600 font-medium mt-0.5">
+                    Res: ₹{Number(pkg.resident_price).toLocaleString("en-IN")}
+                  </p>
+                )}
+              </div>
 
               {/* Actions */}
               <div className="flex items-center gap-1 flex-shrink-0">

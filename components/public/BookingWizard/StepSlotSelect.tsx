@@ -9,7 +9,7 @@ import { getBookedTimeSlots } from "@/actions/bookings";
 import { formatDisplayDate, toDateString, calculateEndDate } from "@/lib/utils/dates";
 import { generateHourlySlots } from "@/lib/utils/slots";
 import { cn, formatINR } from "@/lib/utils/formatters";
-import { Clock, Package, Loader2 } from "lucide-react";
+import { Clock, Package, Loader2, Info } from "lucide-react";
 import type { FacilityWithMedia, FacilityPackage } from "@/types/database";
 import type { BookingWizardState } from "@/types";
 
@@ -23,10 +23,15 @@ interface StepSlotSelectProps {
 
 export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack }: StepSlotSelectProps) {
   const [selected, setSelected] = useState<FacilityPackage | null>(null);
-  const [selectedHourlySlot, setSelectedHourlySlot] = useState<{ start: string; end: string } | null>(null);
   const [bookedSlots, setBookedSlots] = useState<{ start_time: string; end_time: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingSlots, setLoadingSlots] = useState(false);
+
+  // Multi-slot range state
+  const [rangeStart, setRangeStart] = useState<string | null>(null);
+  const [rangeEnd, setRangeEnd] = useState<string | null>(null);
+  // "selecting" = user clicked start but not end yet
+  const [selectingEnd, setSelectingEnd] = useState(false);
 
   useEffect(() => {
     async function loadBookedSlots() {
@@ -45,6 +50,10 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
       }
     }
     loadBookedSlots();
+    // Reset range when date changes
+    setRangeStart(null);
+    setRangeEnd(null);
+    setSelectingEnd(false);
   }, [facility.id, state.selectedDate]);
 
   const packages = facility.facility_packages.filter((p) => p.is_active);
@@ -52,14 +61,145 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
   const otherPackages = packages.filter((p) => p.type !== "hourly");
   const hourlySlots = generateHourlySlots();
 
+  // ---- helpers ----
+
+  const isSlotBooked = (slotStart: string, slotEnd: string) =>
+    bookedSlots.some((b) => {
+      const bStart = b.start_time.slice(0, 5);
+      const bEnd = b.end_time.slice(0, 5);
+      return (
+        (slotStart >= bStart && slotStart < bEnd) ||
+        (slotEnd > bStart && slotEnd <= bEnd) ||
+        (slotStart <= bStart && slotEnd >= bEnd)
+      );
+    });
+
+  // Check if ANY slot in a range [from..to] is booked
+  const hasBookedSlotInRange = (fromStart: string, toEnd: string): boolean => {
+    return hourlySlots.some(
+      (s) =>
+        s.startTime >= fromStart &&
+        s.endTime <= toEnd &&
+        isSlotBooked(s.startTime, s.endTime)
+    );
+  };
+
+  // Slot label: "6 AM", "7 AM" … "10 PM"
+  const slotLabel = (startTime: string) => {
+    const [h] = startTime.split(":").map(Number);
+    if (h === 0) return "12 AM";
+    if (h === 12) return "12 PM";
+    return h < 12 ? `${h} AM` : `${h - 12} PM`;
+  };
+
+  // Hours selected in the current range
+  const hoursSelected = (() => {
+    if (!rangeStart || !rangeEnd) return 0;
+    const startIdx = hourlySlots.findIndex((s) => s.startTime === rangeStart);
+    const endIdx = hourlySlots.findIndex((s) => s.endTime === rangeEnd);
+    return endIdx - startIdx + 1;
+  })();
+
+  const getSlotState = (slot: { startTime: string; endTime: string }) => {
+    const booked = isSlotBooked(slot.startTime, slot.endTime);
+    if (booked) return "booked";
+
+    if (!rangeStart) return "available";
+
+    // If still picking end — highlight hover range (we use CSS hover for that)
+    if (rangeStart && rangeEnd) {
+      const inRange =
+        slot.startTime >= rangeStart && slot.endTime <= rangeEnd;
+      if (slot.startTime === rangeStart) return "range-start";
+      if (slot.endTime === rangeEnd) return "range-end";
+      if (inRange) return "range-mid";
+    } else {
+      // Selecting end — mark the start
+      if (slot.startTime === rangeStart) return "range-start";
+    }
+    return "available";
+  };
+
+  // ---- slot click handler ----
+  const handleSlotClick = (slot: { startTime: string; endTime: string }) => {
+    if (!selected) return;
+
+    const booked = isSlotBooked(slot.startTime, slot.endTime);
+    if (booked) {
+      // Reset
+      setRangeStart(null);
+      setRangeEnd(null);
+      setSelectingEnd(false);
+      onStateChange({ startTime: null, endTime: null, totalAmount: selected.price });
+      return;
+    }
+
+    if (!selectingEnd) {
+      // First click — set start
+      setRangeStart(slot.startTime);
+      setRangeEnd(slot.endTime); // default: 1 hour (end = this slot's end)
+      setSelectingEnd(true);
+      onStateChange({
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        totalAmount: selected.price * 1,
+      });
+    } else {
+      // Second click
+      if (slot.startTime === rangeStart) {
+        // Tap same slot → toggle off
+        setRangeStart(null);
+        setRangeEnd(null);
+        setSelectingEnd(false);
+        onStateChange({ startTime: null, endTime: null, totalAmount: selected.price });
+        return;
+      }
+
+      if (slot.startTime < rangeStart!) {
+        // Picked an earlier slot → restart selection from here
+        setRangeStart(slot.startTime);
+        setRangeEnd(slot.endTime);
+        setSelectingEnd(true);
+        onStateChange({
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+          totalAmount: selected.price * 1,
+        });
+        return;
+      }
+
+      // Picked a later slot — check no booked slots in between
+      if (hasBookedSlotInRange(rangeStart!, slot.endTime)) {
+        toast.error("One or more slots in this range are already booked. Please adjust your selection.");
+        return;
+      }
+
+      const startIdx = hourlySlots.findIndex((s) => s.startTime === rangeStart);
+      const endIdx = hourlySlots.findIndex((s) => s.endTime === slot.endTime);
+      const hours = endIdx - startIdx + 1;
+
+      setRangeEnd(slot.endTime);
+      setSelectingEnd(false);
+      onStateChange({
+        startTime: rangeStart!,
+        endTime: slot.endTime,
+        totalAmount: selected.price * hours,
+      });
+    }
+  };
+
+  // ---- package select ----
   const handlePackageSelect = (pkg: FacilityPackage) => {
     setSelected(pkg);
+    // Reset range on package switch
+    setRangeStart(null);
+    setRangeEnd(null);
+    setSelectingEnd(false);
+
     const needsSlot = pkg.type === "hourly" || pkg.type === "monthly";
-    const endDate = state.selectedDate
-      ? calculateEndDate(state.selectedDate, pkg.type)
-      : null;
+    const endDate = state.selectedDate ? calculateEndDate(state.selectedDate, pkg.type) : null;
+
     if (!needsSlot) {
-      setSelectedHourlySlot(null);
       onStateChange({
         selectedPackageId: pkg.id,
         slotType: pkg.type,
@@ -69,7 +209,6 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
         totalAmount: pkg.price,
       });
     } else {
-      setSelectedHourlySlot(null);
       onStateChange({
         selectedPackageId: pkg.id,
         slotType: pkg.type,
@@ -81,32 +220,40 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
     }
   };
 
-  const handleHourlySlotSelect = (slot: { start: string; end: string }) => {
-    if (!selected) return;
-    setSelectedHourlySlot(slot);
-    onStateChange({
-      startTime: slot.start,
-      endTime: slot.end,
-      totalAmount: selected.price,
-    });
-  };
-
   const needsTimeSlot = selected?.type === "hourly" || selected?.type === "monthly";
-  const canProceed =
-    selected &&
-    (!needsTimeSlot || selectedHourlySlot !== null);
+  const hasValidRange = rangeStart !== null && rangeEnd !== null;
+  const canProceed = selected && (!needsTimeSlot || hasValidRange);
+
+  // Resident pricing — read from shared wizard state (set by the popup)
+  const isResident = state.isResident;
+  const hasResidentPrice = selected !== null && selected.resident_price !== null && selected.resident_price < selected.price;
+  const effectivePrice = isResident && hasResidentPrice ? selected!.resident_price! : (selected?.price ?? 0);
 
   const handleContinue = async () => {
     if (!selected || !state.selectedDate) return;
     setLoading(true);
     try {
       const endDate = calculateEndDate(state.selectedDate, selected.type) ?? undefined;
+      const startTime = needsTimeSlot ? rangeStart ?? undefined : selected.start_time ?? undefined;
+      const endTime = needsTimeSlot ? rangeEnd ?? undefined : selected.end_time ?? undefined;
+
+      // Compute the final amount based on resident status
+      let finalAmount: number;
+      if (needsTimeSlot && hasValidRange) {
+        const startIdx = hourlySlots.findIndex((s) => s.startTime === (startTime ?? ""));
+        const endIdx = hourlySlots.findIndex((s) => s.endTime === (endTime ?? ""));
+        const hours = endIdx - startIdx + 1;
+        finalAmount = effectivePrice * hours;
+      } else {
+        finalAmount = effectivePrice;
+      }
+
       const res = await createTemporaryReservation({
         facilityId: facility.id,
         bookingDate: toDateString(state.selectedDate),
         slotType: selected.type,
-        startTime: needsTimeSlot ? selectedHourlySlot?.start : selected.start_time ?? undefined,
-        endTime: needsTimeSlot ? selectedHourlySlot?.end : selected.end_time ?? undefined,
+        startTime,
+        endTime,
         endDate,
       });
 
@@ -121,6 +268,8 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
         selectedPackageId: selected.id,
         slotType: selected.type,
         endDate: endDate ?? null,
+        totalAmount: finalAmount,
+        isResident,
       });
       onNext();
     } catch {
@@ -129,6 +278,12 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
       setLoading(false);
     }
   };
+
+  // Formatted range label for summary
+  const rangeLabel = (() => {
+    if (!rangeStart || !rangeEnd) return null;
+    return `${slotLabel(rangeStart)} – ${rangeEnd}`;
+  })();
 
   return (
     <div className="space-y-5">
@@ -139,7 +294,7 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
             {state.selectedDate && formatDisplayDate(state.selectedDate)}
           </p>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <label htmlFor="booking-date" className="text-sm font-medium text-stone-700">Date:</label>
           <input
@@ -177,13 +332,14 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
                     pkg={pkg}
                     selected={selected?.id === pkg.id}
                     onSelect={handlePackageSelect}
+                    isResident={isResident}
                   />
                 ))}
               </div>
             </div>
           )}
 
-          {/* Package-type options */}
+          {/* Non-hourly packages */}
           {otherPackages.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-3">
@@ -197,63 +353,112 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
                     pkg={pkg}
                     selected={selected?.id === pkg.id}
                     onSelect={handlePackageSelect}
+                    isResident={isResident}
                   />
                 ))}
               </div>
             </div>
           )}
 
-          {/* Hourly time slots grid */}
+          {/* Hourly time slot grid */}
           {needsTimeSlot && selected && (
-            <div className="mt-4 bg-stone-50 rounded-xl p-4">
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-sm font-medium text-stone-700">Choose a time slot:</p>
-                {loadingSlots && <Loader2 className="w-4 h-4 animate-spin text-stone-400" />}
+            <div className="mt-4 bg-stone-50 rounded-xl p-4 space-y-3">
+              {/* Instruction banner */}
+              <div className="flex items-start gap-2">
+                <Info className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                <p className="text-xs text-stone-600">
+                  {selectingEnd
+                    ? "Now tap the slot where you want to end — or tap the same slot for just 1 hour."
+                    : "Tap a slot to start. Tap another to extend the range."}
+                </p>
+                {loadingSlots && <Loader2 className="w-4 h-4 animate-spin text-stone-400 ml-auto flex-shrink-0" />}
               </div>
+
+              {/* Slot grid */}
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
                 {hourlySlots.map((slot) => {
-                  const isBooked = bookedSlots.some(
-                    (b) => {
-                      const bStart = b.start_time.slice(0, 5);
-                      const bEnd = b.end_time.slice(0, 5);
-                      return (
-                        (slot.startTime >= bStart && slot.startTime < bEnd) ||
-                        (slot.endTime > bStart && slot.endTime <= bEnd) ||
-                        (slot.startTime <= bStart && slot.endTime >= bEnd)
-                      );
-                    }
-                  );
-                  
+                  const state = getSlotState(slot);
+                  const isStart = state === "range-start";
+                  const isEnd = state === "range-end";
+                  const isMid = state === "range-mid";
+                  const isBooked = state === "booked";
+
                   return (
                     <button
                       key={slot.startTime}
                       disabled={isBooked}
-                      onClick={() => handleHourlySlotSelect({ start: slot.startTime, end: slot.endTime })}
+                      onClick={() => handleSlotClick(slot)}
+                      title={isBooked ? "Already booked" : slot.label}
                       className={cn(
-                        "py-2 px-2 text-xs rounded-lg border font-medium transition-all text-center",
+                        "py-2 px-2 text-xs rounded-lg border font-medium transition-all text-center select-none",
                         isBooked
-                          ? "bg-slate-200 border-slate-200 text-slate-400 cursor-not-allowed line-through opacity-70"
-                          : selectedHourlySlot?.start === slot.startTime
-                            ? "bg-blue-600 border-blue-600 text-white"
-                            : "border-slate-200 bg-white hover:border-blue-400 text-slate-700"
+                          ? "bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed line-through opacity-60"
+                          : isStart || isEnd
+                          ? "bg-blue-600 border-blue-600 text-white shadow-md"
+                          : isMid
+                          ? "bg-blue-100 border-blue-300 text-blue-800"
+                          : "border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50 text-slate-700 cursor-pointer"
                       )}
                     >
-                      {slot.label.split("–")[0].trim()}
+                      {slotLabel(slot.startTime)}
                     </button>
                   );
                 })}
               </div>
+
+              {/* Live range indicator */}
+              {rangeStart && (
+                <div className="flex flex-wrap items-center gap-3 text-xs text-stone-500 pt-1 border-t border-stone-200">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded-sm bg-blue-600 inline-block" />
+                    <span>Selected (start / end)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded-sm bg-blue-100 border border-blue-300 inline-block" />
+                    <span>In range</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded-sm bg-slate-100 border border-slate-200 inline-block" />
+                    <span>Booked</span>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
       )}
 
-      {/* Summary */}
+
+      {/* Summary bar */}
       {canProceed && (
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-center justify-between">
-          <div>
-            <p className="text-sm text-stone-600">Total Amount</p>
-            <p className="text-xl font-bold text-stone-900">{formatINR(state.totalAmount)}</p>
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-stone-600">Total Amount</p>
+              <p className="text-xl font-bold text-stone-900">
+                {formatINR(
+                  needsTimeSlot && hasValidRange && hoursSelected > 0
+                    ? effectivePrice * hoursSelected
+                    : effectivePrice
+                )}
+              </p>
+            </div>
+            {needsTimeSlot && hasValidRange && hoursSelected > 0 && (
+              <div className="text-right">
+                <p className="text-xs text-stone-500 uppercase tracking-wide">Duration</p>
+                <p className="text-sm font-semibold text-blue-700">
+                  {hoursSelected} hr{hoursSelected > 1 ? "s" : ""}
+                  {hoursSelected > 1 && (
+                    <span className="text-xs font-normal text-stone-400 ml-1">
+                      ({formatINR(effectivePrice)}/hr)
+                    </span>
+                  )}
+                </p>
+                {selectingEnd && (
+                  <p className="text-xs text-amber-600 mt-0.5">Tap another slot to extend</p>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}

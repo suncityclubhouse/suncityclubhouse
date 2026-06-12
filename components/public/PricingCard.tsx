@@ -11,9 +11,10 @@ interface PricingCardProps {
   pkg: FacilityPackage;
   selected?: boolean;
   onSelect?: (pkg: FacilityPackage) => void;
+  isResident?: boolean | null;
 }
 
-export function PricingCard({ pkg, selected, onSelect }: PricingCardProps) {
+export function PricingCard({ pkg, selected, onSelect, isResident }: PricingCardProps) {
   const typeLabel = getSlotTypeLabel(pkg.type);
   const isClickable = !!onSelect;
 
@@ -23,6 +24,9 @@ export function PricingCard({ pkg, selected, onSelect }: PricingCardProps) {
       : pkg.duration_hours
       ? `${pkg.duration_hours} hour${pkg.duration_hours > 1 ? "s" : ""} per booking`
       : null;
+
+  const hasResidentPrice = pkg.resident_price !== null && pkg.resident_price < pkg.price;
+  const displayPrice = isResident && hasResidentPrice ? pkg.resident_price! : pkg.price;
 
   return (
     <motion.div
@@ -66,7 +70,7 @@ export function PricingCard({ pkg, selected, onSelect }: PricingCardProps) {
               </span>
             </div>
             <div className="text-right flex-shrink-0">
-              <p className="text-xl font-bold text-slate-900">{formatINR(pkg.price)}</p>
+              <p className="text-xl font-bold text-slate-700">{formatINR(displayPrice)}</p>
               {pkg.type === "hourly" && (
                 <p className="text-xs text-slate-400">/hour</p>
               )}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { toast } from "sonner";
+import { Home, UserRound } from "lucide-react";
 import { StepSlotSelect } from "./StepSlotSelect";
 import { StepBookingForm } from "./StepBookingForm";
 import { StepPayment } from "./StepPayment";
@@ -24,6 +24,9 @@ interface BookingWizardProps {
 
 export function BookingWizard({ facility }: BookingWizardProps) {
   const [step, setStep] = useState(1);
+  // null = not chosen yet → shows the residency modal
+  const [residentChosen, setResidentChosen] = useState<boolean | null>(null);
+
   const [state, setState] = useState<BookingWizardState>({
     facilityId: facility.id,
     facilitySlug: facility.slug,
@@ -34,9 +37,11 @@ export function BookingWizard({ facility }: BookingWizardProps) {
     endTime: null,
     endDate: null,
     totalAmount: 0,
+    isResident: true,
     sessionToken: null,
     reservationExpiresAt: null,
   });
+
   const [bookingResult, setBookingResult] = useState<{
     bookingId: string;
     bookingRef: string;
@@ -47,7 +52,11 @@ export function BookingWizard({ facility }: BookingWizardProps) {
     setState((prev) => ({ ...prev, ...patch }));
   }, []);
 
-  // Release reservation if user navigates back past step 2
+  const handleResidencyChoice = (choice: boolean) => {
+    setResidentChosen(choice);
+    updateState({ isResident: choice });
+  };
+
   const handleBack = async () => {
     if (step === 2 && state.sessionToken) {
       await releaseTemporaryReservation(state.sessionToken);
@@ -60,6 +69,47 @@ export function BookingWizard({ facility }: BookingWizardProps) {
 
   return (
     <div className="space-y-6">
+
+      {/* ─── Residency Modal — blocks UI until user picks ─── */}
+      {residentChosen === null && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+
+            <div className="px-6 pt-6 pb-2">
+              <h2 className="text-lg font-serif font-bold text-slate-900 text-center">
+                Are you a society resident?
+              </h2>
+            </div>
+
+            <div className="p-4 grid grid-cols-1 gap-3">
+
+              <button
+                onClick={() => handleResidencyChoice(true)}
+                className="group flex items-center gap-3 p-4 rounded-xl border-2 border-emerald-200 bg-emerald-50 hover:border-emerald-500 hover:bg-emerald-100 transition-all text-left"
+              >
+                <div className="w-10 h-10 rounded-full bg-emerald-100 border-2 border-emerald-300 group-hover:bg-emerald-200 flex items-center justify-center flex-shrink-0 transition-colors">
+                  <Home className="w-5 h-5 text-emerald-700" />
+                </div>
+                <p className="font-semibold text-slate-800">Yes, I&apos;m a Resident</p>
+              </button>
+
+              <button
+                onClick={() => handleResidencyChoice(false)}
+                className="group flex items-center gap-3 p-4 rounded-xl border-2 border-slate-200 bg-slate-50 hover:border-slate-400 hover:bg-slate-100 transition-all text-left"
+              >
+                <div className="w-10 h-10 rounded-full bg-slate-100 border-2 border-slate-300 group-hover:bg-slate-200 flex items-center justify-center flex-shrink-0 transition-colors">
+                  <UserRound className="w-5 h-5 text-slate-600" />
+                </div>
+                <p className="font-semibold text-slate-800">No, I&apos;m a Non-Resident</p>
+              </button>
+
+            </div>
+
+            <div className="pb-5" />
+          </div>
+        </div>
+      )}
+
       {/* Step indicator */}
       {step < 4 && (
         <div className="flex items-center justify-center gap-0">

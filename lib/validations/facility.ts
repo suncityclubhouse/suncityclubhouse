@@ -23,6 +23,7 @@ export const facilityPackageSchema = z.object({
   name: z.string().min(1, "Package name required").max(100),
   type: z.enum(["hourly", "half_day", "full_day", "monthly", "quarterly"]),
   price: z.number().min(0, "Price must be at least 0"),
+  residentPrice: z.number().min(0).optional().nullable(),
   durationHours: z.number().int().min(1).optional(),
   startTime: z
     .string()

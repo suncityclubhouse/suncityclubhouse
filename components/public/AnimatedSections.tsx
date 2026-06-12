@@ -14,6 +14,32 @@ interface AnimatedSectionsProps {
 export function AnimatedSections({ children }: AnimatedSectionsProps) {
   return (
     <>
+      {/* ─── FACILITIES GRID ──────────────────────────────────── */}
+      <section id="facilities" className="py-16 md:py-24 bg-slate-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <FadeIn animation="fade-up" className="text-center mb-14">
+            <p
+              className="text-xs font-bold uppercase tracking-widest mb-3"
+              style={{ color: "#2563eb" }}
+            >
+              Our Spaces
+            </p>
+            <h2 className="font-serif text-4xl font-semibold text-slate-900 mb-4">
+              Premium Facilities
+            </h2>
+            <div className="divider-blue w-24 mx-auto mb-4" />
+            <p className="text-slate-500 max-w-xl mx-auto">
+              Every facility is professionally maintained and available for booking online.
+              No registration required — just select, book, and pay.
+            </p>
+          </FadeIn>
+
+          <FadeIn animation="fade-up" delay={0.2}>
+            {children}
+          </FadeIn>
+        </div>
+      </section>
+
       {/* ─── ABOUT / MAHAVIR GROUP ─── video bg, no stat cards ── */}
       <section id="about" className="relative overflow-hidden" style={{ minHeight: "580px" }}>
         {/* Looping background video */}
@@ -101,32 +127,6 @@ export function AnimatedSections({ children }: AnimatedSectionsProps) {
                 />
               </div>
             </div>
-          </FadeIn>
-        </div>
-      </section>
-
-      {/* ─── FACILITIES GRID ──────────────────────────────────── */}
-      <section id="facilities" className="py-16 md:py-24 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <FadeIn animation="fade-up" className="text-center mb-14">
-            <p
-              className="text-xs font-bold uppercase tracking-widest mb-3"
-              style={{ color: "#2563eb" }}
-            >
-              Our Spaces
-            </p>
-            <h2 className="font-serif text-4xl font-semibold text-slate-900 mb-4">
-              Premium Facilities
-            </h2>
-            <div className="divider-blue w-24 mx-auto mb-4" />
-            <p className="text-slate-500 max-w-xl mx-auto">
-              Every facility is professionally maintained and available for booking online.
-              No registration required — just select, book, and pay.
-            </p>
-          </FadeIn>
-
-          <FadeIn animation="fade-up" delay={0.2}>
-            {children}
           </FadeIn>
         </div>
       </section>

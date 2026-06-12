@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, Play, X, ZoomIn } from "lucide-react";
+import { ChevronLeft, ChevronRight, Play, X, ZoomIn, Pause } from "lucide-react";
 import { cn } from "@/lib/utils/formatters";
 import type { FacilityMedia } from "@/types/database";
 import { motion, AnimatePresence } from "framer-motion";
@@ -13,17 +13,77 @@ interface FacilityGalleryProps {
 }
 
 const smoothEase = [0.16, 1, 0.3, 1] as const;
+const SLIDE_INTERVAL_MS = 3000;
 
 export function FacilityGallery({ media, facilityName }: FacilityGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   if (media.length === 0) return null;
 
   const active = media[activeIndex];
+  const imageOnlyMedia = media.filter((m) => m.media_type === "image");
+  const hasMultiple = media.length > 1;
 
-  const prev = () => setActiveIndex((i) => (i === 0 ? media.length - 1 : i - 1));
-  const next = () => setActiveIndex((i) => (i === media.length - 1 ? 0 : i + 1));
+  const prev = useCallback(
+    () => setActiveIndex((i) => (i === 0 ? media.length - 1 : i - 1)),
+    [media.length]
+  );
+
+  const next = useCallback(
+    () => setActiveIndex((i) => (i === media.length - 1 ? 0 : i + 1)),
+    [media.length]
+  );
+
+  // Auto-advance: skip videos (stay on them until user navigates)
+  const startInterval = useCallback(() => {
+    if (!hasMultiple) return;
+    intervalRef.current = setInterval(() => {
+      setActiveIndex((current) => {
+        const currentItem = media[current];
+        // Don't auto-advance away from a video
+        if (currentItem.media_type === "video") return current;
+        return current === media.length - 1 ? 0 : current + 1;
+      });
+    }, SLIDE_INTERVAL_MS);
+  }, [hasMultiple, media]);
+
+  const stopInterval = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isPaused && !lightboxOpen) {
+      startInterval();
+    } else {
+      stopInterval();
+    }
+    return stopInterval;
+  }, [isPaused, lightboxOpen, startInterval, stopInterval]);
+
+  // Manual nav resets the 3s timer
+  const handlePrev = () => {
+    stopInterval();
+    prev();
+    if (!isPaused) startInterval();
+  };
+
+  const handleNext = () => {
+    stopInterval();
+    next();
+    if (!isPaused) startInterval();
+  };
+
+  const handleThumbnailClick = (i: number) => {
+    stopInterval();
+    setActiveIndex(i);
+    if (!isPaused) startInterval();
+  };
 
   return (
     <>
@@ -32,7 +92,9 @@ export function FacilityGallery({ media, facilityName }: FacilityGalleryProps) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: smoothEase }}
-        className="relative rounded-2xl overflow-hidden bg-slate-100 aspect-video"
+        className="relative rounded-2xl overflow-hidden bg-slate-100 aspect-video group"
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
       >
         <AnimatePresence mode="wait">
           <motion.div
@@ -40,7 +102,7 @@ export function FacilityGallery({ media, facilityName }: FacilityGalleryProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.35 }}
             className="absolute inset-0"
           >
             {active.media_type === "video" ? (
@@ -48,7 +110,7 @@ export function FacilityGallery({ media, facilityName }: FacilityGalleryProps) {
                 src={active.url}
                 controls
                 className="w-full h-full object-cover"
-                poster={media.find((m) => m.media_type === "image")?.url}
+                poster={imageOnlyMedia[0]?.url}
               />
             ) : (
               <>
@@ -73,23 +135,50 @@ export function FacilityGallery({ media, facilityName }: FacilityGalleryProps) {
         </AnimatePresence>
 
         {/* Nav arrows */}
-        {media.length > 1 && (
+        {hasMultiple && (
           <>
             <button
-              onClick={prev}
-              className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white shadow-md p-2 rounded-full transition-all hover:scale-110 z-10"
+              onClick={handlePrev}
+              className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white shadow-md p-2 rounded-full transition-all hover:scale-110 z-10 opacity-0 group-hover:opacity-100 focus:opacity-100"
               aria-label="Previous"
             >
               <ChevronLeft className="w-4 h-4 text-slate-700" />
             </button>
             <button
-              onClick={next}
-              className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white shadow-md p-2 rounded-full transition-all hover:scale-110 z-10"
+              onClick={handleNext}
+              className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white shadow-md p-2 rounded-full transition-all hover:scale-110 z-10 opacity-0 group-hover:opacity-100 focus:opacity-100"
               aria-label="Next"
             >
               <ChevronRight className="w-4 h-4 text-slate-700" />
             </button>
           </>
+        )}
+
+        {/* Progress dots + pause indicator */}
+        {hasMultiple && (
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10">
+            {media.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => handleThumbnailClick(i)}
+                aria-label={`Go to slide ${i + 1}`}
+                className={cn(
+                  "rounded-full transition-all duration-300",
+                  i === activeIndex
+                    ? "bg-white w-5 h-1.5"
+                    : "bg-white/50 hover:bg-white/80 w-1.5 h-1.5"
+                )}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Pause indicator — shows briefly on hover */}
+        {hasMultiple && isPaused && active.media_type !== "video" && (
+          <div className="absolute top-3 left-3 bg-black/40 text-white px-2 py-1 rounded-md text-xs flex items-center gap-1 z-10 pointer-events-none">
+            <Pause className="w-3 h-3" />
+            Paused
+          </div>
         )}
 
         {/* Counter */}
@@ -99,7 +188,7 @@ export function FacilityGallery({ media, facilityName }: FacilityGalleryProps) {
       </motion.div>
 
       {/* Thumbnails */}
-      {media.length > 1 && (
+      {hasMultiple && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -109,7 +198,7 @@ export function FacilityGallery({ media, facilityName }: FacilityGalleryProps) {
           {media.map((item, i) => (
             <button
               key={item.id}
-              onClick={() => setActiveIndex(i)}
+              onClick={() => handleThumbnailClick(i)}
               className={cn(
                 "relative flex-shrink-0 w-20 h-14 rounded-lg overflow-hidden border-2 transition-all",
                 i === activeIndex
@@ -135,7 +224,7 @@ export function FacilityGallery({ media, facilityName }: FacilityGalleryProps) {
         </motion.div>
       )}
 
-      {/* Lightbox — animated with Framer Motion */}
+      {/* Lightbox */}
       <AnimatePresence>
         {lightboxOpen && active.media_type === "image" && (
           <motion.div

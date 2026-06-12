@@ -5,7 +5,6 @@ import { Users, MapPin, Clock, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { FacilityGallery } from "@/components/public/FacilityGallery";
-import { PricingCard } from "@/components/public/PricingCard";
 import { getFacilityBySlug } from "@/actions/facilities";
 
 interface Props {
@@ -39,18 +38,6 @@ export default async function FacilityDetailPage({ params }: Props) {
 
   const bookingCta = (
     <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-5">
-      <div>
-        <p className="text-sm text-slate-500 mb-1">Starting from</p>
-        {activePackages.length > 0 ? (
-          <p className="text-3xl font-bold text-slate-900">
-            ₹{Math.min(...activePackages.map((p) => p.price)).toLocaleString("en-IN")}
-          </p>
-        ) : (
-          <p className="text-slate-400 text-sm italic">Contact for pricing</p>
-        )}
-      </div>
-
-      <Separator />
 
       {/* Quick info */}
       <div className="space-y-2.5 text-sm text-slate-600">
@@ -156,17 +143,7 @@ export default async function FacilityDetailPage({ params }: Props) {
             )}
           </div>
 
-          {/* Pricing section */}
-          {activePackages.length > 0 && (
-            <div className="order-4">
-              <h2 className="font-serif text-2xl font-semibold text-slate-900 mb-5">Pricing &amp; Packages</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {activePackages.map((pkg) => (
-                  <PricingCard key={pkg.id} pkg={pkg} />
-                ))}
-              </div>
-            </div>
-          )}
+
         </div>
 
         {/* Right column — sticky booking CTA (Desktop only) */}
