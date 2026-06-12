@@ -72,7 +72,6 @@ export function HeroSection() {
           className="text-base sm:text-lg md:text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed mb-10"
         >
           Book premium facilities for your events, sports, and celebrations.
-          Seamless online booking — no registration required.
         </motion.p>
 
         <motion.div

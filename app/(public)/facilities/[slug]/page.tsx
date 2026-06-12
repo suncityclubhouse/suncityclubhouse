@@ -47,10 +47,7 @@ export default async function FacilityDetailPage({ params }: Props) {
             Up to {facility.max_capacity} guests
           </div>
         )}
-        <div className="flex items-center gap-2">
-          <Clock className="w-4 h-4 text-slate-400" />
-          Online booking — no registration needed
-        </div>
+
       </div>
 
       <Button

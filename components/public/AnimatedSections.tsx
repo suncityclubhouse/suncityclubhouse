@@ -30,7 +30,6 @@ export function AnimatedSections({ children }: AnimatedSectionsProps) {
             <div className="divider-blue w-24 mx-auto mb-4" />
             <p className="text-slate-500 max-w-xl mx-auto">
               Every facility is professionally maintained and available for booking online.
-              No registration required — just select, book, and pay.
             </p>
           </FadeIn>
 
