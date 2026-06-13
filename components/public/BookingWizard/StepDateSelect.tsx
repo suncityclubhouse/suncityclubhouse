@@ -79,8 +79,8 @@ export function StepDateSelect({ facility, state, onStateChange, onNext }: StepD
           {/* Injected styles scoped to our calendar wrapper */}
           <style>{`
             .sc-cal .rdp-root {
-              --rdp-accent-color: #1d4ed8;
-              --rdp-accent-background-color: #dbeafe;
+              --rdp-accent-color: #08428C;
+              --rdp-accent-background-color: #d5dff0;
               --rdp-day-width: 40px;
               --rdp-day-height: 40px;
               font-family: inherit;
@@ -109,18 +109,18 @@ export function StepDateSelect({ facility, state, onStateChange, onNext }: StepD
               transition: background 0.15s, color 0.15s;
             }
             .sc-cal .rdp-day button:hover:not(:disabled) {
-              background: #dbeafe;
-              color: #1d4ed8;
+              background: #d5dff0;
+              color: #08428C;
             }
             .sc-cal .rdp-selected button {
-              background: #1d4ed8 !important;
+              background: #08428C !important;
               color: white !important;
               font-weight: 700;
-              box-shadow: 0 2px 8px rgba(29,78,216,0.3);
+              box-shadow: 0 2px 8px rgba(8,66,140,0.35);
             }
             .sc-cal .rdp-today button {
-              border: 2px solid #3b82f6;
-              color: #1d4ed8;
+              border: 2px solid #5C6795;
+              color: #08428C;
               font-weight: 700;
             }
             .sc-cal .rdp-disabled button {
@@ -231,7 +231,7 @@ export function StepDateSelect({ facility, state, onStateChange, onNext }: StepD
           onClick={onNext}
           disabled={!state.selectedDate}
           className="text-white px-6 disabled:opacity-40"
-          style={{ background: "linear-gradient(135deg, #1d4ed8, #3b82f6)" }}
+          style={{ background: "linear-gradient(135deg, #07377a, #08428C)" }}
         >
           Continue to Package Selection →
         </Button>

@@ -8,20 +8,37 @@
 
 @layer base {
   :root {
-    /* Premium Blue palette */
-    --blue-50: #eff6ff;
-    --blue-100: #dbeafe;
-    --blue-200: #bfdbfe;
-    --blue-300: #93c5fd;
-    --blue-400: #60a5fa;
-    --blue-500: #3b82f6;
-    --blue-600: #2563eb;
-    --blue-700: #1d4ed8;
-    --blue-800: #1e40af;
-    --blue-900: #1e3a8a;
-    --blue-950: #172554;
+    /* ── Brand palette ──────────────────────────────────────────
+       Primary anchor : #08428C  (deep navy — used for CTAs, selected states)
+       Secondary anchor: #5C6795  (slate-indigo — used for hover, accents, lighter tones)
+       Full 50-950 ramp generated to match the two anchors.
+    ──────────────────────────────────────────────────────────── */
+    --brand-50:  #eef2f9;
+    --brand-100: #d5dff0;
+    --brand-200: #afc3e2;
+    --brand-300: #849fce;
+    --brand-400: #5C6795;   /* secondary anchor */
+    --brand-500: #455282;
+    --brand-600: #08428C;   /* primary anchor */
+    --brand-700: #073776;
+    --brand-800: #062c60;
+    --brand-900: #04204a;
+    --brand-950: #021630;
 
-    /* Slate/neutral palette */
+    /* Kept as aliases so Tailwind "blue-*" utilities work unchanged */
+    --blue-50:  var(--brand-50);
+    --blue-100: var(--brand-100);
+    --blue-200: var(--brand-200);
+    --blue-300: var(--brand-300);
+    --blue-400: var(--brand-400);
+    --blue-500: var(--brand-500);
+    --blue-600: var(--brand-600);
+    --blue-700: var(--brand-700);
+    --blue-800: var(--brand-800);
+    --blue-900: var(--brand-900);
+    --blue-950: var(--brand-950);
+
+    /* Slate/neutral palette (unchanged) */
     --slate-50: #f8fafc;
     --slate-100: #f1f5f9;
     --slate-200: #e2e8f0;
@@ -34,14 +51,14 @@
     --slate-900: #0f172a;
     --slate-950: #020617;
 
-    /* ShadCN CSS vars */
+    /* ShadCN CSS vars — remapped to brand */
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;    /* blue-600 */
+    --primary: 213 91% 29%;             /* #08428C */
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -53,7 +70,7 @@
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
+    --ring: 213 91% 29%;                /* #08428C */
     --radius: 0.5rem;
   }
 
@@ -85,17 +102,17 @@
 }
 
 @layer utilities {
-  /* Blue gradient used on hero and CTAs */
+  /* Brand gradient used on hero CTAs and primary buttons */
   .bg-blue-gradient {
-    background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 50%, #1d4ed8 100%);
+    background: linear-gradient(135deg, #07377a 0%, #08428C 50%, #5C6795 100%);
   }
 
   /* Hero background texture */
   .hero-pattern {
     background-color: #020617;
     background-image:
-      radial-gradient(ellipse at 20% 50%, rgba(37,99,235,0.12) 0%, transparent 60%),
-      radial-gradient(ellipse at 80% 20%, rgba(59,130,246,0.08) 0%, transparent 50%);
+      radial-gradient(ellipse at 20% 50%, rgba(8,66,140,0.14) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(92,103,149,0.10) 0%, transparent 50%);
   }
 
   /* Subtle card hover effect */
@@ -118,12 +135,12 @@
   /* Luxury divider */
   .divider-blue {
     height: 1px;
-    background: linear-gradient(90deg, transparent, #3b82f6, transparent);
+    background: linear-gradient(90deg, transparent, #08428C, transparent);
   }
 
   /* Text gradient */
   .text-blue-gradient {
-    background: linear-gradient(135deg, #1d4ed8, #60a5fa);
+    background: linear-gradient(135deg, #08428C, #5C6795);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -132,7 +149,7 @@
   /* Scrollbar styling */
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: #3b82f6 transparent;
+    scrollbar-color: #08428C transparent;
   }
   .scrollbar-thin::-webkit-scrollbar {
     width: 4px;
@@ -141,7 +158,7 @@
     background: transparent;
   }
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: #3b82f6;
+    background: #08428C;
     border-radius: 2px;
   }
 
@@ -217,7 +234,7 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.45 0.16 260); /* blue-600 approx */
+  --primary: oklch(0.32 0.12 248);     /* #08428C — deep navy */
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
@@ -228,21 +245,21 @@
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.45 0.16 260);
-  --chart-1: oklch(0.45 0.16 260);
-  --chart-2: oklch(0.55 0.12 250);
-  --chart-3: oklch(0.65 0.10 240);
-  --chart-4: oklch(0.75 0.08 230);
-  --chart-5: oklch(0.85 0.05 220);
+  --ring: oklch(0.32 0.12 248);        /* #08428C */
+  --chart-1: oklch(0.32 0.12 248);     /* #08428C */
+  --chart-2: oklch(0.42 0.10 258);     /* #5C6795 */
+  --chart-3: oklch(0.52 0.08 252);
+  --chart-4: oklch(0.62 0.06 248);
+  --chart-5: oklch(0.72 0.04 244);
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.45 0.16 260);
+  --sidebar-primary: oklch(0.32 0.12 248);
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.97 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.45 0.16 260);
+  --sidebar-ring: oklch(0.32 0.12 248);
 }
 
 .dark {
@@ -252,7 +269,7 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.45 0.16 260);
+  --primary: oklch(0.42 0.10 258);     /* #5C6795 — lighter for dark mode */
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
@@ -263,18 +280,18 @@
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.45 0.16 260);
-  --chart-1: oklch(0.45 0.16 260);
-  --chart-2: oklch(0.55 0.12 250);
-  --chart-3: oklch(0.65 0.10 240);
-  --chart-4: oklch(0.75 0.08 230);
-  --chart-5: oklch(0.85 0.05 220);
+  --ring: oklch(0.42 0.10 258);
+  --chart-1: oklch(0.32 0.12 248);
+  --chart-2: oklch(0.42 0.10 258);
+  --chart-3: oklch(0.52 0.08 252);
+  --chart-4: oklch(0.62 0.06 248);
+  --chart-5: oklch(0.72 0.04 244);
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.45 0.16 260);
+  --sidebar-primary: oklch(0.42 0.10 258);
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.269 0 0);
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.45 0.16 260);
+  --sidebar-ring: oklch(0.42 0.10 258);
 }

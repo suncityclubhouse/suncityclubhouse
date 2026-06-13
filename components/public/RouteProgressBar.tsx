@@ -94,8 +94,8 @@ export function RouteProgressBar() {
       className="fixed top-0 left-0 right-0 h-1.5 z-[9999] transition-all duration-300 pointer-events-none"
       style={{
         width: `${progress}%`,
-        background: "linear-gradient(90deg, #3b82f6, #8b6914, #1d4ed8)",
-        boxShadow: "0 0 10px rgba(59, 130, 246, 0.7)",
+        background: "linear-gradient(90deg, #08428C, #8b6914, #5C6795)",
+        boxShadow: "0 0 10px rgba(8, 66, 140, 0.7)",
       }}
     />
   );

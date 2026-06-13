@@ -29,7 +29,7 @@ export function HeroSection() {
           <div className="absolute top-1/3 left-1/3 w-64 h-64 rounded-full border border-white/10" />
         </FloatingElement>
         <FloatingElement y={15} duration={7} delay={0.5}>
-          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full border border-blue-400/20" />
+          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full border border-brand-400/20" />
         </FloatingElement>
       </div>
 
@@ -41,7 +41,7 @@ export function HeroSection() {
           transition={{ duration: 0.7, ease: smoothEase, delay: 0.2 }}
           className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 text-blue-200 text-xs font-medium px-4 py-1.5 rounded-full mb-6"
         >
-          <Star className="w-3 h-3 fill-blue-200" />
+          <Star className="w-3 h-3 fill-current text-blue-200" />
           A Mahavir Group Development — Experience. Quality. Trust.
         </motion.div>
 
@@ -55,7 +55,7 @@ export function HeroSection() {
           Suncity{" "}
           <span
             style={{
-              background: "linear-gradient(135deg, #60a5fa, #bfdbfe, #60a5fa)",
+              background: "linear-gradient(135deg, #5C6795, #afc3e2, #5C6795)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
@@ -83,8 +83,8 @@ export function HeroSection() {
           <Button
             asChild
             size="lg"
-            className="text-white font-semibold px-8 py-6 text-base rounded-xl shadow-lg hover:shadow-blue-900/30 hover:scale-[1.02] transition-all"
-            style={{ background: "linear-gradient(135deg, #1d4ed8, #3b82f6)" }}
+            className="text-white font-semibold px-8 py-6 text-base rounded-xl shadow-lg hover:shadow-brand-900/30 hover:scale-[1.02] transition-all"
+            style={{ background: "linear-gradient(135deg, #07377a, #08428C)" }}
           >
             <Link href="#facilities">
               Browse Facilities

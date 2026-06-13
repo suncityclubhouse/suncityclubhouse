@@ -53,7 +53,7 @@ export default async function FacilityDetailPage({ params }: Props) {
       <Button
         asChild
         className="w-full py-5 text-base font-semibold text-white rounded-xl"
-        style={{ background: "linear-gradient(135deg, #1d4ed8, #3b82f6)" }}
+        style={{ background: "linear-gradient(135deg, #07377a, #08428C)" }}
       >
         <Link href={`/facilities/${facility.slug}/book`}>
           Book Now

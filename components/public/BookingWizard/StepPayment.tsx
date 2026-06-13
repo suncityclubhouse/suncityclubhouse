@@ -291,7 +291,7 @@ export function StepPayment({ bookingId, bookingRef, expiresAt, totalAmount, onS
               type="submit"
               disabled={uploading || !uploadedUrl}
               className="w-full text-white"
-              style={{ background: "linear-gradient(135deg, #1d4ed8, #3b82f6)" }}
+              style={{ background: "linear-gradient(135deg, #07377a, #08428C)" }}
             >
               {uploading ? (
                 <><Loader2 className="w-4 h-4 animate-spin mr-2" />Submitting…</>

@@ -148,7 +148,7 @@ export function Navbar() {
               asChild
               size="sm"
               className="text-white font-semibold shadow-sm hover:shadow-md transition-all hover:scale-[1.02]"
-              style={{ background: "linear-gradient(135deg, #1d4ed8, #3b82f6)" }}
+              style={{ background: "linear-gradient(135deg, #07377a, #08428C)" }}
             >
               <a href="/#facilities" onClick={scrollToFacilities}>Book Now</a>
             </Button>
@@ -215,7 +215,7 @@ export function Navbar() {
                 <Button
                   asChild
                   className="w-full text-white font-semibold"
-                  style={{ background: "linear-gradient(135deg, #1d4ed8, #3b82f6)" }}
+                  style={{ background: "linear-gradient(135deg, #07377a, #08428C)" }}
                 >
                   <Link href="/#facilities" onClick={() => setOpen(false)}>
                     Book a Facility

@@ -20,7 +20,7 @@ export function AnimatedSections({ children }: AnimatedSectionsProps) {
           <FadeIn animation="fade-up" className="text-center mb-14">
             <p
               className="text-xs font-bold uppercase tracking-widest mb-3"
-              style={{ color: "#2563eb" }}
+              style={{ color: "#08428C" }}
             >
               Our Spaces
             </p>
@@ -67,7 +67,7 @@ export function AnimatedSections({ children }: AnimatedSectionsProps) {
           <FadeIn animation="fade-up-small" delay={0.1}>
             <p
               className="text-xs font-bold uppercase tracking-widest mb-4 drop-shadow-[0_1.5px_3px_rgba(255,255,255,0.9)]"
-              style={{ color: "#1d4ed8" }}
+              style={{ color: "#08428C" }}
             >
               About Us
             </p>
@@ -80,7 +80,7 @@ export function AnimatedSections({ children }: AnimatedSectionsProps) {
                 Excellence
                 <span
                   className="absolute -bottom-1 left-0 w-full h-0.5"
-                  style={{ background: "linear-gradient(90deg, transparent, #3b82f6, transparent)" }}
+                  style={{ background: "linear-gradient(90deg, transparent, #08428C, transparent)" }}
                 />
               </span>
             </h2>
@@ -134,7 +134,7 @@ export function AnimatedSections({ children }: AnimatedSectionsProps) {
       <section className="py-20 bg-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <FadeIn animation="fade-up" className="text-center mb-12">
-            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "#2563eb" }}>
+            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "#08428C" }}>
               Simple Process
             </p>
             <h2 className="font-serif text-3xl font-semibold text-slate-900">How It Works</h2>
@@ -152,11 +152,11 @@ export function AnimatedSections({ children }: AnimatedSectionsProps) {
                     className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto group-hover:scale-110 transition-transform"
                     style={{ backgroundColor: "#dbeafe" }}
                   >
-                    <Icon className="w-7 h-7" style={{ color: "#1d4ed8" }} />
+                    <Icon className="w-7 h-7" style={{ color: "#08428C" }} />
                   </div>
                   <span
                     className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold"
-                    style={{ background: "linear-gradient(135deg, #1d4ed8, #3b82f6)" }}
+                    style={{ background: "linear-gradient(135deg, #07377a, #08428C)" }}
                   >
                     {step}
                   </span>
@@ -213,7 +213,7 @@ export function AnimatedSections({ children }: AnimatedSectionsProps) {
                 asChild
                 size="lg"
                 className="text-white font-semibold px-10 py-6 text-base rounded-xl shadow-lg hover:shadow-blue-900/30 hover:scale-[1.02] transition-all"
-                style={{ background: "linear-gradient(135deg, #1d4ed8, #3b82f6)" }}
+                style={{ background: "linear-gradient(135deg, #07377a, #08428C)" }}
               >
                 <Link href="#facilities">
                   Book Now — Free to Browse

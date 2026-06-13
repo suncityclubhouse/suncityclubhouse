@@ -328,7 +328,7 @@ export function StepBookingForm({ facility, state, onStateChange, onNext, onBack
           <Button
             type="submit"
             disabled={submitting || !canProceed}
-            style={{ backgroundColor: "#8b6914" }}
+            style={{ background: "linear-gradient(135deg, #07377a, #08428C)" }}
             className="text-white hover:opacity-90 disabled:opacity-40"
           >
             {submitting ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Creating booking…</> : "Proceed to Payment →"}

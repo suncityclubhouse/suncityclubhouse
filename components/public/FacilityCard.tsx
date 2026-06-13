@@ -70,7 +70,7 @@ export function FacilityCard({ facility, index = 0 }: FacilityCardProps) {
               asChild
               size="sm"
               className="flex-1 text-white font-semibold gap-1 rounded-lg shadow-sm hover:shadow-md hover:scale-[1.02] transition-all"
-              style={{ background: "linear-gradient(135deg, #1d4ed8, #3b82f6)" }}
+              style={{ background: "linear-gradient(135deg, #07377a, #08428C)" }}
             >
               <Link href={bookUrl}>
                 <CalendarCheck className="w-3.5 h-3.5" />
