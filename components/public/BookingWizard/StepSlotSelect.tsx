@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/button";
 import { PricingCard } from "@/components/public/PricingCard";
 import { createTemporaryReservation } from "@/actions/reservations";
 import { getBookedTimeSlots } from "@/actions/bookings";
-import { formatDisplayDate, toDateString, calculateEndDate } from "@/lib/utils/dates";
+import { formatDisplayDate, formatShortDate, toDateString, calculateEndDate } from "@/lib/utils/dates";
 import { generateHourlySlots } from "@/lib/utils/slots";
 import { cn, formatINR } from "@/lib/utils/formatters";
-import { Calendar, Clock, Package, Loader2, Info } from "lucide-react";
+import { Calendar, Clock, Package, Loader2, Info, ArrowRight } from "lucide-react";
 import type { FacilityWithMedia, FacilityPackage } from "@/types/database";
 import type { BookingWizardState } from "@/types";
 
@@ -28,17 +28,14 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
   const [loading, setLoading] = useState(false);
   const [loadingSlots, setLoadingSlots] = useState(false);
 
-  // Multi-day (full_day) state
+  // Multi-day state — lives at the top, independent of package selection
   const [isMultiDay, setIsMultiDay] = useState(false);
   const [endDateStr, setEndDateStr] = useState<string>(""); // "yyyy-MM-dd"
 
   // Multi-slot range state (hourly)
   const [rangeStart, setRangeStart] = useState<string | null>(null);
   const [rangeEnd, setRangeEnd] = useState<string | null>(null);
-  // "selecting" = user clicked start but not end yet
   const [selectingEnd, setSelectingEnd] = useState(false);
-
-
 
   useEffect(() => {
     async function loadBookedSlots() {
@@ -57,7 +54,7 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
       }
     }
     loadBookedSlots();
-    // Reset range when date changes
+    // Reset hourly range when date changes
     setRangeStart(null);
     setRangeEnd(null);
     setSelectingEnd(false);
@@ -65,7 +62,11 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
 
   const packages = facility.facility_packages.filter((p) => p.is_active);
   const hourlyPackages = packages.filter((p) => p.type === "hourly");
+  // When multi-day is ON, only show full_day packages (hourly/monthly don't support multi-day)
   const otherPackages = packages.filter((p) => p.type !== "hourly");
+  const filteredOtherPackages = isMultiDay
+    ? otherPackages.filter((p) => p.type === "full_day")
+    : otherPackages;
   const hourlySlots = generateHourlySlots();
 
   // ---- helpers ----
@@ -81,7 +82,6 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
       );
     });
 
-  // Check if ANY slot in a range [from..to] is booked
   const hasBookedSlotInRange = (fromStart: string, toEnd: string): boolean => {
     return hourlySlots.some(
       (s) =>
@@ -91,7 +91,6 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
     );
   };
 
-  // Slot label: "6 AM", "7 AM" … "10 PM"
   const slotLabel = (startTime: string) => {
     const [h] = startTime.split(":").map(Number);
     if (h === 0) return "12 AM";
@@ -99,7 +98,6 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
     return h < 12 ? `${h} AM` : `${h - 12} PM`;
   };
 
-  // Hours selected in the current range
   const hoursSelected = (() => {
     if (!rangeStart || !rangeEnd) return 0;
     const startIdx = hourlySlots.findIndex((s) => s.startTime === rangeStart);
@@ -110,18 +108,13 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
   const getSlotState = (slot: { startTime: string; endTime: string }) => {
     const booked = isSlotBooked(slot.startTime, slot.endTime);
     if (booked) return "booked";
-
     if (!rangeStart) return "available";
-
-    // If still picking end — highlight hover range (we use CSS hover for that)
     if (rangeStart && rangeEnd) {
-      const inRange =
-        slot.startTime >= rangeStart && slot.endTime <= rangeEnd;
+      const inRange = slot.startTime >= rangeStart && slot.endTime <= rangeEnd;
       if (slot.startTime === rangeStart) return "range-start";
       if (slot.endTime === rangeEnd) return "range-end";
       if (inRange) return "range-mid";
     } else {
-      // Selecting end — mark the start
       if (slot.startTime === rangeStart) return "range-start";
     }
     return "available";
@@ -130,84 +123,65 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
   // ---- slot click handler ----
   const handleSlotClick = (slot: { startTime: string; endTime: string }) => {
     if (!selected) return;
-
     const booked = isSlotBooked(slot.startTime, slot.endTime);
     if (booked) {
-      // Reset
       setRangeStart(null);
       setRangeEnd(null);
       setSelectingEnd(false);
       onStateChange({ startTime: null, endTime: null, totalAmount: selected.price });
       return;
     }
-
     if (!selectingEnd) {
-      // First click — set start
       setRangeStart(slot.startTime);
-      setRangeEnd(slot.endTime); // default: 1 hour (end = this slot's end)
+      setRangeEnd(slot.endTime);
       setSelectingEnd(true);
-      onStateChange({
-        startTime: slot.startTime,
-        endTime: slot.endTime,
-        totalAmount: selected.price * 1,
-      });
+      onStateChange({ startTime: slot.startTime, endTime: slot.endTime, totalAmount: selected.price * 1 });
     } else {
-      // Second click
       if (slot.startTime === rangeStart) {
-        // Tap same slot → toggle off
         setRangeStart(null);
         setRangeEnd(null);
         setSelectingEnd(false);
         onStateChange({ startTime: null, endTime: null, totalAmount: selected.price });
         return;
       }
-
       if (slot.startTime < rangeStart!) {
-        // Picked an earlier slot → restart selection from here
         setRangeStart(slot.startTime);
         setRangeEnd(slot.endTime);
         setSelectingEnd(true);
-        onStateChange({
-          startTime: slot.startTime,
-          endTime: slot.endTime,
-          totalAmount: selected.price * 1,
-        });
+        onStateChange({ startTime: slot.startTime, endTime: slot.endTime, totalAmount: selected.price * 1 });
         return;
       }
-
-      // Picked a later slot — check no booked slots in between
       if (hasBookedSlotInRange(rangeStart!, slot.endTime)) {
         toast.error("One or more slots in this range are already booked. Please adjust your selection.");
         return;
       }
-
       const startIdx = hourlySlots.findIndex((s) => s.startTime === rangeStart);
       const endIdx = hourlySlots.findIndex((s) => s.endTime === slot.endTime);
       const hours = endIdx - startIdx + 1;
-
       setRangeEnd(slot.endTime);
       setSelectingEnd(false);
-      onStateChange({
-        startTime: rangeStart!,
-        endTime: slot.endTime,
-        totalAmount: selected.price * hours,
-      });
+      onStateChange({ startTime: rangeStart!, endTime: slot.endTime, totalAmount: selected.price * hours });
     }
   };
 
   // ---- package select ----
   const handlePackageSelect = (pkg: FacilityPackage) => {
     setSelected(pkg);
-    // Reset range on package switch
     setRangeStart(null);
     setRangeEnd(null);
     setSelectingEnd(false);
-    // Reset multi-day when switching packages
-    setIsMultiDay(false);
-    setEndDateStr("");
 
     const needsSlot = pkg.type === "hourly" || pkg.type === "monthly";
-    const endDate = state.selectedDate ? calculateEndDate(state.selectedDate, pkg.type) : null;
+    // For full_day + multi-day: endDate = the user-chosen endDateStr (or start date for single day)
+    let endDate: string | null;
+    if (pkg.type === "full_day") {
+      endDate = isMultiDay && endDateStr ? endDateStr : toDateString(state.selectedDate ?? new Date());
+    } else {
+      endDate = state.selectedDate ? calculateEndDate(state.selectedDate, pkg.type) : null;
+    }
+
+    const basePrice = pkg.price;
+    const days = pkg.type === "full_day" ? daysCount : 1;
 
     if (!needsSlot) {
       onStateChange({
@@ -216,7 +190,7 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
         startTime: pkg.start_time ?? null,
         endTime: pkg.end_time ?? null,
         endDate,
-        totalAmount: pkg.price,
+        totalAmount: basePrice * days,
       });
     } else {
       onStateChange({
@@ -225,28 +199,43 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
         startTime: null,
         endTime: null,
         endDate,
-        totalAmount: pkg.price,
+        totalAmount: basePrice,
       });
     }
   };
 
-  // Resident pricing — read from shared wizard state (set by the popup)
-  const isResident = state.isResident;
-  const hasResidentPrice = selected !== null && selected.resident_price !== null && selected.resident_price < selected.price;
-  const effectivePrice = isResident && hasResidentPrice ? selected!.resident_price! : (selected?.price ?? 0);
-
   // ---- multi-day helpers ----
   const isFullDay = selected?.type === "full_day";
 
-  // How many days is the current selection? (minimum 1)
+  // How many days? Always computed from top-level state, not package
   const daysCount = (() => {
-    if (!isFullDay || !isMultiDay || !state.selectedDate || !endDateStr) return 1;
+    if (!isMultiDay || !state.selectedDate || !endDateStr) return 1;
     const startStr = toDateString(state.selectedDate);
     if (endDateStr <= startStr) return 1;
     return differenceInCalendarDays(parseISO(endDateStr), parseISO(startStr)) + 1;
   })();
 
-  // Recalculate amount when days, start date, end date, or resident status changes
+  // When multi-day toggled ON: deselect any non-full_day package (they don't support multi-day)
+  const handleMultiDayToggle = () => {
+    const next = !isMultiDay;
+    setIsMultiDay(next);
+    if (!next) {
+      setEndDateStr("");
+    } else {
+      // If currently selected package is not full_day, clear it
+      if (selected && selected.type !== "full_day") {
+        setSelected(null);
+        onStateChange({ selectedPackageId: null, slotType: null, startTime: null, endTime: null, totalAmount: 0 });
+      }
+    }
+  };
+
+  // Resident pricing
+  const isResident = state.isResident;
+  const hasResidentPrice = selected !== null && selected.resident_price !== null && selected.resident_price < selected.price;
+  const effectivePrice = isResident && hasResidentPrice ? selected!.resident_price! : (selected?.price ?? 0);
+
+  // Recalculate amount when days/dates/resident/package changes (for full_day)
   useEffect(() => {
     if (!selected || !isFullDay) return;
     const price = isResident && selected.resident_price !== null && selected.resident_price < selected.price
@@ -277,7 +266,6 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
     if (!selected || !state.selectedDate) return;
     setLoading(true);
     try {
-      // For full_day multi-day: use the custom end date; otherwise use calculateEndDate
       let endDate: string | undefined;
       if (isFullDay) {
         endDate = isMultiDay && endDateStr ? endDateStr : toDateString(state.selectedDate);
@@ -288,7 +276,6 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
       const startTime = needsTimeSlot ? rangeStart ?? undefined : selected.start_time ?? undefined;
       const endTime = needsTimeSlot ? rangeEnd ?? undefined : selected.end_time ?? undefined;
 
-      // Compute the final amount based on resident status and days
       let finalAmount: number;
       if (needsTimeSlot && hasValidRange) {
         const startIdx = hourlySlots.findIndex((s) => s.startTime === (startTime ?? ""));
@@ -332,52 +319,120 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
     }
   };
 
-  // Formatted range label for summary
-  const rangeLabel = (() => {
-    if (!rangeStart || !rangeEnd) return null;
-    return `${slotLabel(rangeStart)} – ${rangeEnd}`;
-  })();
-
   return (
     <div className="space-y-5">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+
+      {/* ── Header: title + date range picker ─────────────────── */}
+      <div className="space-y-3">
         <div>
           <h2 className="text-xl font-serif font-semibold text-stone-900">Select Package</h2>
-          <p className="text-sm text-stone-500 mt-1">
-            {state.selectedDate && formatDisplayDate(state.selectedDate)}
-          </p>
+          <p className="text-sm text-stone-500 mt-0.5">Choose your dates, then pick a package below</p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <label htmlFor="booking-date" className="text-sm font-medium text-stone-700">Date:</label>
-          <input
-            id="booking-date"
-            type="date"
-            min={toDateString(new Date())}
-            value={state.selectedDate ? toDateString(state.selectedDate) : toDateString(new Date())}
-            onChange={(e) => {
-              if (e.target.value) {
-                const newDate = new Date(e.target.value + "T00:00:00");
-                onStateChange({ selectedDate: newDate });
-                // Reset end date if it's before new start
-                if (endDateStr && endDateStr < e.target.value) {
-                  setEndDateStr("");
-                }
-              }
-            }}
-            className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
+        {/* Date range card — always visible */}
+        <div className="bg-stone-50 border border-stone-200 rounded-xl p-4 space-y-3">
+
+          {/* Toggle row */}
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-stone-500 flex-shrink-0" />
+              <span className="text-sm font-medium text-stone-700">Book for multiple days?</span>
+            </div>
+            <button
+              id="multi-day-toggle"
+              type="button"
+              role="switch"
+              aria-checked={isMultiDay}
+              onClick={handleMultiDayToggle}
+              className={cn(
+                "relative inline-flex w-11 h-6 rounded-full border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1 flex-shrink-0",
+                isMultiDay ? "bg-blue-600 border-blue-600" : "bg-white border-slate-300"
+              )}
+            >
+              <span
+                className={cn(
+                  "inline-block w-4 h-4 rounded-full bg-white shadow transform transition-transform mt-0.5",
+                  isMultiDay ? "translate-x-5" : "translate-x-0.5"
+                )}
+              />
+            </button>
+          </div>
+
+          {/* Date inputs */}
+          <div className={cn(
+            "grid gap-3",
+            isMultiDay ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"
+          )}>
+            {/* Start / single date */}
+            <div className="space-y-1">
+              <label htmlFor="booking-date" className="text-xs font-semibold text-stone-400 uppercase tracking-wider block">
+                {isMultiDay ? "Start Date" : "Date"}
+              </label>
+              <input
+                id="booking-date"
+                type="date"
+                min={toDateString(new Date())}
+                value={state.selectedDate ? toDateString(state.selectedDate) : toDateString(new Date())}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    onStateChange({ selectedDate: new Date(e.target.value + "T00:00:00") });
+                    if (endDateStr && endDateStr < e.target.value) setEndDateStr("");
+                  }
+                }}
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            {/* End date — only when multi-day */}
+            {isMultiDay && (
+              <div className="space-y-1">
+                <label htmlFor="end-date" className="text-xs font-semibold text-stone-400 uppercase tracking-wider block">
+                  End Date
+                </label>
+                <input
+                  id="end-date"
+                  type="date"
+                  min={state.selectedDate ? toDateString(state.selectedDate) : toDateString(new Date())}
+                  value={endDateStr || (state.selectedDate ? toDateString(state.selectedDate) : "")}
+                  onChange={(e) => setEndDateStr(e.target.value)}
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Duration pill — shown when multi-day and dates differ */}
+          {isMultiDay && daysCount > 1 && (
+            <div className="flex items-center gap-2 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
+              <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
+              <span>
+                {formatShortDate(state.selectedDate!)}
+                <ArrowRight className="inline w-3 h-3 mx-1.5 opacity-60" />
+                {formatShortDate(parseISO(endDateStr))}
+                <span className="ml-2 font-bold">· {daysCount} days</span>
+              </span>
+            </div>
+          )}
+
+          {/* Hint when multi-day is on */}
+          {isMultiDay && daysCount === 1 && (
+            <p className="text-xs text-stone-400 flex items-center gap-1.5">
+              <Info className="w-3.5 h-3.5 flex-shrink-0" />
+              Set an end date later than the start date to book multiple days
+            </p>
+          )}
         </div>
       </div>
 
+      {/* ── Package list ───────────────────────────────────────── */}
       {packages.length === 0 ? (
         <div className="text-center py-10 text-stone-400">
           No packages available. Please contact the admin.
         </div>
       ) : (
         <div className="space-y-6">
-          {/* Hourly packages */}
-          {hourlyPackages.length > 0 && (
+          {/* Hourly packages — hidden when multi-day is on */}
+          {!isMultiDay && hourlyPackages.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <Clock className="w-4 h-4 text-stone-400" />
@@ -398,14 +453,21 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
           )}
 
           {/* Non-hourly packages */}
-          {otherPackages.length > 0 && (
+          {filteredOtherPackages.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <Package className="w-4 h-4 text-stone-400" />
-                <h3 className="text-sm font-semibold text-stone-700">Packages</h3>
+                <h3 className="text-sm font-semibold text-stone-700">
+                  {isMultiDay ? "Multi-day Packages" : "Packages"}
+                </h3>
+                {isMultiDay && daysCount > 1 && selected?.type === "full_day" && (
+                  <span className="ml-auto text-xs text-blue-600 font-medium bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full">
+                    Price shown × {daysCount} days
+                  </span>
+                )}
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {otherPackages.map((pkg) => (
+                {filteredOtherPackages.map((pkg) => (
                   <PricingCard
                     key={pkg.id}
                     pkg={pkg}
@@ -418,10 +480,16 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
             </div>
           )}
 
+          {/* No full-day packages available for multi-day */}
+          {isMultiDay && filteredOtherPackages.length === 0 && (
+            <div className="text-center py-6 text-stone-400 text-sm border border-dashed border-stone-200 rounded-xl">
+              No full-day packages available for multi-day bookings.
+            </div>
+          )}
+
           {/* Hourly time slot grid */}
           {needsTimeSlot && selected && (
             <div className="mt-4 bg-stone-50 rounded-xl p-4 space-y-3">
-              {/* Instruction banner */}
               <div className="flex items-start gap-2">
                 <Info className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
                 <p className="text-xs text-stone-600">
@@ -432,7 +500,6 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
                 {loadingSlots && <Loader2 className="w-4 h-4 animate-spin text-stone-400 ml-auto flex-shrink-0" />}
               </div>
 
-              {/* Slot grid */}
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
                 {hourlySlots.map((slot) => {
                   const state = getSlotState(slot);
@@ -440,7 +507,6 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
                   const isEnd = state === "range-end";
                   const isMid = state === "range-mid";
                   const isBooked = state === "booked";
-
                   return (
                     <button
                       key={slot.startTime}
@@ -464,7 +530,6 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
                 })}
               </div>
 
-              {/* Live range indicator */}
               {rangeStart && (
                 <div className="flex flex-wrap items-center gap-3 text-xs text-stone-500 pt-1 border-t border-stone-200">
                   <div className="flex items-center gap-1.5">
@@ -486,77 +551,7 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
         </div>
       )}
 
-
-      {/* Multi-day toggle — only for full_day packages */}
-      {isFullDay && selected && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3">
-          <div className="flex items-center gap-3">
-            <Calendar className="w-4 h-4 text-amber-600 flex-shrink-0" />
-            <label htmlFor="multi-day-toggle" className="text-sm font-medium text-stone-700 cursor-pointer flex-1">
-              Book for multiple days
-            </label>
-            <button
-              id="multi-day-toggle"
-              type="button"
-              role="switch"
-              aria-checked={isMultiDay}
-              onClick={() => {
-                const next = !isMultiDay;
-                setIsMultiDay(next);
-                if (!next) setEndDateStr("");
-              }}
-              className={cn(
-                "relative inline-flex w-11 h-6 rounded-full border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-1",
-                isMultiDay ? "bg-amber-500 border-amber-500" : "bg-white border-slate-300"
-              )}
-            >
-              <span
-                className={cn(
-                  "inline-block w-4 h-4 rounded-full bg-white shadow transform transition-transform mt-0.5",
-                  isMultiDay ? "translate-x-5" : "translate-x-0.5"
-                )}
-              />
-            </button>
-          </div>
-
-          {isMultiDay && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-              <div className="space-y-1">
-                <p className="text-xs font-medium text-stone-500 uppercase tracking-wider">Start Date</p>
-                <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700">
-                  {state.selectedDate ? formatDisplayDate(state.selectedDate) : "—"}
-                </div>
-              </div>
-              <div className="space-y-1">
-                <label htmlFor="end-date" className="text-xs font-medium text-stone-500 uppercase tracking-wider block">
-                  End Date
-                </label>
-                <input
-                  id="end-date"
-                  type="date"
-                  min={state.selectedDate ? toDateString(state.selectedDate) : toDateString(new Date())}
-                  value={endDateStr || (state.selectedDate ? toDateString(state.selectedDate) : "")}
-                  onChange={(e) => setEndDateStr(e.target.value)}
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400"
-                />
-              </div>
-            </div>
-          )}
-
-          {isMultiDay && daysCount > 1 && (
-            <div className="flex items-center gap-2 text-xs text-amber-700 bg-amber-100 rounded-lg px-3 py-2">
-              <Info className="w-3.5 h-3.5 flex-shrink-0" />
-              <span>
-                <strong>{daysCount} days</strong> selected &nbsp;·&nbsp;
-                {formatINR(effectivePrice)}/day &nbsp;·&nbsp;
-                Total: <strong>{formatINR(effectivePrice * daysCount)}</strong>
-              </span>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Summary bar */}
+      {/* ── Summary bar ───────────────────────────────────────── */}
       {canProceed && (
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
           <div className="flex items-center justify-between">
