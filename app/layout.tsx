@@ -3,6 +3,8 @@ import "./globals.css";
 import { Toaster } from "sonner";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
+import { RouteProgressBar } from "@/components/public/RouteProgressBar";
+import { Suspense } from "react";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -24,6 +26,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={cn("font-sans", geist.variable)}>
       <body>
+        <Suspense fallback={null}>
+          <RouteProgressBar />
+        </Suspense>
         {children}
         <Toaster
           position="top-right"
@@ -39,3 +44,4 @@ export default function RootLayout({
     </html>
   );
 }
+
