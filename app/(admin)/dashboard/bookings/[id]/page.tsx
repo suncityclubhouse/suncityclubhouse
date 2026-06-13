@@ -71,6 +71,9 @@ export default async function BookingDetailPage({ params }: Props) {
           {[
             { label: "Facility", value: b.facility?.name ?? "—" },
             { label: "Date", value: formatDisplayDate(b.booking_date) },
+            ...(b.end_date && b.end_date !== b.booking_date
+              ? [{ label: "End Date", value: formatDisplayDate(b.end_date) }]
+              : []),
             {
               label: "Slot",
               value: b.start_time && b.end_time
@@ -80,7 +83,10 @@ export default async function BookingDetailPage({ params }: Props) {
             { label: "Slot Type", value: b.slot_type.replace(/_/g, " ") },
             { label: "Base Amount", value: formatINR(b.base_amount) },
             { label: "Total Amount", value: formatINR(b.total_amount) },
-            { label: "Booked At", value: new Date(b.created_at).toLocaleString("en-IN") },
+            {
+              label: "Booked At",
+              value: new Date(b.created_at).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
+            },
           ].map(({ label, value }) => (
             <div key={label} className="flex justify-between gap-3 text-sm">
               <span className="text-stone-500 flex-shrink-0">{label}</span>
@@ -98,7 +104,7 @@ export default async function BookingDetailPage({ params }: Props) {
             {
               label: "Uploaded At",
               value: b.payment_uploaded_at
-                ? new Date(b.payment_uploaded_at).toLocaleString("en-IN")
+                ? new Date(b.payment_uploaded_at).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })
                 : "—",
             },
           ].map(({ label, value }) => (
@@ -152,7 +158,7 @@ export default async function BookingDetailPage({ params }: Props) {
             )}
             {b.approved_at && (
               <div className="text-xs text-stone-400">
-                Approved at: {new Date(b.approved_at).toLocaleString("en-IN")}
+                Approved at: {new Date(b.approved_at).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}
               </div>
             )}
           </div>

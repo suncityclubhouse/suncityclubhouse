@@ -8,7 +8,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import {
   Plus, Trash2, Pencil, Loader2, X, Check,
-  Clock, Calendar, Sun, Sunrise
+  Clock, Calendar, Sun
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,11 +40,9 @@ const packageSchema = z.object({
 type PackageFormValues = z.infer<typeof packageSchema>;
 
 const TYPE_OPTIONS = [
-  { value: "hourly",    label: "Hourly",     icon: Clock,    hint: "Charged per hour" },
-  { value: "half_day",  label: "Half Day",   icon: Sunrise,  hint: "Fixed AM/PM slot" },
-  { value: "full_day",  label: "Full Day",   icon: Sun,      hint: "Entire day" },
-  { value: "monthly",   label: "Monthly",    icon: Calendar, hint: "30-day subscription" },
-  { value: "quarterly", label: "Quarterly",  icon: Calendar, hint: "90-day subscription" },
+  { value: "hourly",  label: "Hourly",  icon: Clock,    hint: "Charged per hour" },
+  { value: "full_day", label: "Full Day", icon: Sun,     hint: "Entire day (supports multi-day)" },
+  { value: "monthly",  label: "Monthly",  icon: Calendar, hint: "30-day subscription" },
 ] as const;
 
 const TYPE_COLORS: Record<string, string> = {
