@@ -30,6 +30,7 @@ export async function createBooking(params: {
   endDate?: string;
   baseAmount: number;
   totalAmount: number;
+  quantity?: number;
   formValues: BookingFormSchema;
 }): Promise<ActionResult<{ bookingId: string; bookingRef: string; expiresAt: string }>> {
   const db = createAdminClient();
@@ -61,6 +62,7 @@ export async function createBooking(params: {
       p_slot_type: params.slotType,
       p_exclude_id: null,
       p_end_date: params.endDate ?? null,
+      p_quantity: params.quantity ?? 1,
     }
   );
 
@@ -110,6 +112,7 @@ export async function createBooking(params: {
       end_time: params.endTime ?? null,
       end_date: endDate,
       slot_type: params.slotType,
+      quantity: params.quantity ?? 1,
       base_amount: params.baseAmount,
       discount_amount: 0,
       total_amount: params.totalAmount,

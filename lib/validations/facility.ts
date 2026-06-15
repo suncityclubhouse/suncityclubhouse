@@ -13,6 +13,7 @@ export const facilitySchema = z.object({
   rules: z.string().max(5000).optional(),
   minCapacity: z.number().int().min(1).optional(),
   maxCapacity: z.number().int().min(1).optional(),
+  inventoryCount: z.number().int().min(1).default(1), // max units for accommodation
   status: z.enum(["active", "inactive", "maintenance"]).default("active"),
   displayOrder: z.number().int().min(0).default(0),
 });

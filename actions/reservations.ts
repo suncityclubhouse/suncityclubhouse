@@ -18,6 +18,7 @@ export async function createTemporaryReservation(params: {
   startTime?: string;
   endTime?: string;
   endDate?: string;
+  quantity?: number;
 }): Promise<ActionResult<{ sessionToken: string; expiresAt: string }>> {
   const db = createAdminClient();
 
@@ -38,11 +39,12 @@ export async function createTemporaryReservation(params: {
       p_slot_type: params.slotType,
       p_exclude_id: null,
       p_end_date: params.endDate ?? null,
+      p_quantity: params.quantity ?? 1,
     }
   );
 
   if (checkError || !isAvailable) {
-    return { success: false, error: "This slot is no longer available or is temporarily held by another user. Please try again." };
+    return { success: false, error: "Sorry, not enough rooms available for your selected dates. Please try a different date or reduce the quantity." };
   }
 
   const sessionToken = generateSessionToken();
@@ -55,6 +57,7 @@ export async function createTemporaryReservation(params: {
     end_time: params.endTime ?? null,
     end_date: params.endDate ?? null,
     slot_type: params.slotType,
+    quantity: params.quantity ?? 1,
     session_token: sessionToken,
     expires_at: expiresAt,
   });

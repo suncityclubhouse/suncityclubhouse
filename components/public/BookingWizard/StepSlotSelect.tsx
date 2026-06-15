@@ -10,7 +10,7 @@ import { getBookedTimeSlots } from "@/actions/bookings";
 import { formatDisplayDate, formatShortDate, toDateString, calculateEndDate } from "@/lib/utils/dates";
 import { generateHourlySlots } from "@/lib/utils/slots";
 import { cn, formatINR } from "@/lib/utils/formatters";
-import { Calendar, Clock, Package, Loader2, Info, ArrowRight } from "lucide-react";
+import { Calendar, Clock, Package, Loader2, Info, ArrowRight, Minus, Plus } from "lucide-react";
 import type { FacilityWithMedia, FacilityPackage } from "@/types/database";
 import type { BookingWizardState } from "@/types";
 
@@ -23,6 +23,9 @@ interface StepSlotSelectProps {
 }
 
 export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack }: StepSlotSelectProps) {
+  const isAccommodation = facility.category === "accommodation";
+  const maxQuantity = facility.inventory_count ?? 1;
+
   const [selected, setSelected] = useState<FacilityPackage | null>(null);
   const [bookedSlots, setBookedSlots] = useState<{ start_time: string; end_time: string }[]>([]);
   const [loading, setLoading] = useState(false);
@@ -287,6 +290,8 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
       } else {
         finalAmount = effectivePrice;
       }
+      // For accommodation: multiply by number of rooms selected
+      if (isAccommodation) finalAmount = finalAmount * state.quantity;
 
       const res = await createTemporaryReservation({
         facilityId: facility.id,
@@ -295,6 +300,7 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
         startTime,
         endTime,
         endDate,
+        quantity: isAccommodation ? state.quantity : 1,
       });
 
       if (!res.success) {
@@ -357,6 +363,38 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
               />
             </button>
           </div>
+
+          {/* Quantity picker — accommodation only */}
+          {isAccommodation && (
+            <div className="flex items-center justify-between border-t border-stone-200 pt-3">
+              <span className="text-sm font-medium text-stone-700">Number of Rooms</span>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = Math.max(1, state.quantity - 1);
+                    onStateChange({ quantity: next });
+                  }}
+                  disabled={state.quantity <= 1}
+                  className="w-8 h-8 rounded-full border border-stone-300 flex items-center justify-center text-stone-600 hover:bg-stone-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  <Minus className="w-3.5 h-3.5" />
+                </button>
+                <span className="text-lg font-bold text-stone-900 w-5 text-center">{state.quantity}</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = Math.min(maxQuantity, state.quantity + 1);
+                    onStateChange({ quantity: next });
+                  }}
+                  disabled={state.quantity >= maxQuantity}
+                  className="w-8 h-8 rounded-full border border-stone-300 flex items-center justify-center text-stone-600 hover:bg-stone-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Date inputs */}
           <div className={cn(
@@ -559,13 +597,16 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
               <p className="text-sm text-stone-600">Total Amount</p>
               <p className="text-xl font-bold text-stone-900">
                 {formatINR(
-                  needsTimeSlot && hasValidRange && hoursSelected > 0
+                  (needsTimeSlot && hasValidRange && hoursSelected > 0
                     ? effectivePrice * hoursSelected
                     : isFullDay
                     ? effectivePrice * daysCount
-                    : effectivePrice
+                    : effectivePrice) * (isAccommodation ? state.quantity : 1)
                 )}
               </p>
+              {isAccommodation && state.quantity > 1 && (
+                <p className="text-xs text-stone-400 mt-0.5">{state.quantity} units × {formatINR(effectivePrice)}</p>
+              )}
             </div>
             {needsTimeSlot && hasValidRange && hoursSelected > 0 && (
               <div className="text-right">

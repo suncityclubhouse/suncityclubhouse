@@ -139,6 +139,7 @@ export function StepBookingForm({ facility, state, onStateChange, onNext, onBack
         endDate: state.endDate ?? undefined,
         baseAmount: finalAmount,
         totalAmount: finalAmount,
+        quantity: state.quantity ?? 1,
         formValues: {
           ...values,
           eventPurpose: values.eventPurpose || "Facility Booking",

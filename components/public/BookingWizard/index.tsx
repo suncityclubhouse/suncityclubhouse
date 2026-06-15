@@ -36,6 +36,7 @@ export function BookingWizard({ facility }: BookingWizardProps) {
     startTime: null,
     endTime: null,
     endDate: null,
+    quantity: 1,
     totalAmount: 0,
     isResident: true,
     sessionToken: null,

@@ -95,6 +95,7 @@ export async function createFacility(
       rules: values.rules ?? null,
       min_capacity: values.minCapacity ?? 1,
       max_capacity: values.maxCapacity ?? null,
+      inventory_count: values.inventoryCount ?? 1,
       status: values.status,
       display_order: values.displayOrder,
     })
@@ -134,6 +135,7 @@ export async function updateFacility(
       rules: values.rules ?? null,
       min_capacity: values.minCapacity ?? 1,
       max_capacity: values.maxCapacity ?? null,
+      inventory_count: values.inventoryCount ?? 1,
       status: values.status,
       display_order: values.displayOrder,
       thumbnail_url: values.thumbnailUrl ?? undefined,

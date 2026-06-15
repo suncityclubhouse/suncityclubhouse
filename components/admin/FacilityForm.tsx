@@ -29,6 +29,7 @@ const facilitySchema = z.object({
   rules: z.string().max(2000).optional(),
   min_capacity: z.coerce.number().int().min(1).optional(),
   max_capacity: z.coerce.number().int().min(1).optional(),
+  inventory_count: z.coerce.number().int().min(1).default(1),
   status: z.enum(["active", "inactive", "maintenance"]),
   display_order: z.coerce.number().int().min(0).default(0),
 });
@@ -64,6 +65,7 @@ export function FacilityForm({ facility, isEdit = false }: Props) {
     handleSubmit,
     setValue,
     getValues,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(facilitySchema) as any,
@@ -76,10 +78,13 @@ export function FacilityForm({ facility, isEdit = false }: Props) {
       rules:             facility?.rules ?? "",
       min_capacity:      facility?.min_capacity ?? undefined,
       max_capacity:      facility?.max_capacity ?? undefined,
+      inventory_count:   facility?.inventory_count ?? 1,
       status:            facility?.status ?? "active",
       display_order:     facility?.display_order ?? 0,
     },
   });
+
+  const watchedCategory = watch("category");
 
   const handleThumbnailUpload = async (file: File) => {
     setUploadingThumb(true);
@@ -119,6 +124,7 @@ export function FacilityForm({ facility, isEdit = false }: Props) {
         rules:            values.rules ?? null,
         minCapacity:      values.min_capacity ?? 1,
         maxCapacity:      values.max_capacity ?? null,
+        inventoryCount:   values.inventory_count ?? 1,
         status:           values.status,
         displayOrder:     values.display_order,
         thumbnailUrl:     thumbnailUrl || undefined,
@@ -240,6 +246,16 @@ export function FacilityForm({ facility, isEdit = false }: Props) {
             <Label htmlFor="max_capacity">Max Capacity (persons)</Label>
             <Input id="max_capacity" type="number" {...register("max_capacity")} placeholder="500" />
           </div>
+
+          {/* Inventory count — accommodation only */}
+          {watchedCategory === "accommodation" && (
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label htmlFor="inventory_count">Number of Rooms Available *</Label>
+              <Input id="inventory_count" type="number" min={1} {...register("inventory_count")} placeholder="e.g. 5" />
+              <p className="text-xs text-stone-400">Total rooms that can be booked simultaneously on any given date</p>
+              {errors.inventory_count && <p className="text-xs text-red-500">{errors.inventory_count.message}</p>}
+            </div>
+          )}
 
           <div className="space-y-1.5">
             <Label htmlFor="display_order">Display Order</Label>

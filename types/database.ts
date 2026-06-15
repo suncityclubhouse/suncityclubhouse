@@ -66,6 +66,7 @@ export interface Facility {
   thumbnail_url: string | null;
   min_capacity: number;
   max_capacity: number | null;
+  inventory_count: number;          // for accommodation: total rooms available
   status: FacilityStatus;
   display_order: number;
   created_at: string;
@@ -131,6 +132,7 @@ export interface Booking {
   end_time: string | null;
   end_date: string | null;
   slot_type: SlotType;
+  quantity: number;                 // rooms/units booked (accommodation)
   // Pricing
   base_amount: number;
   discount_amount: number;
@@ -166,6 +168,7 @@ export interface TemporaryReservation {
   end_time: string | null;
   end_date: string | null;
   slot_type: SlotType;
+  quantity: number;
   session_token: string;
   expires_at: string;
   created_at: string;

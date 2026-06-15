@@ -81,6 +81,7 @@ export default async function BookingDetailPage({ params }: Props) {
                 : b.slot_type.replace(/_/g, " "),
             },
             { label: "Slot Type", value: b.slot_type.replace(/_/g, " ") },
+            ...(b.quantity > 1 ? [{ label: "Rooms / Qty", value: `${b.quantity} rooms` }] : []),
             { label: "Base Amount", value: formatINR(b.base_amount) },
             { label: "Total Amount", value: formatINR(b.total_amount) },
             {
