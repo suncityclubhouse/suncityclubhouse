@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
-import { Menu, X, Home } from "lucide-react";
+import { Menu, X, Home, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getWhatsAppUrl } from "@/lib/utils/formatters";
 import { motion, AnimatePresence } from "framer-motion";
@@ -77,6 +77,14 @@ export function Navbar() {
                 <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-blue-600 transition-all duration-300 group-hover:w-full" />
               </a>
             ))}
+            <Link
+              href="/track-booking"
+              className="flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors relative group"
+            >
+              <Search className="w-3.5 h-3.5" />
+              Track Booking
+              <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-blue-600 transition-all duration-300 group-hover:w-full" />
+            </Link>
           </nav>
             <button
               className="lg:hidden p-2 -ml-1 rounded-md text-slate-600 hover:text-slate-900 transition-colors"
@@ -172,6 +180,7 @@ export function Navbar() {
                 { id: "facilities", label: "Facilities" },
                 { id: "about", label: "About" },
                 { id: "contact", label: "Contact" },
+                { id: "track-booking", label: "Track Booking", href: "/track-booking", isLink: true, icon: <Search className="w-4 h-4" /> },
               ].map((item, i) => (
                 <motion.div
                   key={item.id}
@@ -185,7 +194,7 @@ export function Navbar() {
                       onClick={() => setOpen(false)}
                       className="flex items-center gap-2 text-sm font-medium text-slate-700 hover:text-blue-600 py-2.5 border-b border-slate-50 transition-colors"
                     >
-                      <Home className="w-4 h-4" />
+                      {(item as any).icon ?? <Home className="w-4 h-4" />}
                       {item.label}
                     </Link>
                   ) : (

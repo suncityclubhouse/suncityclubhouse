@@ -33,6 +33,7 @@ export function StepBookingForm({ facility, state, onStateChange, onNext, onBack
   const [otpValue, setOtpValue] = useState("");
   const [sendingOtp, setSendingOtp] = useState(false);
   const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
 
   const form = useForm<BookingFormSchema>({
     resolver: zodResolver(bookingFormSchema) as any,
@@ -62,7 +63,8 @@ export function StepBookingForm({ facility, state, onStateChange, onNext, onBack
     const res = await sendOtp(phone);
     setSendingOtp(false);
     
-    if (res.success) {
+    if (res.success && res.data) {
+      setSessionId(res.data.sessionId);
       setOtpSent(true);
       toast.success("OTP sent to your mobile.");
     } else {
@@ -75,7 +77,8 @@ export function StepBookingForm({ facility, state, onStateChange, onNext, onBack
     const res = await resendOtp(phone);
     setSendingOtp(false);
     
-    if (res.success) {
+    if (res.success && res.data) {
+      setSessionId(res.data.sessionId);
       toast.success("OTP resent.");
     } else {
       toast.error(res.error);
@@ -87,9 +90,13 @@ export function StepBookingForm({ facility, state, onStateChange, onNext, onBack
       toast.error("Please enter the OTP.");
       return;
     }
+    if (!sessionId) {
+      toast.error("Session missing. Please resend OTP.");
+      return;
+    }
     
     setVerifyingOtp(true);
-    const res = await verifyOtp(phone, otpValue);
+    const res = await verifyOtp(sessionId, otpValue);
     setVerifyingOtp(false);
     
     if (res.success) {
