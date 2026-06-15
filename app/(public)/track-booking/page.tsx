@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Loader2 } from "lucide-react";
+import { Suspense } from "react";
 import { TrackBookingClient } from "@/components/public/TrackBookingClient";
 
 export const metadata: Metadata = {
@@ -23,7 +24,9 @@ export default function TrackBookingPage() {
         <p className="text-stone-500 text-sm">Enter the 6-character reference code from your booking confirmation</p>
       </div>
 
-      <TrackBookingClient />
+      <Suspense fallback={<div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-stone-300" /></div>}>
+        <TrackBookingClient />
+      </Suspense>
     </div>
   );
 }
