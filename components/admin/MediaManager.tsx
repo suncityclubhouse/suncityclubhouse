@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Trash2, MoveUp, MoveDown, ImagePlus, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { deleteMediaItem, reorderMediaItems, addMediaItem } from "@/actions/media";
+import { optimizeCloudinaryUrl } from "@/lib/utils/formatters";
 import type { FacilityMedia } from "@/types/database";
 
 interface MediaManagerProps {
@@ -170,10 +171,10 @@ export function MediaManager({ facilityId, initialMedia }: MediaManagerProps) {
               className="relative group rounded-xl overflow-hidden border border-stone-200 bg-stone-100 aspect-video shadow-sm"
             >
               {item.media_type === "video" ? (
-                <video src={item.url} className="w-full h-full object-cover" muted />
+                <video src={optimizeCloudinaryUrl(item.url)} className="w-full h-full object-cover" muted />
               ) : (
                 <Image
-                  src={item.url}
+                  src={optimizeCloudinaryUrl(item.url)}
                   alt={`Media ${i + 1}`}
                   fill
                   sizes="220px"

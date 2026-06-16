@@ -100,3 +100,14 @@ export function truncate(str: string, maxLength: number): string {
 export function generateSessionToken(): string {
   return crypto.randomUUID();
 }
+
+/**
+ * Optimizes a Cloudinary URL to serve compressed, fast-loading formats (WebP/AVIF for images, optimized MP4 for videos).
+ * This significantly speeds up Next.js Image component and <video> loading.
+ */
+export function optimizeCloudinaryUrl(url: string | null | undefined): string {
+  if (!url || !url.includes("res.cloudinary.com")) return url || "";
+  if (url.includes("f_auto") || url.includes("q_auto")) return url;
+  
+  return url.replace("/upload/", "/upload/f_auto,q_auto/");
+}

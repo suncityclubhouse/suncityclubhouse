@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { getBookingById } from "@/actions/bookings";
 import { formatDisplayDate, formatTimeDisplay } from "@/lib/utils/dates";
-import { formatINR } from "@/lib/utils/formatters";
+import { formatINR, optimizeCloudinaryUrl } from "@/lib/utils/formatters";
 import { BookingActionsPanel } from "./BookingActionsPanel";
 
 export const metadata: Metadata = { title: "Booking Detail | Admin" };
@@ -121,7 +121,7 @@ export default async function BookingDetailPage({ params }: Props) {
               <p className="text-xs text-stone-500 mb-2">Payment Screenshot:</p>
               <div className="relative rounded-lg overflow-hidden border border-stone-200 bg-stone-50" style={{ height: 220 }}>
                 <Image
-                  src={b.payment_proof_url}
+                  src={optimizeCloudinaryUrl(b.payment_proof_url)}
                   alt="Payment proof"
                   fill
                   sizes="400px"

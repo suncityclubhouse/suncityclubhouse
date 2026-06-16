@@ -1,5 +1,6 @@
 import { cloudinary } from "@/lib/cloudinary";
 import { NextResponse } from "next/server";
+import { optimizeCloudinaryUrl } from "@/lib/utils/formatters";
 
 /**
  * POST /api/upload
@@ -54,7 +55,7 @@ export async function POST(request: Request) {
     );
 
     return NextResponse.json({
-      url: result.secure_url,
+      url: optimizeCloudinaryUrl(result.secure_url),
       publicId: result.public_id,
     });
   } catch (err: any) {

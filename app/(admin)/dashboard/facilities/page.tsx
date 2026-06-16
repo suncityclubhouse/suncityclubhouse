@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Plus, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getFacilities } from "@/actions/facilities";
-import { StatusBadge } from "@/components/shared/StatusBadge";
+import { optimizeCloudinaryUrl } from "@/lib/utils/formatters";
 import Image from "next/image";
 
 export const metadata: Metadata = { title: "Facilities | Admin" };
@@ -31,7 +31,7 @@ export default async function FacilitiesPage() {
           <div key={f.id} className="bg-white border border-stone-200 rounded-xl overflow-hidden hover:shadow-sm transition-shadow">
             <div className="relative h-40 bg-stone-100">
               {f.thumbnail_url ? (
-                <Image src={f.thumbnail_url} alt={f.name} fill sizes="400px" className="object-cover" />
+                <Image src={optimizeCloudinaryUrl(f.thumbnail_url)} alt={f.name} fill sizes="400px" className="object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-stone-300 text-4xl font-serif">
                   {f.name.charAt(0)}

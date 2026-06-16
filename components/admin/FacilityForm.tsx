@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createFacility, updateFacility } from "@/actions/facilities";
+import { optimizeCloudinaryUrl } from "@/lib/utils/formatters";
 
 // Match EXACTLY what createFacility / the facilities table accepts
 const facilitySchema = z.object({
@@ -161,7 +162,7 @@ export function FacilityForm({ facility, isEdit = false }: Props) {
           <div className="relative w-40 h-28 rounded-lg overflow-hidden bg-stone-100 border border-stone-200 flex-shrink-0 flex items-center justify-center">
             {thumbnailUrl
               ? <>
-                  <Image src={thumbnailUrl} alt="Thumbnail" fill sizes="160px" className="object-cover" />
+                  <Image src={optimizeCloudinaryUrl(thumbnailUrl)} alt="Thumbnail" fill sizes="160px" className="object-cover" />
                   <button type="button" onClick={() => { setThumbnailUrl(""); setThumbnailPublicId(""); }}
                     className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center">
                     <X className="w-3 h-3" />

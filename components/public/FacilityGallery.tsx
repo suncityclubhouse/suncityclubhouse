@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, Play, X, ZoomIn, Pause } from "lucide-react";
-import { cn } from "@/lib/utils/formatters";
+import { cn, optimizeCloudinaryUrl } from "@/lib/utils/formatters";
 import type { FacilityMedia } from "@/types/database";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -107,15 +107,15 @@ export function FacilityGallery({ media, facilityName }: FacilityGalleryProps) {
           >
             {active.media_type === "video" ? (
               <video
-                src={active.url}
+                src={optimizeCloudinaryUrl(active.url)}
                 controls
                 className="w-full h-full object-cover"
-                poster={imageOnlyMedia[0]?.url}
+                poster={optimizeCloudinaryUrl(imageOnlyMedia[0]?.url)}
               />
             ) : (
               <>
                 <Image
-                  src={active.url}
+                  src={optimizeCloudinaryUrl(active.url)}
                   alt={`${facilityName} — photo ${activeIndex + 1}`}
                   fill
                   sizes="(max-width:768px) 100vw, 70vw"
@@ -212,7 +212,7 @@ export function FacilityGallery({ media, facilityName }: FacilityGalleryProps) {
                 </div>
               ) : (
                 <Image
-                  src={item.url}
+                  src={optimizeCloudinaryUrl(item.url)}
                   alt={`Thumbnail ${i + 1}`}
                   fill
                   sizes="80px"
@@ -253,7 +253,7 @@ export function FacilityGallery({ media, facilityName }: FacilityGalleryProps) {
               onClick={(e) => e.stopPropagation()}
             >
               <Image
-                src={active.url}
+                src={optimizeCloudinaryUrl(active.url)}
                 alt={facilityName}
                 fill
                 sizes="100vw"

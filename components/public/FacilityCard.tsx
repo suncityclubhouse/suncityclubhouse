@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, CalendarCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { formatINR } from "@/lib/utils/formatters";
+import { formatINR, optimizeCloudinaryUrl } from "@/lib/utils/formatters";
 import type { Facility, FacilityPackage } from "@/types/database";
 import { motion } from "framer-motion";
 
@@ -34,7 +34,7 @@ export function FacilityCard({ facility, index = 0 }: FacilityCardProps) {
       <div className="relative h-52 overflow-hidden bg-slate-100">
         {facility.thumbnail_url ? (
           <Image
-            src={facility.thumbnail_url}
+            src={optimizeCloudinaryUrl(facility.thumbnail_url)}
             alt={facility.name}
             fill
             sizes="(max-width:768px) 100vw, (max-width:1200px) 50vw, 33vw"
