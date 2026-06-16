@@ -126,7 +126,7 @@ async function DashboardContent() {
             value={kpis.totalRevenue}
             isCurrency
             icon={DollarSign}
-            className="h-full group-hover:shadow-md group-hover:border-amber-200 transition-all cursor-pointer"
+            className="h-full group-hover:shadow-md group-hover:border-blue-200 transition-all cursor-pointer"
           />
         </Link>
         <Link href="/dashboard/expenses" className="block group">
@@ -212,9 +212,9 @@ async function DashboardContent() {
         <div className="bg-white border border-stone-200 rounded-xl p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-medium text-stone-900">Pending Approvals</h3>
-            <a href="/dashboard/bookings?status=pending_approval" className="text-xs text-amber-700 hover:underline">
+            <Link href="/dashboard/bookings?status=pending_approval" className="text-xs text-amber-700 hover:underline">
               View all
-            </a>
+            </Link>
           </div>
           {pending.length === 0 ? (
             <div className="text-center py-6 text-stone-400 text-sm">No pending approvals</div>
@@ -227,12 +227,12 @@ async function DashboardContent() {
                     <p className="text-xs text-stone-500">{b.facility?.name} · {b.booking_date}</p>
                     <p className="text-xs font-mono text-stone-400">{b.booking_ref}</p>
                   </div>
-                  <a
+                  <Link
                     href={`/dashboard/bookings/${b.id}`}
                     className="text-xs text-amber-700 font-medium hover:underline flex-shrink-0 ml-3"
                   >
                     Review →
-                  </a>
+                  </Link>
                 </div>
               ))}
             </div>
@@ -244,9 +244,9 @@ async function DashboardContent() {
       <div className="bg-white border border-stone-200 rounded-xl p-5">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-medium text-stone-900">Upcoming Bookings</h3>
-          <a href="/dashboard/bookings?status=confirmed" className="text-xs text-amber-700 hover:underline">
+          <Link href="/dashboard/bookings?status=confirmed" className="text-xs text-blue-700 hover:underline">
             View all
-          </a>
+          </Link>
         </div>
         <UpcomingBookingsTable bookings={upcoming} />
       </div>

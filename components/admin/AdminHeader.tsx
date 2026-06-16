@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, ExternalLink, Menu } from "lucide-react";
+import { ExternalLink, Menu } from "lucide-react";
 import Link from "next/link";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
@@ -30,7 +30,7 @@ export function AdminHeader({ userEmail, onMenuClick }: AdminHeaderProps) {
         <Link
           href="/"
           target="_blank"
-          className="flex items-center gap-1.5 text-xs text-stone-500 hover:text-stone-700 transition-colors px-3 py-1.5 rounded-lg hover:bg-stone-100"
+          className="flex items-center gap-1.5 text-xs text-stone-500 hover:text-blue-700 transition-colors px-3 py-1.5 rounded-lg hover:bg-blue-50"
         >
           <ExternalLink className="w-3.5 h-3.5" />
           View Site
@@ -38,7 +38,7 @@ export function AdminHeader({ userEmail, onMenuClick }: AdminHeaderProps) {
 
         {/* User avatar */}
         <Avatar className="w-8 h-8 border border-stone-200">
-          <AvatarFallback className="bg-amber-100 text-amber-700 text-xs font-semibold">
+          <AvatarFallback className="bg-blue-100 text-blue-700 text-xs font-semibold">
             {initials}
           </AvatarFallback>
         </Avatar>

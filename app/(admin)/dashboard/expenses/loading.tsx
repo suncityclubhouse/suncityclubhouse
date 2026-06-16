@@ -22,7 +22,7 @@ export default function ExpensesLoading() {
       {/* Header and Button Skeleton */}
       <div className="flex justify-between items-center">
         <div className="h-8 w-32 bg-stone-200 rounded" />
-        <Button disabled style={{ backgroundColor: "#8b6914" }} className="text-white opacity-50 pointer-events-none">
+        <Button disabled style={{ backgroundColor: "#08428C" }} className="text-white opacity-50 pointer-events-none">
           <Plus className="w-4 h-4 mr-2" />
           Add Expense
         </Button>

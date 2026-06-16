@@ -41,7 +41,7 @@ export function AdminSidebar({ mobileOpen, setMobileOpen }: AdminSidebarProps) {
   return (
     <aside
       className={cn(
-        "absolute inset-y-0 left-0 z-50 md:relative flex flex-col bg-stone-900 text-stone-300 transition-all duration-300 ease-in-out flex-shrink-0",
+        "absolute inset-y-0 left-0 z-50 md:relative flex flex-col bg-[#021630] text-blue-100 transition-all duration-300 ease-in-out flex-shrink-0",
         // Mobile visibility
         mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
         // Desktop width
@@ -49,14 +49,14 @@ export function AdminSidebar({ mobileOpen, setMobileOpen }: AdminSidebarProps) {
       )}
     >
       {/* Logo */}
-      <div className={cn("flex items-center h-16 px-4 border-b border-stone-800", collapsed && "justify-center")}>
+      <div className={cn("flex items-center h-16 px-4 border-b border-white/15", collapsed && "justify-center")}>
         {!collapsed && (
           <Link href="/dashboard" className="font-serif text-lg font-semibold text-white">
             Clubhouse
           </Link>
         )}
         {collapsed && (
-          <span className="text-amber-400 font-bold text-lg">C</span>
+          <span className="text-white font-bold text-lg">C</span>
         )}
       </div>
 
@@ -71,8 +71,8 @@ export function AdminSidebar({ mobileOpen, setMobileOpen }: AdminSidebarProps) {
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
                   isActive(href, exact)
-                    ? "bg-amber-600/20 text-amber-400 border border-amber-600/30"
-                    : "hover:bg-stone-800 hover:text-white"
+                    ? "bg-[#08428C] text-white border border-blue-300/30 shadow-sm"
+                    : "text-blue-100 hover:bg-[#073776] hover:text-white"
                 )}
               >
                 <Icon className="w-4 h-4 flex-shrink-0" />
@@ -84,12 +84,12 @@ export function AdminSidebar({ mobileOpen, setMobileOpen }: AdminSidebarProps) {
       </nav>
 
       {/* Footer */}
-      <div className="border-t border-stone-800 p-2">
+      <div className="border-t border-white/15 p-2">
         <form action={adminLogout}>
           <button
             type="submit"
             className={cn(
-              "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-stone-400 hover:text-red-400 hover:bg-red-900/20 transition-colors",
+              "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-blue-100 hover:text-white hover:bg-[#073776] transition-colors",
               collapsed && "justify-center"
             )}
           >
@@ -102,7 +102,7 @@ export function AdminSidebar({ mobileOpen, setMobileOpen }: AdminSidebarProps) {
       {/* Collapse toggle (Desktop only) */}
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="hidden md:flex absolute -right-3 top-20 bg-stone-800 border border-stone-700 text-stone-400 rounded-full p-1 hover:text-white transition-colors z-10"
+        className="hidden md:flex absolute -right-3 top-20 bg-[#021630] border border-blue-800 text-blue-100 rounded-full p-1 hover:bg-[#08428C] transition-colors z-10"
         aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
       >
         {collapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}

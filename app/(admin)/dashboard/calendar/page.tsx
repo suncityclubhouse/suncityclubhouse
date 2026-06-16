@@ -70,7 +70,7 @@ async function CalendarContent() {
               <div className={cn(
                 "text-xs font-medium mb-1 w-6 h-6 flex items-center justify-center rounded-full",
                 today_
-                  ? "bg-amber-600 text-white"
+                  ? "bg-blue-600 text-white"
                   : "text-stone-500"
               )}>
                 {format(day, "d")}

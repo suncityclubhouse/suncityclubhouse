@@ -18,7 +18,7 @@ export default async function FacilitiesPage() {
           <h1 className="font-serif text-2xl font-bold text-stone-900">Facilities</h1>
           <p className="text-sm text-stone-500 mt-1">{facilities.length} facilities configured</p>
         </div>
-        <Button asChild style={{ backgroundColor: "#8b6914" }} className="text-white gap-2">
+        <Button asChild style={{ backgroundColor: "#08428C" }} className="text-white gap-2">
           <Link href="/dashboard/facilities/new">
             <Plus className="w-4 h-4" />
             Add Facility
@@ -64,7 +64,7 @@ export default async function FacilitiesPage() {
         {facilities.length === 0 && (
           <div className="col-span-full text-center py-16 text-stone-400">
             <p className="text-lg mb-2">No facilities yet</p>
-            <Button asChild style={{ backgroundColor: "#8b6914" }} className="text-white">
+            <Button asChild style={{ backgroundColor: "#08428C" }} className="text-white">
               <Link href="/dashboard/facilities/new">Add your first facility</Link>
             </Button>
           </div>

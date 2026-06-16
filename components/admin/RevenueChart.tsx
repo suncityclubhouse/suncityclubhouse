@@ -31,8 +31,8 @@ export function RevenueChart({ data }: RevenueChartProps) {
         <AreaChart data={data} margin={{ top: 5, right: 10, bottom: 0, left: 0 }}>
           <defs>
             <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#8b6914" stopOpacity={0.2} />
-              <stop offset="95%" stopColor="#8b6914" stopOpacity={0} />
+              <stop offset="5%" stopColor="#08428C" stopOpacity={0.22} />
+              <stop offset="95%" stopColor="#08428C" stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0ede9" />
@@ -50,7 +50,7 @@ export function RevenueChart({ data }: RevenueChartProps) {
           <Area
             type="monotone"
             dataKey="revenue"
-            stroke="#8b6914"
+            stroke="#08428C"
             strokeWidth={2}
             fill="url(#revenueGrad)"
           />
@@ -65,7 +65,7 @@ interface FacilityPieChartProps {
   data: FacilityUsageData[];
 }
 
-const PIE_COLORS = ["#8b6914", "#d4a82e", "#e9c14d", "#f2d98a", "#78716c", "#a8a29e"];
+const PIE_COLORS = ["#08428C", "#5C6795", "#849fce", "#16a34a", "#8b5cf6", "#64748b"];
 
 export function FacilityPieChart({ data }: FacilityPieChartProps) {
   return (

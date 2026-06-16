@@ -146,7 +146,7 @@ export function PackageManager({ facilityId, initialPackages }: Props) {
           </p>
         </div>
         {!showForm && (
-          <Button onClick={openNew} size="sm" className="gap-1.5 text-white" style={{ backgroundColor: "#8b6914" }}>
+          <Button onClick={openNew} size="sm" className="gap-1.5 text-white" style={{ backgroundColor: "#08428C" }}>
             <Plus className="w-3.5 h-3.5" /> Add Package
           </Button>
         )}
@@ -292,7 +292,7 @@ export function PackageManager({ facilityId, initialPackages }: Props) {
                 size="sm"
                 disabled={form.formState.isSubmitting}
                 className="text-white gap-1.5"
-                style={{ backgroundColor: "#8b6914" }}
+                style={{ backgroundColor: "#08428C" }}
               >
                 {form.formState.isSubmitting
                   ? <><Loader2 className="w-3.5 h-3.5 animate-spin" />Saving…</>

@@ -10,7 +10,7 @@ export default function FacilitiesLoading() {
           <div className="h-8 w-32 bg-stone-200 rounded" />
           <div className="h-4 w-40 bg-stone-200 rounded mt-2" />
         </div>
-        <Button disabled style={{ backgroundColor: "#8b6914" }} className="text-white gap-2 opacity-50 pointer-events-none">
+        <Button disabled style={{ backgroundColor: "#08428C" }} className="text-white gap-2 opacity-50 pointer-events-none">
           <Plus className="w-4 h-4" />
           Add Facility
         </Button>

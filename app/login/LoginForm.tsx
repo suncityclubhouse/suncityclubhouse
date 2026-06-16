@@ -77,7 +77,7 @@ export function LoginForm() {
       <Button
         type="submit"
         className="w-full text-white py-5"
-        style={{ backgroundColor: "#8b6914" }}
+        style={{ backgroundColor: "#08428C" }}
         disabled={form.formState.isSubmitting}
       >
         {form.formState.isSubmitting ? (

@@ -296,7 +296,7 @@ export function FacilityForm({ facility, isEdit = false }: Props) {
         <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
         <Button type="submit" disabled={isSubmitting}
           className="min-w-32 text-white"
-          style={{ backgroundColor: "#8b6914" }}>
+          style={{ backgroundColor: "#08428C" }}>
           {isSubmitting
             ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Saving…</>
             : isEdit ? "Save Changes" : "Create Facility"}

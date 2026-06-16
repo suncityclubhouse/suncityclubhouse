@@ -46,7 +46,7 @@ export default function EditFacilityLoading() {
       {/* Action Buttons Skeleton */}
       <div className="flex gap-3 justify-end">
         <Button disabled variant="outline">Cancel</Button>
-        <Button disabled className="min-w-32 opacity-50" style={{ backgroundColor: "#8b6914" }}>
+        <Button disabled className="min-w-32 opacity-50" style={{ backgroundColor: "#08428C" }}>
           Saving…
         </Button>
       </div>

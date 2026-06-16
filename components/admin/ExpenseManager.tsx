@@ -180,7 +180,7 @@ export function ExpenseManager({ initialExpenses, facilities, recurringTemplates
       {!isAdding && (
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-serif font-bold text-stone-900">Expenses</h1>
-          <Button onClick={() => setIsAdding(true)} style={{ backgroundColor: "#8b6914" }} className="text-white">
+          <Button onClick={() => setIsAdding(true)} style={{ backgroundColor: "#08428C" }} className="text-white">
             <Plus className="w-4 h-4 mr-2" />
             Add Expense
           </Button>
@@ -227,13 +227,13 @@ export function ExpenseManager({ initialExpenses, facilities, recurringTemplates
             </div>
 
             <div className="flex items-center gap-2 pt-2">
-              <input type="checkbox" id="recurring" checked={isRecurring} onChange={(e) => setIsRecurring(e.target.checked)} className="rounded border-stone-300 text-amber-600 focus:ring-amber-500" />
+              <input type="checkbox" id="recurring" checked={isRecurring} onChange={(e) => setIsRecurring(e.target.checked)} className="rounded border-stone-300 text-blue-600 focus:ring-blue-500" />
               <Label htmlFor="recurring" className="text-stone-600 font-normal">Save as a recurring monthly template</Label>
             </div>
 
             <div className="flex gap-3 justify-end pt-4">
               <Button type="button" variant="outline" onClick={resetForm} disabled={loading}>Cancel</Button>
-              <Button type="submit" disabled={loading} style={{ backgroundColor: "#8b6914" }} className="text-white min-w-24">
+              <Button type="submit" disabled={loading} style={{ backgroundColor: "#08428C" }} className="text-white min-w-24">
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Expense"}
               </Button>
             </div>
@@ -280,7 +280,7 @@ export function ExpenseManager({ initialExpenses, facilities, recurringTemplates
                       <td className="px-4 py-3 text-right font-semibold text-stone-900">{formatINR(expense.amount)}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-center gap-2">
-                          <button onClick={() => handleEdit(expense)} className="p-1 text-stone-400 hover:text-amber-600 transition-colors" title="Edit">
+                          <button onClick={() => handleEdit(expense)} className="p-1 text-stone-400 hover:text-blue-600 transition-colors" title="Edit">
                             <Edit2 className="w-4 h-4" />
                           </button>
                           <button onClick={() => handleDelete(expense.id)} className="p-1 text-stone-400 hover:text-red-500 transition-colors" title="Delete">

@@ -20,7 +20,7 @@ export function KPICard({
   isCurrency,
   trend,
   className,
-  accentColor = "#8b6914",
+  accentColor = "#08428C",
 }: KPICardProps) {
   const displayValue =
     isCurrency && typeof value === "number"
