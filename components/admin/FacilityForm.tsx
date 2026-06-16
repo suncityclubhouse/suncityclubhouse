@@ -172,7 +172,7 @@ export function FacilityForm({ facility, isEdit = false }: Props) {
                 {uploadingThumb ? "Uploading…" : "Upload Image"}
               </div>
             </Label>
-            <input id="thumb-upload" type="file" accept="image/*" className="sr-only"
+            <input id="thumb-upload" type="file" accept="image/*,.heic,.HEIC,.heif,.HEIF" className="sr-only"
               onChange={(e) => e.target.files?.[0] && handleThumbnailUpload(e.target.files[0])} />
             <p className="text-xs text-stone-400 mt-2">Recommended: 800×600px, JPG/PNG, max 5 MB</p>
           </div>

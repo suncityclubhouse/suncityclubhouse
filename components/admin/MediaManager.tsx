@@ -116,7 +116,7 @@ export function MediaManager({ facilityId, initialMedia }: MediaManagerProps) {
         <input
           ref={inputRef}
           type="file"
-          accept="image/*,video/*"
+          accept="image/*,video/*,.heic,.HEIC,.heif,.HEIF"
           multiple
           className="hidden"
           onChange={(e) => handleFiles(e.target.files)}

@@ -60,8 +60,12 @@ export function StepPayment({ bookingId, bookingRef, expiresAt, totalAmount, onS
   };
 
   const uploadFile = async (file: File) => {
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please upload an image file (JPG, PNG, etc.)");
+    // On some Apple devices, HEIC files might have an empty type or 'image/heic'
+    const isImageMime = file.type.startsWith("image/");
+    const isHeicExt = file.name.toLowerCase().match(/\.(heic|heif)$/);
+
+    if (!isImageMime && !isHeicExt) {
+      toast.error("Please upload an image file (JPG, PNG, HEIC, etc.)");
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
@@ -241,7 +245,7 @@ export function StepPayment({ bookingId, bookingRef, expiresAt, totalAmount, onS
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/*,.heic,.heif,.HEIC,.HEIF"
                   onChange={handleFileChange}
                   className="hidden"
                 />
