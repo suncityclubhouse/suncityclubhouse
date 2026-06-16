@@ -68,8 +68,8 @@ export function StepPayment({ bookingId, bookingRef, expiresAt, totalAmount, onS
       toast.error("Please upload an image file (JPG, PNG, HEIC, etc.)");
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("File size must be under 5 MB");
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("File size must be under 10 MB");
       return;
     }
 

@@ -18,11 +18,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    // Size limits: 50MB for video, 10MB for image
-    const isVideo = file.type.startsWith("video");
-    const maxBytes = isVideo ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
+    // Size limits: 25MB for video, 10MB for image
+    const isVideo = file.type.startsWith("video") || !!file.name.toLowerCase().match(/\.(mp4|mov|hevc)$/);
+    const maxBytes = isVideo ? 25 * 1024 * 1024 : 10 * 1024 * 1024;
     if (file.size > maxBytes) {
-      const label = isVideo ? "50 MB" : "10 MB";
+      const label = isVideo ? "25 MB" : "10 MB";
       return NextResponse.json(
         { error: `File too large. Maximum size is ${label}.` },
         { status: 413 }

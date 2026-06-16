@@ -37,6 +37,17 @@ export function MediaManager({ facilityId, initialMedia }: MediaManagerProps) {
     const results: FacilityMedia[] = [];
 
     for (const file of toUpload) {
+      const isVideo = file.type.startsWith("video") || !!file.name.toLowerCase().match(/\.(mp4|mov|hevc)$/);
+      const maxSize = isVideo ? 25 * 1024 * 1024 : 10 * 1024 * 1024;
+      if (file.size > maxSize) {
+        setError(`File ${file.name} is too large. Max ${isVideo ? "25MB" : "10MB"}.`);
+        setUploading(false);
+        if (inputRef.current) inputRef.current.value = "";
+        return;
+      }
+    }
+
+    for (const file of toUpload) {
       try {
         const fd = new FormData();
         fd.append("file", file);
@@ -46,7 +57,8 @@ export function MediaManager({ facilityId, initialMedia }: MediaManagerProps) {
         if (!json.url) throw new Error(json.error ?? "Upload failed");
 
         const displayOrder = media.length + results.length;
-        const mediaType: "image" | "video" = file.type.startsWith("video") ? "video" : "image";
+        const isVideo = file.type.startsWith("video") || !!file.name.toLowerCase().match(/\.(mp4|mov|hevc)$/);
+        const mediaType: "image" | "video" = isVideo ? "video" : "image";
 
         const result = await addMediaItem({
           facilityId,
@@ -116,7 +128,7 @@ export function MediaManager({ facilityId, initialMedia }: MediaManagerProps) {
         <input
           ref={inputRef}
           type="file"
-          accept="image/*,video/*,.heic,.HEIC,.heif,.HEIF"
+          accept="image/*,video/*,.heic,.HEIC,.heif,.HEIF,.hevc,.HEVC,.mov,.MOV"
           multiple
           className="hidden"
           onChange={(e) => handleFiles(e.target.files)}
@@ -145,7 +157,7 @@ export function MediaManager({ facilityId, initialMedia }: MediaManagerProps) {
           )}
         </Button>
         <p className="text-xs text-stone-400 mt-1.5 pl-1">
-          Supports JPG, PNG, WebP, MP4. First image is the gallery cover shown to users. Max 10 files.
+          Supports JPG, PNG, WebP, MP4, MOV, HEVC. First image is the gallery cover shown to users. Max 10 files.
         </p>
       </div>
 

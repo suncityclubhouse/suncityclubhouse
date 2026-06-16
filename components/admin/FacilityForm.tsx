@@ -87,6 +87,10 @@ export function FacilityForm({ facility, isEdit = false }: Props) {
   const watchedCategory = watch("category");
 
   const handleThumbnailUpload = async (file: File) => {
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("File size must be under 10 MB");
+      return;
+    }
     setUploadingThumb(true);
     try {
       const fd = new FormData();
@@ -174,7 +178,7 @@ export function FacilityForm({ facility, isEdit = false }: Props) {
             </Label>
             <input id="thumb-upload" type="file" accept="image/*,.heic,.HEIC,.heif,.HEIF" className="sr-only"
               onChange={(e) => e.target.files?.[0] && handleThumbnailUpload(e.target.files[0])} />
-            <p className="text-xs text-stone-400 mt-2">Recommended: 800×600px, JPG/PNG, max 5 MB</p>
+            <p className="text-xs text-stone-400 mt-2">Recommended: 800×600px, JPG/PNG, max 10 MB</p>
           </div>
         </div>
       </div>
