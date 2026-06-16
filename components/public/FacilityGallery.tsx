@@ -109,7 +109,7 @@ export function FacilityGallery({ media, facilityName }: FacilityGalleryProps) {
               <video
                 src={optimizeCloudinaryUrl(active.url)}
                 controls
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain bg-black"
                 poster={optimizeCloudinaryUrl(imageOnlyMedia[0]?.url)}
               />
             ) : (
@@ -119,7 +119,7 @@ export function FacilityGallery({ media, facilityName }: FacilityGalleryProps) {
                   alt={`${facilityName} — photo ${activeIndex + 1}`}
                   fill
                   sizes="(max-width:768px) 100vw, 70vw"
-                  className="object-cover"
+                  className="object-contain"
                   priority={activeIndex === 0}
                 />
                 <button
