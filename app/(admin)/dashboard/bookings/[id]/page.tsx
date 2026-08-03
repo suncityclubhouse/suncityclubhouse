@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Image from "next/image";
-import { ChevronRight, ExternalLink } from "lucide-react";
+import { ChevronRight, ExternalLink, Download } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -10,6 +10,7 @@ import { getBookingById } from "@/actions/bookings";
 import { formatDisplayDate, formatTimeDisplay } from "@/lib/utils/dates";
 import { formatINR, optimizeCloudinaryUrl } from "@/lib/utils/formatters";
 import { BookingActionsPanel } from "./BookingActionsPanel";
+
 
 export const metadata: Metadata = { title: "Booking Detail | Admin" };
 
@@ -39,7 +40,15 @@ export default async function BookingDetailPage({ params }: Props) {
           <h1 className="font-serif text-2xl font-bold text-stone-900 mb-1">{b.booking_ref}</h1>
           <StatusBadge status={b.status} />
         </div>
-        <BookingActionsPanel booking={b} />
+        <div className="flex flex-wrap items-center gap-2">
+          <Button asChild variant="outline" size="sm" className="gap-1.5 text-stone-600">
+            <a href={`/api/invoice/${b.id}`} download target="_blank" rel="noopener noreferrer">
+              <Download className="w-3.5 h-3.5" />
+              Download Invoice
+            </a>
+          </Button>
+          <BookingActionsPanel booking={b} />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">

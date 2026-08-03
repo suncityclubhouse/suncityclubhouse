@@ -571,3 +571,228 @@ export async function getDashboardKPIs() {
     mostBookedFacility: mostBooked?.name ?? null,
   };
 }
+
+// ============================================================
+// USER SELF-SERVICE CANCELLATION (no login — phone match only)
+// ============================================================
+
+export async function cancelBookingByUser(params: {
+  bookingRef: string;
+  phone: string; // must exactly match booking.customer_phone
+}): Promise<ActionResult<{
+  refundAmount: number;
+  deductionAmount: number;
+  deductionPercent: number;
+  label: string;
+}>> {
+  const { calculateCancellationRefund } = await import("@/lib/cancellation-policy");
+  const db = createAdminClient();
+
+  // 1. Fetch the booking
+  const { data: booking, error: fetchError } = await db
+    .from("bookings")
+    .select("id, booking_ref, customer_phone, status, booking_date, total_amount, cancelled_by_user")
+    .eq("booking_ref", params.bookingRef.trim().toUpperCase())
+    .single();
+
+  if (fetchError || !booking) {
+    return { success: false, error: "Booking not found." };
+  }
+
+  // 2. Phone match verification
+  const normalisePhone = (p: string) => p.replace(/\D/g, "").slice(-10);
+  if (normalisePhone(booking.customer_phone) !== normalisePhone(params.phone)) {
+    return { success: false, error: "Mobile number does not match our records for this booking." };
+  }
+
+  // 3. Status check — only awaiting_payment and confirmed are user-cancellable
+  const cancellableStatuses = ["awaiting_payment", "confirmed"];
+  if (!cancellableStatuses.includes(booking.status)) {
+    const messages: Record<string, string> = {
+      pending_approval: "Your payment is under review. Please contact the clubhouse office to cancel.",
+      cancelled: "This booking is already cancelled.",
+      rejected: "This booking was already rejected.",
+      completed: "This booking is already completed and cannot be cancelled.",
+      expired: "This booking has expired.",
+    };
+    return {
+      success: false,
+      error: messages[booking.status] ?? "This booking cannot be cancelled.",
+    };
+  }
+
+  // 4. Compute refund
+  // awaiting_payment = no money sent yet → always full refund
+  let refund = {
+    daysUntilBooking: 0,
+    deductionPercent: 0,
+    deductionAmount: 0,
+    refundAmount: booking.total_amount,
+    label: "Full refund — payment not yet submitted",
+  };
+
+  if (booking.status === "confirmed") {
+    refund = calculateCancellationRefund(booking.booking_date, Number(booking.total_amount));
+  }
+
+  // 5. Update booking
+  const { error: updateError } = await db
+    .from("bookings")
+    .update({
+      status: "cancelled",
+      cancelled_at: new Date().toISOString(),
+      cancelled_by: null, // user cancellation — no admin FK
+      cancelled_by_user: true,
+      cancellation_reason: refund.label,
+      refund_amount: refund.refundAmount,
+      admin_notes: `Self-service cancellation by customer. Refund: ₹${refund.refundAmount} (${refund.deductionPercent}% deducted).`,
+    })
+    .eq("id", booking.id);
+
+  if (updateError) {
+    console.error("[cancelBookingByUser]", updateError);
+    return { success: false, error: "Failed to cancel booking. Please try again." };
+  }
+
+  return {
+    success: true,
+    data: {
+      refundAmount: refund.refundAmount,
+      deductionAmount: refund.deductionAmount,
+      deductionPercent: refund.deductionPercent,
+      label: refund.label,
+    },
+  };
+}
+
+// ============================================================
+// ADMIN MANUAL BOOKING (walk-in / owner / guest / cash)
+// ============================================================
+
+export async function createAdminBooking(params: {
+  facilityId: string;
+  packageId: string;
+  slotType: string;
+  bookingDate: string;
+  startTime?: string;
+  endTime?: string;
+  endDate?: string;
+  baseAmount: number;
+  totalAmount: number;
+  quantity?: number;
+  paymentType: "upi" | "cash" | "complimentary" | "deferred";
+  status: "confirmed" | "awaiting_payment";
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  isResident: boolean;
+  houseNumber?: string;
+  referenceResident?: string;
+  eventPurpose: string;
+  guestCount?: number;
+  adminNotes?: string;
+}): Promise<ActionResult<{ bookingId: string; bookingRef: string }>> {
+  // 1. Verify admin is logged in
+  const serverClient = await createClient();
+  const { data: { user } } = await serverClient.auth.getUser();
+  if (!user) return { success: false, error: "Unauthorized" };
+
+  const db = createAdminClient();
+
+  // 2. Check admin record
+  const { data: adminRecord } = await db
+    .from("admins")
+    .select("id")
+    .eq("id", user.id)
+    .maybeSingle();
+  const adminId: string | null = adminRecord?.id ?? null;
+
+  // 3. Double-booking prevention (still enforced for admin bookings)
+  const { data: isAvailable, error: checkError } = await db.rpc(
+    "check_slot_availability",
+    {
+      p_facility_id: params.facilityId,
+      p_booking_date: params.bookingDate,
+      p_start_time: params.startTime ?? null,
+      p_end_time: params.endTime ?? null,
+      p_slot_type: params.slotType,
+      p_exclude_id: null,
+      p_end_date: params.endDate ?? null,
+      p_quantity: params.quantity ?? 1,
+    }
+  );
+
+  if (checkError) {
+    console.error("[createAdminBooking] availability check error:", checkError);
+    return { success: false, error: "Could not verify slot availability. Please try again." };
+  }
+
+  if (!isAvailable) {
+    return {
+      success: false,
+      error: "This slot is already booked. Please select a different date or time slot.",
+    };
+  }
+
+  // 4. Generate booking ref
+  const { data: refData, error: refError } = await db.rpc("generate_booking_ref");
+  if (refError || !refData) {
+    return { success: false, error: "Could not generate booking reference." };
+  }
+
+  const bookingRef = refData as string;
+  const { calculateEndDate } = await import("@/lib/utils/dates");
+  const endDate = params.endDate ?? calculateEndDate(params.bookingDate, params.slotType);
+
+  // 5. Build update object based on status
+  const now = new Date().toISOString();
+  const statusFields =
+    params.status === "confirmed"
+      ? { approved_by: adminId, approved_at: now }
+      : {};
+
+  // 6. Insert booking
+  const { data: booking, error: insertError } = await db
+    .from("bookings")
+    .insert({
+      booking_ref: bookingRef,
+      facility_id: params.facilityId,
+      society_id: SOCIETY_ID,
+      package_id: params.packageId,
+      customer_name: params.customerName,
+      customer_email: params.customerEmail,
+      customer_phone: params.customerPhone,
+      is_resident: params.isResident,
+      house_number: params.houseNumber ?? null,
+      reference_resident: params.referenceResident ?? null,
+      event_purpose: params.eventPurpose || "Facility Booking",
+      guest_count: params.guestCount ?? null,
+      booking_date: params.bookingDate,
+      start_time: params.startTime ?? null,
+      end_time: params.endTime ?? null,
+      end_date: endDate,
+      slot_type: params.slotType,
+      quantity: params.quantity ?? 1,
+      base_amount: params.baseAmount,
+      discount_amount: 0,
+      total_amount: params.totalAmount,
+      status: params.status,
+      payment_type: params.paymentType,
+      is_admin_booking: true,
+      admin_notes: params.adminNotes ?? null,
+      expires_at: null, // admin bookings don't expire
+      ...statusFields,
+    })
+    .select("id, booking_ref")
+    .single();
+
+  if (insertError || !booking) {
+    console.error("[createAdminBooking] insert error:", insertError);
+    return { success: false, error: "Failed to create booking. Please try again." };
+  }
+
+  return {
+    success: true,
+    data: { bookingId: booking.id, bookingRef: booking.booking_ref },
+  };
+}
