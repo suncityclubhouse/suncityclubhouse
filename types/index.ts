@@ -14,7 +14,12 @@ export interface BookingWizardState {
   endTime: string | null;
   endDate: string | null;          // For monthly/quarterly: "yyyy-MM-dd"
   quantity: number;                // rooms/units (accommodation only, defaults to 1)
+  baseAmount: number;
   totalAmount: number;
+  gstPercentage: number;
+  isGstInclusive: boolean;
+  cgstAmount: number;
+  sgstAmount: number;
   isResident: boolean;             // from step 1 resident toggle
   sessionToken: string | null;    // from temporary reservation
   reservationExpiresAt: string | null;

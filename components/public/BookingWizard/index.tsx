@@ -37,7 +37,12 @@ export function BookingWizard({ facility }: BookingWizardProps) {
     endTime: null,
     endDate: null,
     quantity: 1,
+    baseAmount: 0,
     totalAmount: 0,
+    gstPercentage: 0,
+    isGstInclusive: true,
+    cgstAmount: 0,
+    sgstAmount: 0,
     isResident: true,
     sessionToken: null,
     reservationExpiresAt: null,
@@ -180,6 +185,11 @@ export function BookingWizard({ facility }: BookingWizardProps) {
             bookingRef={bookingResult.bookingRef}
             expiresAt={bookingResult.expiresAt}
             totalAmount={state.totalAmount}
+            baseAmount={state.baseAmount}
+            gstPercentage={state.gstPercentage}
+            isGstInclusive={state.isGstInclusive}
+            cgstAmount={state.cgstAmount}
+            sgstAmount={state.sgstAmount}
             onSuccess={goNext}
           />
         )}

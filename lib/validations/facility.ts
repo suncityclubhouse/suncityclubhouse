@@ -22,7 +22,7 @@ export type FacilitySchema = z.infer<typeof facilitySchema>;
 
 export const facilityPackageSchema = z.object({
   name: z.string().min(1, "Package name required").max(100),
-  type: z.enum(["hourly", "half_day", "full_day", "monthly", "quarterly"]),
+  type: z.enum(["hourly", "half_day", "full_day", "monthly", "quarterly", "half_yearly", "yearly"]),
   price: z.number().min(0, "Price must be at least 0"),
   residentPrice: z.number().min(0).optional().nullable(),
   durationHours: z.number().int().min(1).optional(),
@@ -37,6 +37,9 @@ export const facilityPackageSchema = z.object({
   description: z.string().max(500).optional(),
   isActive: z.boolean().default(true),
   displayOrder: z.number().int().min(0).default(0),
+  // GST
+  gstPercentage: z.union([z.literal(0), z.literal(5), z.literal(18)]).default(0),
+  isGstInclusive: z.boolean().default(true),
 });
 
 export type FacilityPackageSchema = z.infer<typeof facilityPackageSchema>;

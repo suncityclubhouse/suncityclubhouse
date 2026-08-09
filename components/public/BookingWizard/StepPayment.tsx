@@ -25,10 +25,26 @@ interface StepPaymentProps {
   bookingRef: string;
   expiresAt: string;
   totalAmount: number;
+  baseAmount: number;
+  gstPercentage: number;
+  isGstInclusive: boolean;
+  cgstAmount: number;
+  sgstAmount: number;
   onSuccess: () => void;
 }
 
-export function StepPayment({ bookingId, bookingRef, expiresAt, totalAmount, onSuccess }: StepPaymentProps) {
+export function StepPayment({ 
+  bookingId, 
+  bookingRef, 
+  expiresAt, 
+  totalAmount,
+  baseAmount,
+  gstPercentage,
+  isGstInclusive,
+  cgstAmount,
+  sgstAmount,
+  onSuccess 
+}: StepPaymentProps) {
   const [secondsLeft, setSecondsLeft] = useState(() => getRemainingSeconds(expiresAt));
   const [uploading, setUploading] = useState(false);
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
@@ -179,9 +195,25 @@ export function StepPayment({ bookingId, bookingRef, expiresAt, totalAmount, onS
 
               {/* Payment details */}
               <div className="space-y-4 flex-1">
-                <div className="bg-stone-50 rounded-lg p-4 space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-stone-500">Amount Due</span>
+                <div className="bg-stone-50 rounded-lg p-4 flex flex-col gap-2">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-stone-500">Amount</span>
+                    <span className="font-medium text-stone-700">{formatINR(isGstInclusive ? totalAmount : baseAmount)}</span>
+                  </div>
+                  {gstPercentage > 0 && (
+                    <>
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-stone-500">CGST ({gstPercentage / 2}%)</span>
+                        <span className="text-stone-500">₹{cgstAmount}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-stone-500">SGST ({gstPercentage / 2}%)</span>
+                        <span className="text-stone-500">₹{sgstAmount}</span>
+                      </div>
+                    </>
+                  )}
+                  <div className="flex justify-between items-center pt-2 mt-1 border-t border-stone-200">
+                    <span className="text-sm font-semibold text-stone-900">Total Amount Due</span>
                     <span className="text-xl font-bold text-stone-900">{formatINR(totalAmount)}</span>
                   </div>
                   {UPI_ID && (

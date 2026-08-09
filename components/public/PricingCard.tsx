@@ -74,6 +74,11 @@ export function PricingCard({ pkg, selected, onSelect, isResident }: PricingCard
               {pkg.type === "hourly" && (
                 <p className="text-xs text-slate-400">/hour</p>
               )}
+              {(pkg.gst_percentage ?? 0) > 0 && (
+                <p className="text-[10px] text-slate-400 mt-0.5">
+                  {pkg.is_gst_inclusive ? `Incl. ${pkg.gst_percentage}% GST` : `+ ${pkg.gst_percentage}% GST`}
+                </p>
+              )}
             </div>
           </div>
 

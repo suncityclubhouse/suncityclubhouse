@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Receipt,
+  Activity,
 } from "lucide-react";
 import { useState } from "react";
 import { adminLogout } from "@/actions/admin";
@@ -19,7 +20,8 @@ import { cn } from "@/lib/utils/formatters";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { href: "/dashboard/bookings", label: "Bookings", icon: BookOpen },
+  { href: "/dashboard/bookings/active", label: "Active Bookings", icon: Activity },
+  { href: "/dashboard/bookings", label: "All Bookings", icon: BookOpen, exact: true },
   { href: "/dashboard/facilities", label: "Facilities", icon: Building2 },
   { href: "/dashboard/calendar", label: "Calendar", icon: CalendarDays },
   { href: "/dashboard/revenue", label: "Revenue", icon: TrendingUp },

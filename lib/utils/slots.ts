@@ -52,6 +52,8 @@ export function getSlotTypeLabel(type: SlotType): string {
     full_day: "Full Day",
     monthly: "Monthly",
     quarterly: "Quarterly",
+    half_yearly: "Half Yearly",
+    yearly: "Yearly",
   };
   return labels[type] ?? type;
 }

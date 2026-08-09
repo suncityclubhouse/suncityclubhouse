@@ -229,6 +229,8 @@ export async function createFacilityPackage(
       description: values.description ?? null,
       is_active: values.isActive,
       display_order: values.displayOrder,
+      gst_percentage: values.gstPercentage,
+      is_gst_inclusive: values.isGstInclusive,
     })
     .select("*")
     .single();
@@ -258,6 +260,8 @@ export async function updateFacilityPackage(
       description: values.description ?? null,
       is_active: values.isActive,
       display_order: values.displayOrder,
+      gst_percentage: values.gstPercentage,
+      is_gst_inclusive: values.isGstInclusive,
     })
     .eq("id", packageId);
 

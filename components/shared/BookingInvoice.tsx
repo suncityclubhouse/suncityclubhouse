@@ -419,7 +419,10 @@ export function BookingInvoice({
             {societyPhone && (
               <Text style={styles.metaLine}>Tel: {societyPhone}</Text>
             )}
-            <Text style={[styles.metaLine, { marginTop: 4, color: SLATE, fontSize: 8 }]}>
+            <Text style={[styles.metaLine, { marginTop: 4, fontFamily: "Helvetica-Bold", fontSize: 8 }]}>
+              GSTIN: 22AAIFV5205EI2K
+            </Text>
+            <Text style={[styles.metaLine, { marginTop: 1, color: SLATE, fontSize: 8 }]}>
               Managed by Mahavir Group
             </Text>
           </View>
@@ -515,11 +518,23 @@ export function BookingInvoice({
             <Text style={styles.summaryLabel}>Sub-total</Text>
             <Text style={styles.summaryValue}>{formatINR(b.base_amount)}</Text>
           </View>
-          {b.discount_amount > 0 && (
+          {Number(b.cgst_amount) > 0 && (
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>CGST ({Number(b.gst_percentage ?? 0) / 2}%)</Text>
+              <Text style={styles.summaryValue}>+ {formatINR(Number(b.cgst_amount))}</Text>
+            </View>
+          )}
+          {Number(b.sgst_amount) > 0 && (
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>SGST ({Number(b.gst_percentage ?? 0) / 2}%)</Text>
+              <Text style={styles.summaryValue}>+ {formatINR(Number(b.sgst_amount))}</Text>
+            </View>
+          )}
+          {Number(b.discount_amount) > 0 && (
             <View style={styles.summaryRow}>
               <Text style={[styles.summaryLabel, { color: SUCCESS_GREEN }]}>Discount</Text>
               <Text style={[styles.summaryValue, { color: SUCCESS_GREEN }]}>
-                − {formatINR(b.discount_amount)}
+                − {formatINR(Number(b.discount_amount))}
               </Text>
             </View>
           )}

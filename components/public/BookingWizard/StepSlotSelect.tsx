@@ -10,6 +10,7 @@ import { getBookedTimeSlots } from "@/actions/bookings";
 import { formatDisplayDate, formatShortDate, toDateString, calculateEndDate } from "@/lib/utils/dates";
 import { generateHourlySlots } from "@/lib/utils/slots";
 import { cn, formatINR } from "@/lib/utils/formatters";
+import { calcGst } from "@/lib/utils/gst";
 import { Calendar, Clock, Package, Loader2, Info, ArrowRight, Minus, Plus } from "lucide-react";
 import type { FacilityWithMedia, FacilityPackage } from "@/types/database";
 import type { BookingWizardState } from "@/types";
@@ -308,13 +309,22 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
         return;
       }
 
+      const gstRate = selected.gst_percentage ?? 0;
+      const isGstInclusive = selected.is_gst_inclusive ?? true;
+      const breakdown = calcGst(finalAmount, gstRate as 0|5|18, isGstInclusive);
+
       onStateChange({
         sessionToken: res.data!.sessionToken,
         reservationExpiresAt: res.data!.expiresAt,
         selectedPackageId: selected.id,
         slotType: selected.type,
         endDate: endDate ?? null,
-        totalAmount: finalAmount,
+        totalAmount: breakdown.grandTotal,
+        baseAmount: breakdown.baseAmount,
+        gstPercentage: breakdown.gstPercentage,
+        isGstInclusive: breakdown.isInclusive,
+        cgstAmount: breakdown.cgstAmount,
+        sgstAmount: breakdown.sgstAmount,
         isResident,
       });
       onNext();
@@ -595,17 +605,30 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-stone-600">Total Amount</p>
-              <p className="text-xl font-bold text-stone-900">
-                {formatINR(
-                  (needsTimeSlot && hasValidRange && hoursSelected > 0
-                    ? effectivePrice * hoursSelected
-                    : isFullDay
-                    ? effectivePrice * daysCount
-                    : effectivePrice) * (isAccommodation ? state.quantity : 1)
+              <div className="flex items-baseline gap-2">
+                <p className="text-xl font-bold text-stone-900">
+                  {formatINR(
+                    (() => {
+                      const base = (needsTimeSlot && hasValidRange && hoursSelected > 0
+                        ? effectivePrice * hoursSelected
+                        : isFullDay
+                        ? effectivePrice * daysCount
+                        : effectivePrice) * (isAccommodation ? state.quantity : 1);
+                      if (selected?.gst_percentage && !selected.is_gst_inclusive) {
+                        return base + (base * (selected.gst_percentage / 100));
+                      }
+                      return base;
+                    })()
+                  )}
+                </p>
+                {(selected?.gst_percentage ?? 0) > 0 && (
+                  <span className="text-xs font-medium text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded">
+                    {selected?.is_gst_inclusive ? "Incl. GST" : "+ GST"}
+                  </span>
                 )}
-              </p>
+              </div>
               {isAccommodation && state.quantity > 1 && (
-                <p className="text-xs text-stone-400 mt-0.5">{state.quantity} units × {formatINR(effectivePrice)}</p>
+                <p className="text-xs text-stone-500 mt-0.5">{state.quantity} units selected</p>
               )}
             </div>
             {needsTimeSlot && hasValidRange && hoursSelected > 0 && (

@@ -15,9 +15,13 @@ export type SlotType =
   | "half_day"
   | "full_day"
   | "monthly"
-  | "quarterly";
+  | "quarterly"
+  | "half_yearly"
+  | "yearly";
 
 export type PackageType = SlotType;
+
+export type GstPercentage = 0 | 5 | 18;
 
 export type MediaType = "image" | "video";
 
@@ -96,6 +100,9 @@ export interface FacilityPackage {
   description: string | null;
   is_active: boolean;
   display_order: number;
+  // GST configuration
+  gst_percentage: GstPercentage;   // 0, 5, or 18
+  is_gst_inclusive: boolean;        // true = price includes GST; false = GST added on top
   created_at: string;
   updated_at: string;
 }
@@ -137,6 +144,10 @@ export interface Booking {
   base_amount: number;
   discount_amount: number;
   total_amount: number;
+  // GST (stored at booking time for historical accuracy)
+  gst_percentage: GstPercentage;
+  cgst_amount: number;              // CGST = gst_percentage / 2 of taxable amount
+  sgst_amount: number;              // SGST = gst_percentage / 2 of taxable amount
   // Status
   status: BookingStatus;
   // Payment

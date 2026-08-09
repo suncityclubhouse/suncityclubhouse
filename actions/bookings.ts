@@ -30,6 +30,9 @@ export async function createBooking(params: {
   endDate?: string;
   baseAmount: number;
   totalAmount: number;
+  gstPercentage?: number;
+  cgstAmount?: number;
+  sgstAmount?: number;
   quantity?: number;
   formValues: BookingFormSchema;
 }): Promise<ActionResult<{ bookingId: string; bookingRef: string; expiresAt: string }>> {
@@ -116,6 +119,9 @@ export async function createBooking(params: {
       base_amount: params.baseAmount,
       discount_amount: 0,
       total_amount: params.totalAmount,
+      gst_percentage: params.gstPercentage ?? 0,
+      cgst_amount: params.cgstAmount ?? 0,
+      sgst_amount: params.sgstAmount ?? 0,
       status: "awaiting_payment",
       expires_at: expiresAt,
     })
@@ -254,6 +260,28 @@ export async function getBookings(filters: BookingFilters = {}): Promise<
   }
 
   return { success: true, data: { bookings: (data ?? []) as unknown as Booking[], total: count ?? 0 } };
+}
+
+// ============================================================
+// GET ACTIVE BOOKINGS (For renewal alerts)
+// ============================================================
+
+export async function getActiveBookings(): Promise<ActionResult<Booking[]>> {
+  const db = createAdminClient();
+  const today = new Date().toISOString().split("T")[0];
+
+  const { data, error } = await db
+    .from("bookings")
+    .select("*, facility:facilities(id,name), package:facility_packages(id,name,type)")
+    .in("status", ["confirmed", "completed"])
+    .gte("end_date", today)
+    .order("end_date", { ascending: true });
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  return { success: true, data: (data ?? []) as unknown as Booking[] };
 }
 
 // ============================================================
@@ -679,6 +707,9 @@ export async function createAdminBooking(params: {
   endDate?: string;
   baseAmount: number;
   totalAmount: number;
+  gstPercentage?: number;
+  cgstAmount?: number;
+  sgstAmount?: number;
   quantity?: number;
   paymentType: "upi" | "cash" | "complimentary" | "deferred";
   status: "confirmed" | "awaiting_payment";
@@ -776,6 +807,9 @@ export async function createAdminBooking(params: {
       base_amount: params.baseAmount,
       discount_amount: 0,
       total_amount: params.totalAmount,
+      gst_percentage: params.gstPercentage ?? 0,
+      cgst_amount: params.cgstAmount ?? 0,
+      sgst_amount: params.sgstAmount ?? 0,
       status: params.status,
       payment_type: params.paymentType,
       is_admin_booking: true,

@@ -31,6 +31,7 @@ import {
 import { createAdminBooking } from "@/actions/bookings";
 import { toDateString } from "@/lib/utils/dates";
 import { formatINR } from "@/lib/utils/formatters";
+import { calcGst } from "@/lib/utils/gst";
 import type { FacilityWithMedia, FacilityPackage } from "@/types/database";
 
 interface AdminBookingFormProps {
@@ -109,7 +110,15 @@ export function AdminBookingForm({ facilities }: AdminBookingFormProps) {
 
   const totalAmount = parseFloat(amountOverride || "0") * (selectedPackage?.type === "hourly" ? quantity : 1);
   const isHourly = selectedPackage?.type === "hourly";
-  const isMultiDay = selectedPackage?.type === "monthly" || selectedPackage?.type === "quarterly";
+  const isMultiDay = selectedPackage?.type === "monthly" || selectedPackage?.type === "quarterly" || selectedPackage?.type === "half_yearly" || selectedPackage?.type === "yearly";
+
+  // Calculate GST
+  const gstRate = selectedPackage?.gst_percentage ?? 0;
+  const isGstInclusive = selectedPackage?.is_gst_inclusive ?? true;
+  const gstBreakdown = calcGst(totalAmount, gstRate, isGstInclusive);
+
+  const finalBaseAmount = gstBreakdown.baseAmount;
+  const finalTotalAmount = gstBreakdown.grandTotal;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,8 +141,11 @@ export function AdminBookingForm({ facilities }: AdminBookingFormProps) {
         bookingDate,
         startTime: isHourly ? startTime : undefined,
         endTime: isHourly ? endTime : undefined,
-        baseAmount: totalAmount,
-        totalAmount,
+        baseAmount: finalBaseAmount,
+        totalAmount: finalTotalAmount,
+        gstPercentage: gstRate,
+        cgstAmount: gstBreakdown.cgstAmount,
+        sgstAmount: gstBreakdown.sgstAmount,
         quantity: isHourly ? quantity : 1,
         paymentType,
         status: bookingStatus,
@@ -249,9 +261,7 @@ export function AdminBookingForm({ facilities }: AdminBookingFormProps) {
         </div>
         {isMultiDay && selectedPackage && (
           <p className="text-xs text-stone-500 bg-stone-50 rounded-lg px-3 py-2">
-            {selectedPackage.type === "monthly"
-              ? "Monthly booking — ends ~1 month from start date"
-              : "Quarterly booking — ends ~3 months from start date"}
+            Multi-day booking — calculates end date automatically based on selected package type.
           </p>
         )}
       </div>
@@ -418,12 +428,30 @@ export function AdminBookingForm({ facilities }: AdminBookingFormProps) {
           </div>
         </div>
         {selectedPackage && (
-          <div className="bg-stone-50 rounded-lg px-4 py-3 text-sm flex items-center justify-between">
-            <span className="text-stone-500">
-              Total Amount
-              {isHourly ? ` (${quantity} unit${quantity !== 1 ? "s" : ""} × ₹${amountOverride || 0})` : ""}
-            </span>
-            <span className="font-bold text-stone-900 text-base">{formatINR(totalAmount)}</span>
+          <div className="bg-stone-50 rounded-lg px-4 py-3 text-sm flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <span className="text-stone-500">
+                Amount
+                {isHourly ? ` (${quantity} unit${quantity !== 1 ? "s" : ""} × ₹${amountOverride || 0})` : ""}
+              </span>
+              <span className="font-medium text-stone-700">{formatINR(totalAmount)}</span>
+            </div>
+            {gstBreakdown.totalGst > 0 && (
+              <>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-stone-500">CGST ({gstRate / 2}%)</span>
+                  <span className="text-stone-500">₹{gstBreakdown.cgstAmount}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-stone-500">SGST ({gstRate / 2}%)</span>
+                  <span className="text-stone-500">₹{gstBreakdown.sgstAmount}</span>
+                </div>
+              </>
+            )}
+            <div className="pt-2 mt-1 border-t border-stone-200 flex items-center justify-between">
+              <span className="font-bold text-stone-900">Total Amount Due</span>
+              <span className="font-bold text-stone-900 text-base">{formatINR(finalTotalAmount)}</span>
+            </div>
           </div>
         )}
         {/* Status selection */}

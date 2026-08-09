@@ -26,31 +26,39 @@ import {
 import type { FacilityPackage } from "@/types/database";
 
 const packageSchema = z.object({
-  name:          z.string().min(1, "Name required").max(80),
-  type:          z.enum(["hourly", "half_day", "full_day", "monthly", "quarterly"]),
-  price:         z.preprocess((val) => (val === "" || val === undefined || val === null) ? undefined : Number(val), z.number().min(0, "Price required")),
-  residentPrice: z.preprocess((val) => (val === "" || val === undefined || val === null) ? undefined : Number(val), z.number().min(0).optional().nullable()),
-  durationHours: z.preprocess((val) => (val === "" || val === undefined || val === null) ? undefined : Number(val), z.number().int().min(1, "Must be at least 1").optional()),
-  startTime:     z.preprocess((val) => (val === "" ? undefined : val), z.string().optional()),
-  endTime:       z.preprocess((val) => (val === "" ? undefined : val), z.string().optional()),
-  description:   z.preprocess((val) => (val === "" ? undefined : val), z.string().max(300).optional()),
-  isActive:      z.boolean().default(true),
-  displayOrder:  z.coerce.number().int().min(0).default(0),
+  name:           z.string().min(1, "Name required").max(80),
+  type:           z.enum(["hourly", "half_day", "full_day", "monthly", "quarterly", "half_yearly", "yearly"]),
+  price:          z.preprocess((val) => (val === "" || val === undefined || val === null) ? undefined : Number(val), z.number().min(0, "Price required")),
+  residentPrice:  z.preprocess((val) => (val === "" || val === undefined || val === null) ? undefined : Number(val), z.number().min(0).optional().nullable()),
+  durationHours:  z.preprocess((val) => (val === "" || val === undefined || val === null) ? undefined : Number(val), z.number().int().min(1, "Must be at least 1").optional()),
+  startTime:      z.preprocess((val) => (val === "" ? undefined : val), z.string().optional()),
+  endTime:        z.preprocess((val) => (val === "" ? undefined : val), z.string().optional()),
+  description:    z.preprocess((val) => (val === "" ? undefined : val), z.string().max(300).optional()),
+  isActive:       z.boolean().default(true),
+  displayOrder:   z.coerce.number().int().min(0).default(0),
+  gstPercentage:  z.union([z.literal(0), z.literal(5), z.literal(18)]).default(0),
+  isGstInclusive: z.boolean().default(true),
 });
 type PackageFormValues = z.infer<typeof packageSchema>;
 
 const TYPE_OPTIONS = [
-  { value: "hourly",  label: "Hourly",  icon: Clock,    hint: "Charged per hour" },
-  { value: "full_day", label: "Full Day", icon: Sun,     hint: "Entire day (supports multi-day)" },
-  { value: "monthly",  label: "Monthly",  icon: Calendar, hint: "30-day subscription" },
+  { value: "hourly",      label: "Hourly",       icon: Clock,    hint: "Charged per hour" },
+  { value: "half_day",    label: "Half Day",      icon: Sun,      hint: "Morning or evening session" },
+  { value: "full_day",    label: "Full Day",      icon: Sun,      hint: "Entire day (supports multi-day)" },
+  { value: "monthly",     label: "Monthly",       icon: Calendar, hint: "30-day subscription" },
+  { value: "quarterly",   label: "Quarterly",     icon: Calendar, hint: "3-month subscription" },
+  { value: "half_yearly", label: "Half Yearly",   icon: Calendar, hint: "6-month subscription" },
+  { value: "yearly",      label: "Yearly",        icon: Calendar, hint: "12-month subscription" },
 ] as const;
 
 const TYPE_COLORS: Record<string, string> = {
-  hourly:    "bg-blue-50 text-blue-700 border-blue-200",
-  half_day:  "bg-amber-50 text-amber-700 border-amber-200",
-  full_day:  "bg-emerald-50 text-emerald-700 border-emerald-200",
-  monthly:   "bg-purple-50 text-purple-700 border-purple-200",
-  quarterly: "bg-rose-50 text-rose-700 border-rose-200",
+  hourly:      "bg-blue-50 text-blue-700 border-blue-200",
+  half_day:    "bg-amber-50 text-amber-700 border-amber-200",
+  full_day:    "bg-emerald-50 text-emerald-700 border-emerald-200",
+  monthly:     "bg-purple-50 text-purple-700 border-purple-200",
+  quarterly:   "bg-rose-50 text-rose-700 border-rose-200",
+  half_yearly: "bg-orange-50 text-orange-700 border-orange-200",
+  yearly:      "bg-cyan-50 text-cyan-700 border-cyan-200",
 };
 
 interface Props {
@@ -79,6 +87,7 @@ export function PackageManager({ facilityId, initialPackages }: Props) {
     form.reset({
       name: "", type: "hourly", price: 0, residentPrice: undefined,
       isActive: true, displayOrder: packages.length,
+      gstPercentage: 0, isGstInclusive: true,
     });
     setEditingId(null);
     setShowForm(true);
@@ -86,16 +95,18 @@ export function PackageManager({ facilityId, initialPackages }: Props) {
 
   const openEdit = (pkg: FacilityPackage) => {
     form.reset({
-      name:          pkg.name,
-      type:          pkg.type as any,
-      price:         pkg.price,
-      residentPrice: pkg.resident_price ?? undefined,
-      durationHours: pkg.duration_hours ?? undefined,
-      startTime:     pkg.start_time ?? undefined,
-      endTime:       pkg.end_time ?? undefined,
-      description:   pkg.description ?? undefined,
-      isActive:      pkg.is_active,
-      displayOrder:  pkg.display_order,
+      name:           pkg.name,
+      type:           pkg.type as any,
+      price:          pkg.price,
+      residentPrice:  pkg.resident_price ?? undefined,
+      durationHours:  pkg.duration_hours ?? undefined,
+      startTime:      pkg.start_time ?? undefined,
+      endTime:        pkg.end_time ?? undefined,
+      description:    pkg.description ?? undefined,
+      isActive:       pkg.is_active,
+      displayOrder:   pkg.display_order,
+      gstPercentage:  (pkg.gst_percentage ?? 0) as 0 | 5 | 18,
+      isGstInclusive: pkg.is_gst_inclusive ?? true,
     });
     setEditingId(pkg.id);
     setShowForm(true);
@@ -248,6 +259,45 @@ export function PackageManager({ facilityId, initialPackages }: Props) {
                 </>
               )}
 
+            {/* GST Rate */}
+              <div className="space-y-1.5">
+                <Label>GST Rate</Label>
+                <Select
+                  defaultValue={String(form.getValues("gstPercentage") ?? 0)}
+                  onValueChange={(v) => form.setValue("gstPercentage", Number(v) as 0 | 5 | 18)}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">No GST (0%)</SelectItem>
+                    <SelectItem value="5">5% GST (CGST 2.5% + SGST 2.5%)</SelectItem>
+                    <SelectItem value="18">18% GST (CGST 9% + SGST 9%)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-stone-400">Applied to all bookings using this package</p>
+              </div>
+
+              {/* GST Type */}
+              {form.watch("gstPercentage") !== 0 && (
+                <div className="space-y-1.5">
+                  <Label>GST Type</Label>
+                  <Select
+                    defaultValue={form.getValues("isGstInclusive") ? "inclusive" : "exclusive"}
+                    onValueChange={(v) => form.setValue("isGstInclusive", v === "inclusive")}
+                  >
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="inclusive">Inclusive — price already includes GST</SelectItem>
+                      <SelectItem value="exclusive">Exclusive — GST added on top of price</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-stone-400">
+                    {form.watch("isGstInclusive")
+                      ? "GST is embedded in the listed price. Customers pay the listed price."
+                      : "GST is charged on top. Customers pay listed price + GST."}
+                  </p>
+                </div>
+              )}
+
               {/* Display order */}
               <div className="space-y-1.5">
                 <Label>Display Order</Label>
@@ -346,6 +396,11 @@ export function PackageManager({ facilityId, initialPackages }: Props) {
                 {pkg.resident_price !== null && pkg.resident_price !== pkg.price && (
                   <p className="text-xs text-emerald-600 font-medium mt-0.5">
                     Res: ₹{Number(pkg.resident_price).toLocaleString("en-IN")}
+                  </p>
+                )}
+                {pkg.gst_percentage > 0 && (
+                  <p className="text-[10px] text-stone-500 mt-1 uppercase tracking-wider">
+                    {pkg.gst_percentage}% GST ({pkg.is_gst_inclusive ? "Inc" : "Exc"})
                   </p>
                 )}
               </div>

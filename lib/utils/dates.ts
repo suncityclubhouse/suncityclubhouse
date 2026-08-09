@@ -78,23 +78,27 @@ export function getBookingExpiry(): string {
 
 /**
  * Calculate the end_date for multi-day booking types.
- * monthly  → same date next month minus 1 day (e.g. June 4 → July 3)
- * quarterly → same date + 3 months minus 1 day (e.g. June 4 → September 3)
+ * monthly    → same date + 1 month  − 1 day
+ * quarterly  → same date + 3 months − 1 day
+ * half_yearly→ same date + 6 months − 1 day
+ * yearly     → same date + 12 months − 1 day
  * Returns null for slot types that don't span multiple days.
  */
 export function calculateEndDate(bookingDate: Date | string, slotType: string): string | null {
-  if (slotType !== "monthly" && slotType !== "quarterly") return null;
+  const multiDayTypes: Record<string, number> = {
+    monthly:     1,
+    quarterly:   3,
+    half_yearly: 6,
+    yearly:      12,
+  };
+
+  const months = multiDayTypes[slotType];
+  if (months === undefined) return null;
 
   const start = typeof bookingDate === "string" ? parseISO(bookingDate) : new Date(bookingDate);
   const end = new Date(start);
-
-  if (slotType === "monthly") {
-    end.setMonth(end.getMonth() + 1);
-    end.setDate(end.getDate() - 1);
-  } else if (slotType === "quarterly") {
-    end.setMonth(end.getMonth() + 3);
-    end.setDate(end.getDate() - 1);
-  }
+  end.setMonth(end.getMonth() + months);
+  end.setDate(end.getDate() - 1);
 
   return format(end, "yyyy-MM-dd");
 }

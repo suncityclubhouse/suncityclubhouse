@@ -118,14 +118,6 @@ export function StepBookingForm({ facility, state, onStateChange, onNext, onBack
       return;
     }
 
-    // Recalculate amount if resident discount applies.
-    // quantity = how many units (hours or days) in the booking, derived from the wizard's stored totalAmount.
-    let finalAmount = state.totalAmount;
-    if (needsVerification && pkg && pkg.resident_price !== null && pkg.price > 0) {
-      const quantity = Math.round(state.totalAmount / pkg.price);
-      finalAmount = quantity * pkg.resident_price;
-    }
-
     setSubmitting(true);
     try {
       const result = await createBooking({
@@ -137,8 +129,11 @@ export function StepBookingForm({ facility, state, onStateChange, onNext, onBack
         startTime: state.startTime ?? undefined,
         endTime: state.endTime ?? undefined,
         endDate: state.endDate ?? undefined,
-        baseAmount: finalAmount,
-        totalAmount: finalAmount,
+        baseAmount: state.baseAmount,
+        totalAmount: state.totalAmount,
+        gstPercentage: state.gstPercentage,
+        cgstAmount: state.cgstAmount,
+        sgstAmount: state.sgstAmount,
         quantity: state.quantity ?? 1,
         formValues: {
           ...values,
