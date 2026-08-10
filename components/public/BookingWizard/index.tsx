@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Home, UserRound } from "lucide-react";
+import { toast } from "sonner";
 import { StepSlotSelect } from "./StepSlotSelect";
 import { StepBookingForm } from "./StepBookingForm";
 import { StepPayment } from "./StepPayment";
@@ -10,6 +11,70 @@ import { releaseTemporaryReservation } from "@/actions/reservations";
 import type { FacilityWithMedia } from "@/types/database";
 import type { BookingWizardState } from "@/types";
 import { cn } from "@/lib/utils/formatters";
+
+// ─── Session persistence types ────────────────────────────────────────────────
+
+interface SavedAmounts {
+  baseAmount: number;
+  totalAmount: number;
+  gstPercentage: number;
+  isGstInclusive: boolean;
+  cgstAmount: number;
+  sgstAmount: number;
+}
+
+interface SavedSession {
+  step: number;
+  residentChosen: boolean;
+  bookingResult: {
+    bookingId: string;
+    bookingRef: string;
+    expiresAt: string;
+  };
+  amounts: SavedAmounts;
+  uploadedProofUrl?: string;
+  uploadedPublicId?: string;
+}
+
+// ─── Session helpers ──────────────────────────────────────────────────────────
+
+function sessionKey(facilityId: string) {
+  return `bw_v2_${facilityId}`;
+}
+
+/** Read and validate a saved session. Returns null if nothing valid is stored. */
+function readSession(facilityId: string): SavedSession | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(sessionKey(facilityId));
+    if (!raw) return null;
+    const parsed: SavedSession = JSON.parse(raw);
+    // Must have a booking result and be on a valid step
+    if (
+      parsed?.bookingResult?.bookingId &&
+      parsed?.bookingResult?.expiresAt &&
+      parsed?.step >= 3 &&
+      parsed?.amounts
+    ) {
+      return parsed;
+    }
+  } catch {}
+  return null;
+}
+
+function saveSession(facilityId: string, session: SavedSession) {
+  try {
+    sessionStorage.setItem(sessionKey(facilityId), JSON.stringify(session));
+  } catch {}
+}
+
+function clearSession(facilityId: string) {
+  try {
+    sessionStorage.removeItem(sessionKey(facilityId));
+  } catch {}
+}
+
+// ─── Wizard steps metadata ────────────────────────────────────────────────────
 
 const STEPS = [
   { num: 1, label: "Package" },
@@ -22,12 +87,26 @@ interface BookingWizardProps {
   facility: FacilityWithMedia;
 }
 
-export function BookingWizard({ facility }: BookingWizardProps) {
-  const [step, setStep] = useState(1);
-  // null = not chosen yet → shows the residency modal
-  const [residentChosen, setResidentChosen] = useState<boolean | null>(null);
+// ─── Component ────────────────────────────────────────────────────────────────
 
-  const [state, setState] = useState<BookingWizardState>({
+export function BookingWizard({ facility }: BookingWizardProps) {
+  // Read session ONCE synchronously before any state initialisation.
+  // Using a ref so this is stable across renders without re-running.
+  const restoredSession = useRef<SavedSession | null>(
+    readSession(facility.id)
+  );
+  const session = restoredSession.current;
+
+  // ── State — all initialised from session in one place ──────────────────────
+
+  const [step, setStep] = useState<number>(session?.step ?? 1);
+
+  // null = not chosen yet → shows the residency modal
+  const [residentChosen, setResidentChosen] = useState<boolean | null>(
+    session ? session.residentChosen : null
+  );
+
+  const [state, setState] = useState<BookingWizardState>(() => ({
     facilityId: facility.id,
     facilitySlug: facility.slug,
     selectedDate: new Date(),
@@ -37,22 +116,98 @@ export function BookingWizard({ facility }: BookingWizardProps) {
     endTime: null,
     endDate: null,
     quantity: 1,
-    baseAmount: 0,
-    totalAmount: 0,
-    gstPercentage: 0,
-    isGstInclusive: true,
-    cgstAmount: 0,
-    sgstAmount: 0,
-    isResident: true,
+    isResident: session?.residentChosen ?? true,
     sessionToken: null,
     reservationExpiresAt: null,
-  });
+    // Amounts — restored from session if available, otherwise zero
+    baseAmount: session?.amounts.baseAmount ?? 0,
+    totalAmount: session?.amounts.totalAmount ?? 0,
+    gstPercentage: session?.amounts.gstPercentage ?? 0,
+    isGstInclusive: session?.amounts.isGstInclusive ?? true,
+    cgstAmount: session?.amounts.cgstAmount ?? 0,
+    sgstAmount: session?.amounts.sgstAmount ?? 0,
+  }));
 
   const [bookingResult, setBookingResult] = useState<{
     bookingId: string;
     bookingRef: string;
     expiresAt: string;
-  } | null>(null);
+  } | null>(session?.bookingResult ?? null);
+
+  // Restored upload state — StepPayment reads this via prop
+  const [restoredUpload, setRestoredUpload] = useState<{
+    url: string;
+    publicId: string;
+  } | null>(
+    session?.uploadedProofUrl
+      ? { url: session.uploadedProofUrl, publicId: session.uploadedPublicId ?? "" }
+      : null
+  );
+
+  // ── Show resume toast once when session is restored ────────────────────────
+  useEffect(() => {
+    if (session) {
+      toast.info("⚡ Your booking session has been restored.", {
+        description: `Ref: ${session.bookingResult.bookingRef}`,
+        duration: 4000,
+      });
+    }
+    // Run once on mount only
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ── Save session to sessionStorage whenever payment-relevant state changes ──
+  useEffect(() => {
+    if (!bookingResult || step < 3) return;
+    saveSession(facility.id, {
+      step,
+      residentChosen: residentChosen ?? true,
+      bookingResult,
+      amounts: {
+        baseAmount: state.baseAmount,
+        totalAmount: state.totalAmount,
+        gstPercentage: state.gstPercentage,
+        isGstInclusive: state.isGstInclusive,
+        cgstAmount: state.cgstAmount,
+        sgstAmount: state.sgstAmount,
+      },
+      uploadedProofUrl: restoredUpload?.url,
+      uploadedPublicId: restoredUpload?.publicId,
+    });
+  }, [
+    step,
+    bookingResult,
+    residentChosen,
+    state.baseAmount,
+    state.totalAmount,
+    state.gstPercentage,
+    state.isGstInclusive,
+    state.cgstAmount,
+    state.sgstAmount,
+    restoredUpload,
+    facility.id,
+  ]);
+
+  // ── Clear session when booking completes ───────────────────────────────────
+  useEffect(() => {
+    if (step === 4) {
+      clearSession(facility.id);
+    }
+  }, [step, facility.id]);
+
+  // ── Warn before tab close during active payment ────────────────────────────
+  useEffect(() => {
+    if (step !== 3) return;
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      // Modern browsers show their own message; setting returnValue triggers the dialog
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [step]);
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
 
   const updateState = useCallback((patch: Partial<BookingWizardState>) => {
     setState((prev) => ({ ...prev, ...patch }));
@@ -73,6 +228,8 @@ export function BookingWizard({ facility }: BookingWizardProps) {
 
   const goNext = () => setStep((s) => Math.min(4, s + 1));
 
+  // ── Render ─────────────────────────────────────────────────────────────────
+
   return (
     <div className="space-y-6">
 
@@ -85,10 +242,12 @@ export function BookingWizard({ facility }: BookingWizardProps) {
               <h2 className="text-lg font-serif font-bold text-slate-900 text-center">
                 Are you a society resident?
               </h2>
+              <p className="text-sm text-stone-500 text-center mt-1">
+                Residents may be eligible for a discounted rate.
+              </p>
             </div>
 
             <div className="p-4 grid grid-cols-1 gap-3">
-
               <button
                 onClick={() => handleResidencyChoice(true)}
                 className="group flex items-center gap-3 p-4 rounded-xl border-2 border-emerald-200 bg-emerald-50 hover:border-emerald-500 hover:bg-emerald-100 transition-all text-left"
@@ -96,7 +255,10 @@ export function BookingWizard({ facility }: BookingWizardProps) {
                 <div className="w-10 h-10 rounded-full bg-emerald-100 border-2 border-emerald-300 group-hover:bg-emerald-200 flex items-center justify-center flex-shrink-0 transition-colors">
                   <Home className="w-5 h-5 text-emerald-700" />
                 </div>
-                <p className="font-semibold text-slate-800">Yes, I&apos;m a Resident</p>
+                <div>
+                  <p className="font-semibold text-slate-800">Yes, I&apos;m a Resident</p>
+                  <p className="text-xs text-slate-500">I live in Suncity Society</p>
+                </div>
               </button>
 
               <button
@@ -106,9 +268,11 @@ export function BookingWizard({ facility }: BookingWizardProps) {
                 <div className="w-10 h-10 rounded-full bg-slate-100 border-2 border-slate-300 group-hover:bg-slate-200 flex items-center justify-center flex-shrink-0 transition-colors">
                   <UserRound className="w-5 h-5 text-slate-600" />
                 </div>
-                <p className="font-semibold text-slate-800">No, I&apos;m a Non-Resident</p>
+                <div>
+                  <p className="font-semibold text-slate-800">No, I&apos;m a Guest / Non-Resident</p>
+                  <p className="text-xs text-slate-500">Visiting or invited by a resident</p>
+                </div>
               </button>
-
             </div>
 
             <div className="pb-5" />
@@ -190,8 +354,31 @@ export function BookingWizard({ facility }: BookingWizardProps) {
             isGstInclusive={state.isGstInclusive}
             cgstAmount={state.cgstAmount}
             sgstAmount={state.sgstAmount}
+            restoredUpload={restoredUpload}
+            onUploadComplete={(url, publicId) => {
+              // __clear__ is a sentinel value meaning the user removed the upload
+              if (url === "__clear__") {
+                setRestoredUpload(null);
+              } else {
+                setRestoredUpload({ url, publicId });
+              }
+            }}
             onSuccess={goNext}
           />
+        )}
+        {step === 3 && !bookingResult && (
+          // Safety net: session was somehow cleared; avoid blank page
+          <div className="text-center py-12 space-y-4">
+            <p className="text-stone-500 text-sm">
+              We couldn&apos;t restore your booking session. Please start a new booking.
+            </p>
+            <button
+              onClick={() => { clearSession(facility.id); setStep(1); setResidentChosen(null); }}
+              className="text-blue-600 hover:underline text-sm font-medium"
+            >
+              ← Start a new booking
+            </button>
+          </div>
         )}
         {step === 4 && bookingResult && (
           <StepConfirmation

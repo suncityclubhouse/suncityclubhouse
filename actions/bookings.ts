@@ -185,12 +185,39 @@ export async function uploadPaymentProof(params: {
     return { success: false, error: "Your booking has expired. Please book again." };
   }
 
+  // ── UTR / Reference uniqueness check ──────────────────────────────────────
+  // A UTR is globally unique across all of India's UPI network. If the same
+  // UTR already exists in our system it means the user is either re-submitting
+  // a previous payment (mistake) or attempting fraud.
+  const normalizedRef = params.paymentReference.trim().toUpperCase();
+  const { data: existingUTR } = await db
+    .from("bookings")
+    .select("id, booking_ref, status")
+    .ilike("payment_reference", normalizedRef)
+    .neq("id", params.bookingId)          // exclude this booking itself
+    .not("status", "in", "(expired,rejected,cancelled)") // only active/confirmed ones count
+    .maybeSingle();
+
+  if (existingUTR) {
+    console.warn(
+      `[uploadPaymentProof] Duplicate UTR attempt: "${normalizedRef}" already used on booking ${
+        existingUTR.booking_ref
+      } (status: ${existingUTR.status})`
+    );
+    return {
+      success: false,
+      error:
+        "This UTR / transaction reference number has already been used for another booking. " +
+        "Please check the correct UTR from your payment app. If you believe this is an error, contact us on WhatsApp.",
+    };
+  }
+
   const { error: updateError } = await db
     .from("bookings")
     .update({
       payment_proof_url: params.paymentProofUrl,
       payment_public_id: params.paymentPublicId,
-      payment_reference: params.paymentReference,
+      payment_reference: normalizedRef, // save the normalised value for consistency with the unique index
       payment_uploaded_at: new Date().toISOString(),
       status: "pending_approval",
       expires_at: null, // clear the expiry once payment is submitted

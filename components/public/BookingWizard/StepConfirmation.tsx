@@ -97,8 +97,7 @@ export function StepConfirmation({ bookingRef, facilityName }: StepConfirmationP
       </div>
 
       <p className="text-xs text-stone-400 max-w-sm">
-        A confirmation email has been sent to you. If you don&apos;t receive it within 15 minutes,
-        please check your spam folder or contact us on WhatsApp.
+        For any queries, feel free to contact us on WhatsApp. Please keep your booking reference number handy.
       </p>
     </div>
   );
