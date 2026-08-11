@@ -139,7 +139,7 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
       setRangeStart(slot.startTime);
       setRangeEnd(slot.endTime);
       setSelectingEnd(true);
-      onStateChange({ startTime: slot.startTime, endTime: slot.endTime, totalAmount: selected.price * 1 });
+      onStateChange({ startTime: slot.startTime, endTime: slot.endTime, totalAmount: selected.price * 1 * (selected.type === "hourly" ? daysCount : 1) });
     } else {
       if (slot.startTime === rangeStart) {
         setRangeStart(null);
@@ -152,7 +152,7 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
         setRangeStart(slot.startTime);
         setRangeEnd(slot.endTime);
         setSelectingEnd(true);
-        onStateChange({ startTime: slot.startTime, endTime: slot.endTime, totalAmount: selected.price * 1 });
+        onStateChange({ startTime: slot.startTime, endTime: slot.endTime, totalAmount: selected.price * 1 * (selected.type === "hourly" ? daysCount : 1) });
         return;
       }
       if (hasBookedSlotInRange(rangeStart!, slot.endTime)) {
@@ -164,7 +164,7 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
       const hours = endIdx - startIdx + 1;
       setRangeEnd(slot.endTime);
       setSelectingEnd(false);
-      onStateChange({ startTime: rangeStart!, endTime: slot.endTime, totalAmount: selected.price * hours });
+      onStateChange({ startTime: rangeStart!, endTime: slot.endTime, totalAmount: selected.price * hours * (selected.type === "hourly" ? daysCount : 1) });
     }
   };
 
@@ -178,7 +178,7 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
     const needsSlot = pkg.type === "hourly" || pkg.type === "monthly";
     // For full_day + multi-day: endDate = the user-chosen endDateStr (or start date for single day)
     let endDate: string | null;
-    if (pkg.type === "full_day") {
+    if (pkg.type === "full_day" || pkg.type === "hourly") {
       endDate = isMultiDay && endDateStr ? endDateStr : toDateString(state.selectedDate ?? new Date());
     } else {
       endDate = state.selectedDate ? calculateEndDate(state.selectedDate, pkg.type) : null;
@@ -226,8 +226,8 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
     if (!next) {
       setEndDateStr("");
     } else {
-      // If currently selected package is not full_day, clear it
-      if (selected && selected.type !== "full_day") {
+      // If currently selected package is not full_day and not hourly, clear it
+      if (selected && selected.type !== "full_day" && selected.type !== "hourly") {
         setSelected(null);
         onStateChange({ selectedPackageId: null, slotType: null, startTime: null, endTime: null, totalAmount: 0 });
       }
@@ -239,16 +239,24 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
   const hasResidentPrice = selected !== null && selected.resident_price !== null && selected.resident_price < selected.price;
   const effectivePrice = isResident && hasResidentPrice ? selected!.resident_price! : (selected?.price ?? 0);
 
-  // Recalculate amount when days/dates/resident/package changes (for full_day)
+  // Recalculate amount when days/dates/resident/package changes (for full_day and hourly)
   useEffect(() => {
-    if (!selected || !isFullDay) return;
+    if (!selected) return;
     const price = isResident && selected.resident_price !== null && selected.resident_price < selected.price
       ? selected.resident_price!
       : selected.price;
-    onStateChange({
-      totalAmount: price * daysCount,
-      endDate: isMultiDay && endDateStr ? endDateStr : toDateString(state.selectedDate ?? new Date()),
-    });
+      
+    if (selected.type === "full_day") {
+      onStateChange({
+        totalAmount: price * daysCount,
+        endDate: isMultiDay && endDateStr ? endDateStr : toDateString(state.selectedDate ?? new Date()),
+      });
+    } else if (selected.type === "hourly" && hasValidRange) {
+      onStateChange({
+        totalAmount: price * hoursSelected * daysCount,
+        endDate: isMultiDay && endDateStr ? endDateStr : toDateString(state.selectedDate ?? new Date()),
+      });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [daysCount, isMultiDay, endDateStr, state.selectedDate, isResident, selected?.id]);
 
@@ -272,7 +280,7 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
     setLoading(true);
     try {
       let endDate: string | undefined;
-      if (isFullDay) {
+      if (isFullDay || selected.type === "hourly") {
         endDate = isMultiDay && endDateStr ? endDateStr : toDateString(state.selectedDate);
       } else {
         endDate = calculateEndDate(state.selectedDate, selected.type) ?? undefined;
@@ -286,7 +294,7 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
         const startIdx = hourlySlots.findIndex((s) => s.startTime === (startTime ?? ""));
         const endIdx = hourlySlots.findIndex((s) => s.endTime === (endTime ?? ""));
         const hours = endIdx - startIdx + 1;
-        finalAmount = effectivePrice * hours;
+        finalAmount = effectivePrice * hours * (selected.type === "hourly" ? daysCount : 1);
       } else if (isFullDay) {
         finalAmount = effectivePrice * daysCount;
       } else {
@@ -480,12 +488,17 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
         </div>
       ) : (
         <div className="space-y-6">
-          {/* Hourly packages — hidden when multi-day is on */}
-          {!isMultiDay && hourlyPackages.length > 0 && (
+          {/* Hourly packages */}
+          {hourlyPackages.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <Clock className="w-4 h-4 text-stone-400" />
                 <h3 className="text-sm font-semibold text-stone-700">Hourly Slots</h3>
+                {isMultiDay && daysCount > 1 && selected?.type === "hourly" && (
+                  <span className="ml-auto text-xs text-blue-600 font-medium bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full">
+                    Price shown × {daysCount} days
+                  </span>
+                )}
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {hourlyPackages.map((pkg) => (
@@ -611,7 +624,7 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
                   {formatINR(
                     (() => {
                       const base = (needsTimeSlot && hasValidRange && hoursSelected > 0
-                        ? effectivePrice * hoursSelected
+                        ? effectivePrice * hoursSelected * (selected?.type === "hourly" ? daysCount : 1)
                         : isFullDay
                         ? effectivePrice * daysCount
                         : effectivePrice) * (isAccommodation ? state.quantity : 1);
