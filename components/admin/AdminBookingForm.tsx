@@ -129,7 +129,6 @@ export function AdminBookingForm({ facilities }: AdminBookingFormProps) {
     if (isHourly && (!startTime || !endTime)) { toast.error("Please enter start and end time."); return; }
     if (!customerName.trim()) { toast.error("Customer name is required."); return; }
     if (!customerPhone || customerPhone.length < 10) { toast.error("Please enter a valid 10-digit phone number."); return; }
-    if (!customerEmail.trim() || !customerEmail.includes("@")) { toast.error("Please enter a valid email address."); return; }
     if (isResident && !houseNumber.trim()) { toast.error("Please enter the house/flat number for resident booking."); return; }
 
     setSubmitting(true);
@@ -298,7 +297,7 @@ export function AdminBookingForm({ facilities }: AdminBookingFormProps) {
             </div>
           </div>
           <div className="space-y-1.5 sm:col-span-2">
-            <Label>Email Address *</Label>
+            <Label>Email Address <span className="text-stone-400 font-normal">(optional)</span></Label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
               <Input
@@ -376,16 +375,6 @@ export function AdminBookingForm({ facilities }: AdminBookingFormProps) {
                 onChange={(e) => setHouseNumber(e.target.value)}
               />
             </div>
-          </div>
-        ) : (
-          <div className="space-y-1.5">
-            <Label>Reference Resident (optional)</Label>
-            <Input
-              placeholder="Name of the resident who is hosting"
-              value={referenceResident}
-              onChange={(e) => setReferenceResident(e.target.value)}
-            />
-          </div>
         )}
       </div>
 
