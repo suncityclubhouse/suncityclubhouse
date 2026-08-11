@@ -6,13 +6,16 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { cn } from "@/lib/utils/formatters";
 import type { BookingStatus } from "@/types/database";
 import { BlockDatesModal } from "@/components/admin/BlockDatesModal";
+import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Calendar | Admin" };
 
 async function CalendarContent() {
-  const db = createAdminClient();
-  const { data: { user } } = await db.auth.getUser();
+  const serverClient = await createClient();
+  const { data: { user } } = await serverClient.auth.getUser();
   if (!user) return null;
+
+  const db = createAdminClient();
 
   const today = new Date();
   const monthStart = startOfMonth(today);
