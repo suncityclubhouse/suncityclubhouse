@@ -11,11 +11,7 @@ import {
   Copy,
   MessageCircle,
   RefreshCw,
-  Smartphone,
   X,
-  QrCode,
-  ChevronDown,
-  ChevronUp,
   Camera,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -67,7 +63,6 @@ export function StepPayment({
   const [dragOver, setDragOver] = useState(false);
   const [copied, setCopied] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [showQR, setShowQR] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
@@ -269,78 +264,66 @@ export function StepPayment({
             </div>
           </div>
 
-          {/* ── MOBILE-FIRST: Big Pay Now button + UPI ID ── */}
-          {UPI_ID && (
+          {(UPI_ID || UPI_QR) && (
             <div className="bg-white border border-stone-200 rounded-xl overflow-hidden">
               <div className="px-4 py-3 border-b border-stone-100">
                 <h3 className="text-sm font-semibold text-stone-700 uppercase tracking-wider">Pay via UPI</h3>
               </div>
 
-              <div className="p-4 space-y-3">
-                {/* PRIMARY CTA — big tap-to-pay button, most important on mobile */}
-                <a
-                  href={`upi://pay?pa=${UPI_ID}&pn=Suncity+Clubhouse&am=${totalAmount}&cu=INR&tn=Booking+${bookingRef}`}
-                  className="flex items-center justify-center gap-3 w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-lg py-4 px-5 rounded-xl transition-colors shadow-md shadow-blue-200 select-none"
-                  style={{ WebkitTapHighlightColor: "transparent" }}
-                >
-                  <Smartphone className="w-6 h-6 flex-shrink-0" />
-                  Pay {formatINR(totalAmount)} with UPI
-                </a>
-                <p className="text-xs text-center text-stone-400">
-                  Opens GPay / PhonePe / Paytm automatically
-                </p>
+              <div className="p-4 space-y-4">
 
-                {/* UPI ID — large, easy to read and copy */}
-                <div className="bg-stone-50 border border-stone-200 rounded-xl p-4">
-                  <p className="text-xs text-stone-500 font-medium mb-2">Or pay manually using UPI ID:</p>
-                  <div className="flex items-center gap-3">
-                    <p className="font-mono font-bold text-stone-900 text-base flex-1 select-all break-all">
-                      {UPI_ID}
-                    </p>
-                    <button
-                      onClick={copyUPI}
-                      className={`flex-shrink-0 flex items-center gap-1.5 font-semibold text-sm px-4 py-2.5 rounded-xl transition-all min-w-[80px] justify-center ${
-                        copied
-                          ? "bg-emerald-100 text-emerald-700 border border-emerald-300"
-                          : "bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800"
-                      }`}
-                      style={{ WebkitTapHighlightColor: "transparent" }}
-                    >
-                      {copied ? (
-                        <><CheckCircle2 className="w-4 h-4" /> Copied</>
-                      ) : (
-                        <><Copy className="w-4 h-4" /> Copy</>
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                {/* QR code — collapsed on mobile (useless on phone), open on desktop */}
+                {/* QR Code — always visible */}
                 {UPI_QR && (
-                  <div className="border border-stone-200 rounded-xl overflow-hidden">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-56 h-56 border-2 border-stone-200 rounded-2xl overflow-hidden flex items-center justify-center bg-white shadow-sm">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={UPI_QR} alt="UPI QR Code" className="w-full h-full object-contain p-2" />
+                    </div>
+                    <p className="text-xs text-stone-400">Scan with any UPI app to pay</p>
+                  </div>
+                )}
+
+                {/* Divider */}
+                {UPI_QR && UPI_ID && (
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 h-px bg-stone-200" />
+                    <span className="text-xs text-stone-400 font-medium">or use UPI ID</span>
+                    <div className="flex-1 h-px bg-stone-200" />
+                  </div>
+                )}
+
+                {/* UPI ID — single clean row with copy icon */}
+                {UPI_ID && (
+                  <div className="flex items-center gap-3 bg-stone-50 border border-stone-200 rounded-xl px-4 py-4">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-stone-400 mb-1">UPI ID</p>
+                      <p className="font-mono font-bold text-stone-900 text-base break-all select-all leading-snug">
+                        {UPI_ID}
+                      </p>
+                    </div>
                     <button
                       type="button"
-                      onClick={() => setShowQR((v) => !v)}
-                      className="w-full flex items-center justify-between px-4 py-3 text-sm text-stone-600 hover:bg-stone-50 transition-colors"
+                      onClick={copyUPI}
+                      className={`flex-shrink-0 flex flex-col items-center gap-1 p-3 rounded-xl transition-all min-w-[56px] ${
+                        copied
+                          ? "bg-emerald-100 text-emerald-700 border border-emerald-300"
+                          : "bg-white text-stone-600 border border-stone-300 hover:bg-stone-100 active:bg-stone-200"
+                      }`}
                       style={{ WebkitTapHighlightColor: "transparent" }}
+                      aria-label="Copy UPI ID"
                     >
-                      <span className="flex items-center gap-2 font-medium">
-                        <QrCode className="w-4 h-4 text-stone-400" />
-                        {showQR ? "Hide QR Code" : "Show QR Code (scan from another device)"}
-                      </span>
-                      {showQR ? <ChevronUp className="w-4 h-4 text-stone-400" /> : <ChevronDown className="w-4 h-4 text-stone-400" />}
+                      {copied ? (
+                        <>
+                          <CheckCircle2 className="w-5 h-5" />
+                          <span className="text-xs font-semibold">Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-5 h-5" />
+                          <span className="text-xs font-medium">Copy</span>
+                        </>
+                      )}
                     </button>
-                    {showQR && (
-                      <div className="px-4 pb-4 flex flex-col items-center gap-2 border-t border-stone-100 pt-4">
-                        <div className="w-52 h-52 border-2 border-stone-200 rounded-xl overflow-hidden flex items-center justify-center bg-white">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={UPI_QR} alt="UPI QR Code" className="w-full h-full object-contain p-2" />
-                        </div>
-                        <p className="text-xs text-stone-400 text-center">
-                          Scan this QR from another phone or computer's camera
-                        </p>
-                      </div>
-                    )}
                   </div>
                 )}
 
