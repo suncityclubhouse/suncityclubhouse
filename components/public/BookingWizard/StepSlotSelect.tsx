@@ -109,9 +109,23 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
     return endIdx - startIdx + 1;
   })();
 
+  const isSlotPast = (slotStart: string) => {
+    if (!state.selectedDate) return false;
+    const todayStr = toDateString(new Date());
+    const selectedStr = toDateString(state.selectedDate);
+    if (selectedStr > todayStr) return false;
+    if (selectedStr < todayStr) return true;
+    
+    // It is today. Check if the slot's start time has passed.
+    const now = new Date();
+    const currentHourStr = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+    return slotStart <= currentHourStr;
+  };
+
   const getSlotState = (slot: { startTime: string; endTime: string }) => {
     const booked = isSlotBooked(slot.startTime, slot.endTime);
-    if (booked) return "booked";
+    const past = isSlotPast(slot.startTime);
+    if (booked || past) return "booked";
     if (!rangeStart) return "available";
     if (rangeStart && rangeEnd) {
       const inRange = slot.startTime >= rangeStart && slot.endTime <= rangeEnd;
@@ -128,7 +142,8 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
   const handleSlotClick = (slot: { startTime: string; endTime: string }) => {
     if (!selected) return;
     const booked = isSlotBooked(slot.startTime, slot.endTime);
-    if (booked) {
+    const past = isSlotPast(slot.startTime);
+    if (booked || past) {
       setRangeStart(null);
       setRangeEnd(null);
       setSelectingEnd(false);
