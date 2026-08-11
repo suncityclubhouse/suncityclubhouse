@@ -352,6 +352,7 @@ export async function updateBookingStatus(params: {
   status: BookingStatus;
   adminNotes?: string;
   rejectionReason?: string;
+  paymentMode?: string; // cash | upi | cheque | bank_transfer | other
 }): Promise<ActionResult> {
   const serverClient = await createClient();
   const { data: { user } } = await serverClient.auth.getUser();
@@ -377,6 +378,9 @@ export async function updateBookingStatus(params: {
   if (params.status === "confirmed") {
     update.approved_by = adminId;
     update.approved_at = new Date().toISOString();
+    if (params.paymentMode) {
+      update.payment_mode = params.paymentMode;
+    }
   }
   if (params.status === "rejected") {
     update.rejection_reason = params.rejectionReason ?? null;

@@ -20,12 +20,29 @@ export function BookingActionsPanel({ booking }: BookingActionsPanelProps) {
   const [rejectOpen, setRejectOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
+  const [approveOpen, setApproveOpen] = useState(false);
+  const [paymentMode, setPaymentMode] = useState("upi");
 
   const canApprove = booking.status === "pending_approval";
   const canReject = booking.status === "pending_approval";
   // Admin can cancel at any stage before it's completed/rejected/expired
   const canCancel = ["awaiting_payment", "pending_approval", "confirmed"].includes(booking.status);
   const canComplete = booking.status === "confirmed";
+
+  const performApprove = async () => {
+    setLoading(true);
+    try {
+      const res = await updateBookingStatus({ bookingId: booking.id, status: "confirmed", paymentMode });
+      if (!res.success) { toast.error(res.error ?? "Failed to update"); return; }
+      toast.success("✅ Booking approved — confirmation email sent to customer");
+      setApproveOpen(false);
+      router.refresh();
+    } catch {
+      toast.error("Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const perform = async (
     status: "confirmed" | "rejected" | "cancelled" | "completed",
@@ -60,14 +77,61 @@ export function BookingActionsPanel({ booking }: BookingActionsPanelProps) {
     <div className="flex flex-wrap gap-2">
       {canApprove && (
         <Button
-          onClick={() => perform("confirmed")}
+          onClick={() => setApproveOpen(true)}
           disabled={loading}
           className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
         >
-          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+          <CheckCircle className="w-4 h-4" />
           Approve & Confirm
         </Button>
       )}
+
+      {/* Approve dialog — captures payment mode */}
+      <Dialog open={approveOpen} onOpenChange={setApproveOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Approve Booking</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-stone-500">
+              Select how <strong>{booking.customer_name}</strong> paid:
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { value: "upi", label: "📱 UPI" },
+                { value: "cash", label: "💵 Cash" },
+                { value: "cheque", label: "🏦 Cheque" },
+                { value: "bank_transfer", label: "🔁 Bank Transfer" },
+                { value: "other", label: "💳 Other" },
+              ].map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setPaymentMode(opt.value)}
+                  className={`py-2 px-3 rounded-lg border text-sm font-medium transition-colors ${
+                    paymentMode === opt.value
+                      ? "border-emerald-500 bg-emerald-50 text-emerald-800"
+                      : "border-stone-200 text-stone-600 hover:bg-stone-50"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setApproveOpen(false)}>Cancel</Button>
+            <Button
+              onClick={performApprove}
+              disabled={loading}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
+            >
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+              Confirm Approval
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       {canReject && (
         <Button
           variant="destructive"

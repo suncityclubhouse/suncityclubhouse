@@ -127,6 +127,24 @@ export default async function BookingDetailPage({ params }: Props) {
             </div>
           ))}
 
+          {/* Payment mode badge */}
+          <div className="flex justify-between gap-3 text-sm items-center">
+            <span className="text-stone-500 flex-shrink-0">Mode of Payment</span>
+            {b.payment_mode ? (
+              <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
+                b.payment_mode === "cash" ? "bg-green-100 text-green-800" :
+                b.payment_mode === "upi" ? "bg-violet-100 text-violet-800" :
+                b.payment_mode === "cheque" ? "bg-blue-100 text-blue-800" :
+                b.payment_mode === "bank_transfer" ? "bg-cyan-100 text-cyan-800" :
+                "bg-stone-100 text-stone-600"
+              }`}>
+                {b.payment_mode.replace("_", " ").toUpperCase()}
+              </span>
+            ) : (
+              <span className="text-stone-400 text-sm">Not recorded</span>
+            )}
+          </div>
+
           {/* Payment proof image */}
           {b.payment_proof_url && (
             <div className="mt-3">

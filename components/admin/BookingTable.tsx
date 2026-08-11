@@ -97,14 +97,14 @@ export function AdminBookingsTable({ bookings, total, page, pageSize }: Bookings
           <table className="w-full text-sm">
             <thead className="border-b border-stone-100 bg-stone-50">
               <tr>
-                {["Ref", "Customer", "Facility", "Date", "Slot", "Amount", "Status", "Actions"].map((h) => (
+                {["Ref", "Customer", "Facility", "Date", "Slot", "Amount", "Payment", "Status", "Actions"].map((h) => (
                   <th key={h} className="text-left py-3 px-4 text-xs font-semibold text-stone-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-50">
               {bookings.length === 0 ? (
-                <tr><td colSpan={8} className="text-center py-12 text-stone-400">No bookings found</td></tr>
+                <tr><td colSpan={9} className="text-center py-12 text-stone-400">No bookings found</td></tr>
               ) : bookings.map((b) => (
                 <tr key={b.id} className="hover:bg-stone-50 transition-colors">
                   <td className="py-3 px-4 font-mono text-xs text-stone-600 whitespace-nowrap">{b.booking_ref}</td>
@@ -121,6 +121,21 @@ export function AdminBookingsTable({ bookings, total, page, pageSize }: Bookings
                       : b.slot_type.replace(/_/g, " ")}
                   </td>
                   <td className="py-3 px-4 font-medium text-stone-900 whitespace-nowrap">{formatINR(b.total_amount)}</td>
+                  <td className="py-3 px-4 whitespace-nowrap">
+                    {(b as any).payment_mode ? (
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                        (b as any).payment_mode === 'cash' ? 'bg-green-100 text-green-800' :
+                        (b as any).payment_mode === 'upi' ? 'bg-violet-100 text-violet-800' :
+                        (b as any).payment_mode === 'cheque' ? 'bg-blue-100 text-blue-800' :
+                        (b as any).payment_mode === 'bank_transfer' ? 'bg-cyan-100 text-cyan-800' :
+                        'bg-stone-100 text-stone-600'
+                      }`}>
+                        {(b as any).payment_mode.replace('_', ' ').toUpperCase()}
+                      </span>
+                    ) : (
+                      <span className="text-stone-300 text-xs">—</span>
+                    )}
+                  </td>
                   <td className="py-3 px-4"><StatusBadge status={b.status} /></td>
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-1">
