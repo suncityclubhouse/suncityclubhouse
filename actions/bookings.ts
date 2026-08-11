@@ -478,8 +478,11 @@ export async function getFacilityAvailability(params: {
     .gt("expires_at", new Date().toISOString())
     .lte("booking_date", maxDate);
 
+  const now = new Date().toISOString();
   const validBookings = [
-    ...(bookings ?? []),
+    ...(bookings ?? []).filter((b: any) =>
+      !(b.status === "awaiting_payment" && b.expires_at && b.expires_at < now)
+    ),
     ...(tempRes ?? [])
   ].filter((b: any) => {
     const bEnd = b.end_date || b.booking_date;
