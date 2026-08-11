@@ -13,6 +13,10 @@ import {
   RefreshCw,
   Smartphone,
   X,
+  QrCode,
+  ChevronDown,
+  ChevronUp,
+  Camera,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,9 +42,7 @@ interface StepPaymentProps {
   isGstInclusive: boolean;
   cgstAmount: number;
   sgstAmount: number;
-  /** Restored upload from session (after refresh) */
   restoredUpload?: { url: string; publicId: string } | null;
-  /** Called whenever a new file is uploaded so the wizard can persist it */
   onUploadComplete?: (url: string, publicId: string) => void;
   onSuccess: () => void;
 }
@@ -62,16 +64,16 @@ export function StepPayment({
   const [secondsLeft, setSecondsLeft] = useState(() => getRemainingSeconds(expiresAt));
   const [uploading, setUploading] = useState(false);
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(restoredUpload?.url ?? null);
-  const [uploadedPublicId, setUploadedPublicId] = useState<string | null>(restoredUpload?.publicId ?? null);
   const [dragOver, setDragOver] = useState(false);
   const [copied, setCopied] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [showQR, setShowQR] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<PaymentUploadSchema>({
     resolver: zodResolver(paymentUploadSchema),
     defaultValues: {
-      // Pre-populate if we restored an upload from session
       paymentProofUrl: restoredUpload?.url ?? "",
       paymentPublicId: restoredUpload?.publicId ?? "",
     },
@@ -91,11 +93,16 @@ export function StepPayment({
   const isUrgent = secondsLeft > 0 && secondsLeft < 120;
 
   // ── Copy UPI ID ────────────────────────────────────────────────────────────
-  const copyUPI = () => {
-    navigator.clipboard.writeText(UPI_ID);
-    setCopied(true);
-    toast.success("UPI ID copied!", { duration: 1500 });
-    setTimeout(() => setCopied(false), 2000);
+  const copyUPI = async () => {
+    try {
+      await navigator.clipboard.writeText(UPI_ID);
+      setCopied(true);
+      toast.success("UPI ID copied to clipboard!", { duration: 1500 });
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      // Fallback for browsers that block clipboard
+      toast.error("Could not copy. Please tap the UPI ID to select it manually.");
+    }
   };
 
   // ── File upload ────────────────────────────────────────────────────────────
@@ -127,14 +134,11 @@ export function StepPayment({
       const publicId: string = data.publicId ?? "";
 
       setUploadedUrl(url);
-      setUploadedPublicId(publicId);
       form.setValue("paymentProofUrl", url);
       form.setValue("paymentPublicId", publicId);
-
-      // Notify parent to persist the upload in session
       onUploadComplete?.(url, publicId);
 
-      toast.success("Screenshot uploaded!");
+      toast.success("Screenshot uploaded successfully!");
     } catch (e: any) {
       toast.error(e?.message ?? "Failed to upload. Please try again.");
     } finally {
@@ -144,12 +148,11 @@ export function StepPayment({
 
   const clearUpload = () => {
     setUploadedUrl(null);
-    setUploadedPublicId(null);
     form.setValue("paymentProofUrl", "");
     form.setValue("paymentPublicId", "");
-    // Notify parent to clear the persisted upload from session
     onUploadComplete?.("__clear__", "");
     if (fileInputRef.current) fileInputRef.current.value = "";
+    if (cameraInputRef.current) cameraInputRef.current.value = "";
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -170,7 +173,6 @@ export function StepPayment({
       toast.error("Your booking window has expired. Please start a new booking.");
       return;
     }
-
     setSubmitting(true);
     try {
       const result = await uploadPaymentProof({
@@ -196,301 +198,318 @@ export function StepPayment({
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
 
       {/* Header */}
       <div>
         <h2 className="text-xl font-serif font-semibold text-stone-900">Complete Payment</h2>
-        <p className="text-sm text-stone-500 mt-1">
-          Booking Ref: <span className="font-mono font-semibold text-stone-800 tracking-wider">{bookingRef}</span>
+        <p className="text-sm text-stone-500 mt-0.5">
+          Ref: <span className="font-mono font-semibold text-stone-800 tracking-wider">{bookingRef}</span>
         </p>
       </div>
 
       {/* ── Timer ── */}
-      <div
-        className={`rounded-xl p-4 border transition-colors ${
-          isExpired
-            ? "bg-red-50 border-red-200"
-            : isUrgent
-            ? "bg-orange-50 border-orange-200"
-            : "bg-blue-50 border-blue-200"
-        }`}
-      >
+      <div className={`rounded-xl p-4 border transition-colors ${
+        isExpired ? "bg-red-50 border-red-200" : isUrgent ? "bg-orange-50 border-orange-200" : "bg-blue-50 border-blue-200"
+      }`}>
         <div className="flex items-center justify-between mb-2">
-          <span
-            className={`text-sm font-medium ${
-              isExpired ? "text-red-700" : isUrgent ? "text-orange-700" : "text-blue-700"
-            }`}
-          >
-            {isExpired ? "⚠️ Session Expired" : isUrgent ? "🔴 Hurry! Time is running out" : "⏱ Time Remaining to Pay"}
+          <span className={`text-sm font-medium ${isExpired ? "text-red-700" : isUrgent ? "text-orange-700" : "text-blue-700"}`}>
+            {isExpired ? "⚠️ Session Expired" : isUrgent ? "🔴 Hurry! Time is running out" : "⏱ Time to Pay"}
           </span>
-          <span
-            className={`font-mono text-xl font-bold ${
-              isExpired ? "text-red-700" : isUrgent ? "text-orange-600 animate-pulse" : "text-blue-700"
-            }`}
-          >
+          <span className={`font-mono text-xl font-bold ${isExpired ? "text-red-700" : isUrgent ? "text-orange-600 animate-pulse" : "text-blue-700"}`}>
             {formatCountdown(secondsLeft)}
           </span>
         </div>
         <Progress value={progressPct} className="h-2" />
         {isExpired && (
           <div className="mt-3 flex flex-col items-start gap-2">
-            <p className="text-xs text-red-600">
-              Your slot has been released. You may start a fresh booking.
-            </p>
-            <a
-              onClick={() => {
-                // Clear the expired session so user gets a fresh start
-                try { sessionStorage.clear(); } catch {}
-                window.location.reload();
-              }}
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-red-700 hover:text-red-900 bg-red-100 hover:bg-red-200 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+            <p className="text-xs text-red-600">Your slot has been released. You may start a fresh booking.</p>
+            <button
+              onClick={() => { try { sessionStorage.clear(); } catch {} window.location.reload(); }}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-red-700 hover:text-red-900 bg-red-100 hover:bg-red-200 px-3 py-1.5 rounded-lg transition-colors"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               Start New Booking
-            </a>
+            </button>
           </div>
         )}
       </div>
 
-      {/* ── Payment instructions (only when not expired) ── */}
+      {/* ── Payment section (only when not expired) ── */}
       {!isExpired && (
         <>
+          {/* ── AMOUNT CARD ── */}
           <div className="bg-white border border-stone-200 rounded-xl overflow-hidden">
-            <div className="px-5 pt-5 pb-3 border-b border-stone-100">
-              <h3 className="text-sm font-semibold text-stone-700 uppercase tracking-wider">
-                Payment Instructions
-              </h3>
+            <div className="px-4 py-3 border-b border-stone-100 flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-stone-700 uppercase tracking-wider">Amount Due</h3>
             </div>
-
-            <div className="p-5 flex flex-col sm:flex-row gap-6 items-start">
-
-              {/* QR Code */}
-              {UPI_QR && (
-                <div className="flex-shrink-0 flex flex-col items-center gap-2">
-                  <div className="w-44 h-44 border-2 border-stone-200 rounded-xl overflow-hidden flex items-center justify-center bg-white shadow-sm">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={UPI_QR}
-                      alt="UPI QR Code"
-                      className="w-full h-full object-contain p-2"
-                    />
-                  </div>
-                  <span className="text-xs text-stone-400 flex items-center gap-1">
-                    📱 Scan to pay instantly
-                  </span>
+            <div className="divide-y divide-stone-100">
+              {gstPercentage > 0 && !isGstInclusive && (
+                <div className="flex justify-between items-center text-sm px-4 py-2.5">
+                  <span className="text-stone-500">Base Amount</span>
+                  <span className="font-medium text-stone-700">{formatINR(baseAmount)}</span>
                 </div>
               )}
-
-              {/* Right side — amounts + UPI + steps */}
-              <div className="flex-1 space-y-4 min-w-0">
-
-                {/* Amount breakdown card */}
-                <div className="bg-stone-50 rounded-xl border border-stone-100 divide-y divide-stone-100">
-                  {/* Base amount — only show separately when GST is added on top */}
-                  {gstPercentage > 0 && !isGstInclusive && (
-                    <div className="flex justify-between items-center text-sm px-4 py-2.5">
-                      <span className="text-stone-500">Base Amount</span>
-                      <span className="font-medium text-stone-700">{formatINR(baseAmount)}</span>
-                    </div>
-                  )}
-                  {gstPercentage > 0 && (
-                    <>
-                      <div className="flex justify-between items-center text-xs px-4 py-2">
-                        <span className="text-stone-400">CGST ({gstPercentage / 2}%)</span>
-                        <span className="text-stone-500">+ ₹{cgstAmount.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between items-center text-xs px-4 py-2">
-                        <span className="text-stone-400">SGST ({gstPercentage / 2}%)</span>
-                        <span className="text-stone-500">+ ₹{sgstAmount.toFixed(2)}</span>
-                      </div>
-                    </>
-                  )}
-                  <div className="flex justify-between items-center px-4 py-3">
-                    <span className="text-sm font-bold text-stone-900">Total Amount Due</span>
-                    <span className="text-2xl font-bold text-stone-900">{formatINR(totalAmount)}</span>
+              {gstPercentage > 0 && (
+                <>
+                  <div className="flex justify-between items-center text-xs px-4 py-2">
+                    <span className="text-stone-400">CGST ({gstPercentage / 2}%)</span>
+                    <span className="text-stone-500">+ ₹{cgstAmount.toFixed(2)}</span>
                   </div>
-                </div>
-
-                {/* UPI ID row */}
-                {UPI_ID && (
-                  <div className="flex items-center justify-between gap-3 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3">
-                    <div className="min-w-0">
-                      <p className="text-xs text-blue-500 font-medium mb-0.5">UPI ID</p>
-                      <a
-                        href={`upi://pay?pa=${UPI_ID}&pn=Clubhouse&am=${totalAmount}&cu=INR`}
-                        className="font-mono font-semibold text-blue-700 text-sm break-all hover:text-blue-900 transition-colors flex items-center gap-1.5"
-                        title="Tap to open in your payment app"
-                      >
-                        <Smartphone className="w-3.5 h-3.5 flex-shrink-0" />
-                        {UPI_ID}
-                      </a>
-                      <p className="text-xs text-blue-400 mt-0.5">Tap to open payment app</p>
-                    </div>
-                    <button
-                      onClick={copyUPI}
-                      className={`flex-shrink-0 flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg transition-all ${
-                        copied
-                          ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
-                          : "bg-white text-blue-700 border border-blue-200 hover:bg-blue-100"
-                      }`}
-                      title="Copy UPI ID"
-                    >
-                      {copied ? (
-                        <><CheckCircle2 className="w-3.5 h-3.5" /> Copied!</>
-                      ) : (
-                        <><Copy className="w-3.5 h-3.5" /> Copy</>
-                      )}
-                    </button>
+                  <div className="flex justify-between items-center text-xs px-4 py-2">
+                    <span className="text-stone-400">SGST ({gstPercentage / 2}%)</span>
+                    <span className="text-stone-500">+ ₹{sgstAmount.toFixed(2)}</span>
                   </div>
-                )}
-
-                {/* Steps */}
-                <ol className="text-sm text-stone-600 space-y-1.5 list-decimal list-inside">
-                  <li>Open GPay / PhonePe / Paytm or any UPI app</li>
-                  <li>Pay <strong>{formatINR(totalAmount)}</strong> to the UPI ID above (or scan QR)</li>
-                  <li>Take a screenshot of the payment confirmation screen</li>
-                  <li>Upload the screenshot and enter your UTR number below</li>
-                </ol>
-
-                {/* WhatsApp help */}
-                {WHATSAPP && (
-                  <a
-                    href={getWhatsAppUrl(
-                      WHATSAPP,
-                      `Hi, I've made a payment for booking ${bookingRef}. Amount: ₹${totalAmount}. Please confirm.`
-                    )}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-sm text-emerald-700 hover:text-emerald-900 font-medium bg-emerald-50 hover:bg-emerald-100 px-3 py-2 rounded-lg transition-colors"
-                  >
-                    <MessageCircle className="w-4 h-4" />
-                    Contact manager on WhatsApp
-                  </a>
-                )}
+                </>
+              )}
+              <div className="flex justify-between items-center px-4 py-4">
+                <span className="text-base font-bold text-stone-900">Total to Pay</span>
+                <span className="text-3xl font-bold text-stone-900">{formatINR(totalAmount)}</span>
               </div>
             </div>
           </div>
 
-          {/* ── Upload proof form ── */}
+          {/* ── MOBILE-FIRST: Big Pay Now button + UPI ID ── */}
+          {UPI_ID && (
+            <div className="bg-white border border-stone-200 rounded-xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-stone-100">
+                <h3 className="text-sm font-semibold text-stone-700 uppercase tracking-wider">Pay via UPI</h3>
+              </div>
+
+              <div className="p-4 space-y-3">
+                {/* PRIMARY CTA — big tap-to-pay button, most important on mobile */}
+                <a
+                  href={`upi://pay?pa=${UPI_ID}&pn=Suncity+Clubhouse&am=${totalAmount}&cu=INR&tn=Booking+${bookingRef}`}
+                  className="flex items-center justify-center gap-3 w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-lg py-4 px-5 rounded-xl transition-colors shadow-md shadow-blue-200 select-none"
+                  style={{ WebkitTapHighlightColor: "transparent" }}
+                >
+                  <Smartphone className="w-6 h-6 flex-shrink-0" />
+                  Pay {formatINR(totalAmount)} with UPI
+                </a>
+                <p className="text-xs text-center text-stone-400">
+                  Opens GPay / PhonePe / Paytm automatically
+                </p>
+
+                {/* UPI ID — large, easy to read and copy */}
+                <div className="bg-stone-50 border border-stone-200 rounded-xl p-4">
+                  <p className="text-xs text-stone-500 font-medium mb-2">Or pay manually using UPI ID:</p>
+                  <div className="flex items-center gap-3">
+                    <p className="font-mono font-bold text-stone-900 text-base flex-1 select-all break-all">
+                      {UPI_ID}
+                    </p>
+                    <button
+                      onClick={copyUPI}
+                      className={`flex-shrink-0 flex items-center gap-1.5 font-semibold text-sm px-4 py-2.5 rounded-xl transition-all min-w-[80px] justify-center ${
+                        copied
+                          ? "bg-emerald-100 text-emerald-700 border border-emerald-300"
+                          : "bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800"
+                      }`}
+                      style={{ WebkitTapHighlightColor: "transparent" }}
+                    >
+                      {copied ? (
+                        <><CheckCircle2 className="w-4 h-4" /> Copied</>
+                      ) : (
+                        <><Copy className="w-4 h-4" /> Copy</>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* QR code — collapsed on mobile (useless on phone), open on desktop */}
+                {UPI_QR && (
+                  <div className="border border-stone-200 rounded-xl overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => setShowQR((v) => !v)}
+                      className="w-full flex items-center justify-between px-4 py-3 text-sm text-stone-600 hover:bg-stone-50 transition-colors"
+                      style={{ WebkitTapHighlightColor: "transparent" }}
+                    >
+                      <span className="flex items-center gap-2 font-medium">
+                        <QrCode className="w-4 h-4 text-stone-400" />
+                        {showQR ? "Hide QR Code" : "Show QR Code (scan from another device)"}
+                      </span>
+                      {showQR ? <ChevronUp className="w-4 h-4 text-stone-400" /> : <ChevronDown className="w-4 h-4 text-stone-400" />}
+                    </button>
+                    {showQR && (
+                      <div className="px-4 pb-4 flex flex-col items-center gap-2 border-t border-stone-100 pt-4">
+                        <div className="w-52 h-52 border-2 border-stone-200 rounded-xl overflow-hidden flex items-center justify-center bg-white">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={UPI_QR} alt="UPI QR Code" className="w-full h-full object-contain p-2" />
+                        </div>
+                        <p className="text-xs text-stone-400 text-center">
+                          Scan this QR from another phone or computer's camera
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* WhatsApp help */}
+                {WHATSAPP && (
+                  <a
+                    href={getWhatsAppUrl(WHATSAPP, `Hi, I've made a payment for booking ${bookingRef}. Amount: ₹${totalAmount}. Please confirm.`)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 w-full text-sm text-emerald-700 font-semibold bg-emerald-50 hover:bg-emerald-100 active:bg-emerald-200 border border-emerald-200 px-4 py-3 rounded-xl transition-colors"
+                    style={{ WebkitTapHighlightColor: "transparent" }}
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    Need help? WhatsApp us
+                  </a>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ── UPLOAD PROOF FORM ── */}
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="bg-white border border-stone-200 rounded-xl overflow-hidden">
-              <div className="px-5 pt-5 pb-3 border-b border-stone-100">
+              <div className="px-4 py-3 border-b border-stone-100">
                 <h3 className="text-sm font-semibold text-stone-700 uppercase tracking-wider">
                   Upload Payment Screenshot
                 </h3>
+                <p className="text-xs text-stone-400 mt-0.5">
+                  After paying, upload a screenshot of your payment confirmation
+                </p>
               </div>
 
-              <div className="p-5 space-y-4">
-                {/* Drop zone */}
-                <div className="relative">
-                  <div
-                    onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-                    onDragLeave={() => setDragOver(false)}
-                    onDrop={handleDrop}
-                    onClick={() => !uploadedUrl && fileInputRef.current?.click()}
-                    className={`border-2 border-dashed rounded-xl p-8 text-center transition-all ${
-                      uploadedUrl
-                        ? "border-emerald-300 bg-emerald-50 cursor-default"
-                        : dragOver
-                        ? "border-blue-500 bg-blue-50 cursor-pointer"
-                        : "border-slate-300 hover:border-blue-400 hover:bg-slate-50 cursor-pointer"
-                    }`}
-                  >
+              <div className="p-4 space-y-4">
+
+                {/* Upload area */}
+                {!uploadedUrl ? (
+                  <div className="space-y-2">
+                    {/* Camera button — mobile primary action */}
+                    <button
+                      type="button"
+                      onClick={() => cameraInputRef.current?.click()}
+                      disabled={uploading}
+                      className="flex items-center justify-center gap-3 w-full bg-stone-900 hover:bg-stone-800 active:bg-stone-700 text-white font-semibold py-4 px-4 rounded-xl transition-colors"
+                      style={{ WebkitTapHighlightColor: "transparent" }}
+                    >
+                      {uploading ? (
+                        <><Loader2 className="w-5 h-5 animate-spin" /> Uploading…</>
+                      ) : (
+                        <><Camera className="w-5 h-5" /> Take / Choose Screenshot</>
+                      )}
+                    </button>
+
+                    {/* Hidden camera input — opens camera on mobile, file picker on desktop */}
                     <input
-                      ref={fileInputRef}
+                      ref={cameraInputRef}
                       type="file"
-                      accept="image/*,.heic,.heif,.HEIC,.HEIF"
+                      accept="image/*"
+                      capture="environment"
                       onChange={handleFileChange}
                       className="hidden"
                     />
 
-                    {uploading ? (
-                      <div className="flex flex-col items-center gap-3">
-                        <Loader2 className="w-9 h-9 text-blue-500 animate-spin" />
-                        <p className="text-sm text-stone-500 font-medium">Uploading your screenshot…</p>
-                      </div>
-                    ) : uploadedUrl ? (
-                      <div className="flex flex-col items-center gap-2">
-                        <CheckCircle2 className="w-9 h-9 text-emerald-500" />
-                        <p className="text-sm font-semibold text-emerald-700">Screenshot uploaded!</p>
-                        <p className="text-xs text-stone-400">
-                          {restoredUpload?.url === uploadedUrl ? "Restored from previous session" : "File received and secured"}
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center gap-2">
-                        <Upload className="w-9 h-9 text-stone-400" />
-                        <p className="text-sm font-semibold text-stone-600">Drag & drop or click to upload</p>
-                        <p className="text-xs text-stone-400">JPG, PNG, HEIC · Max 10 MB</p>
-                      </div>
-                    )}
+                    {/* Drag & drop zone — desktop fallback */}
+                    <div
+                      onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                      onDragLeave={() => setDragOver(false)}
+                      onDrop={handleDrop}
+                      onClick={() => fileInputRef.current?.click()}
+                      className={`hidden sm:flex border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all flex-col items-center gap-2 ${
+                        dragOver ? "border-blue-500 bg-blue-50" : "border-slate-200 hover:border-blue-400 hover:bg-slate-50"
+                      }`}
+                    >
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*,.heic,.heif,.HEIC,.HEIF"
+                        onChange={handleFileChange}
+                        className="hidden"
+                      />
+                      <Upload className="w-7 h-7 text-stone-400" />
+                      <p className="text-sm text-stone-500">or drag & drop a file here</p>
+                      <p className="text-xs text-stone-400">JPG, PNG, HEIC · Max 10 MB</p>
+                    </div>
                   </div>
-
-                  {/* Replace / clear button when uploaded */}
-                  {uploadedUrl && !uploading && (
-                    <div className="flex items-center justify-center gap-3 mt-2">
+                ) : (
+                  /* Uploaded state */
+                  <div className="flex flex-col items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-xl p-5">
+                    <CheckCircle2 className="w-10 h-10 text-emerald-500" />
+                    <div className="text-center">
+                      <p className="text-sm font-semibold text-emerald-700">Screenshot uploaded!</p>
+                      <p className="text-xs text-stone-400 mt-0.5">
+                        {restoredUpload?.url === uploadedUrl ? "Restored from previous session" : "File received and secured"}
+                      </p>
+                    </div>
+                    <div className="flex gap-3">
                       <button
                         type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+                        onClick={() => cameraInputRef.current?.click()}
+                        className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 py-1.5 px-3 rounded-lg bg-white border border-blue-200"
                       >
-                        <Upload className="w-3 h-3" /> Replace screenshot
+                        <Upload className="w-3.5 h-3.5" /> Replace
                       </button>
-                      <span className="text-stone-300">|</span>
                       <button
                         type="button"
                         onClick={clearUpload}
-                        className="text-xs text-red-400 hover:text-red-600 font-medium flex items-center gap-1"
+                        className="text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1 py-1.5 px-3 rounded-lg bg-white border border-red-200"
                       >
-                        <X className="w-3 h-3" /> Remove
+                        <X className="w-3.5 h-3.5" /> Remove
                       </button>
                     </div>
-                  )}
-                </div>
-
-                {form.formState.errors.paymentProofUrl && (
-                  <p className="text-xs text-red-500 flex items-center gap-1">
-                    ⚠️ Please upload your payment screenshot to continue
-                  </p>
+                  </div>
                 )}
 
-                {/* UTR / reference */}
+                {form.formState.errors.paymentProofUrl && (
+                  <p className="text-xs text-red-500">⚠️ Please upload your payment screenshot to continue</p>
+                )}
+
+                {/* UTR field */}
                 <div className="space-y-1.5">
-                  <Label htmlFor="paymentReference">
-                    UTR / Transaction Reference Number <span className="text-red-500">*</span>
+                  <Label htmlFor="paymentReference" className="text-sm font-semibold text-stone-800">
+                    UTR / Transaction Reference <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="paymentReference"
-                    placeholder="12-digit UTR or reference number shown after payment"
+                    placeholder="e.g. 426811234567"
                     {...form.register("paymentReference")}
                     aria-invalid={!!form.formState.errors.paymentReference}
+                    className="text-base h-12" // larger on mobile for easier typing
+                    inputMode="text"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="characters"
+                    spellCheck={false}
                   />
                   {form.formState.errors.paymentReference && (
                     <p className="text-xs text-red-500">{form.formState.errors.paymentReference.message}</p>
                   )}
                   <p className="text-xs text-stone-400">
-                    Find this in your payment app under transaction details (also called Reference ID or UPI Ref No.)
+                    Find this in your payment app → Transaction Details → UTR / Reference No.
                   </p>
                 </div>
               </div>
             </div>
 
+            {/* Steps summary */}
+            <div className="bg-stone-50 border border-stone-200 rounded-xl px-4 py-3">
+              <ol className="text-sm text-stone-600 space-y-1 list-decimal list-inside">
+                <li>Tap <strong>"Pay with UPI"</strong> above — your payment app opens</li>
+                <li>Pay <strong>{formatINR(totalAmount)}</strong> and wait for the confirmation screen</li>
+                <li>Take a screenshot of the success screen</li>
+                <li>Come back here, upload the screenshot and enter the UTR number</li>
+              </ol>
+            </div>
+
             <Button
               type="submit"
               disabled={submitting || uploading || !uploadedUrl}
-              className="w-full text-white font-semibold h-12 text-base"
+              className="w-full text-white font-bold h-14 text-base rounded-xl shadow-md"
               style={{ background: "linear-gradient(135deg, #07377a, #08428C)" }}
             >
               {submitting ? (
-                <><Loader2 className="w-4 h-4 animate-spin mr-2" />Submitting payment…</>
+                <><Loader2 className="w-5 h-5 animate-spin mr-2" />Submitting…</>
               ) : (
                 "Submit Payment for Approval →"
               )}
             </Button>
 
-            <p className="text-xs text-center text-stone-400">
-              Your booking will be confirmed once our team verifies the payment (usually within 2–4 hours).
+            <p className="text-xs text-center text-stone-400 pb-2">
+              Your booking is confirmed once our team verifies the payment (usually within 2–4 hours).
             </p>
           </form>
         </>
