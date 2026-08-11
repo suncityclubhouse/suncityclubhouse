@@ -498,7 +498,7 @@ export async function getFacilityAvailability(params: {
       result[date] = "available";
     } else if (
       dayBookings.some((b: any) =>
-        ["half_day", "full_day", "monthly", "quarterly"].includes(b.slot_type)
+        ["half_day", "full_day", "monthly", "quarterly", "half_yearly", "yearly"].includes(b.slot_type)
       )
     ) {
       result[date] = "booked";
@@ -522,7 +522,7 @@ export async function getBookedTimeSlots(params: {
 
   const { data: bookings } = await db
     .from("bookings")
-    .select("booking_date, end_date, start_time, end_time")
+    .select("booking_date, end_date, start_time, end_time, status, expires_at")
     .eq("facility_id", params.facilityId)
     .not("status", "in", "(rejected,cancelled,expired)")
     .lte("booking_date", params.date);
@@ -534,8 +534,12 @@ export async function getBookedTimeSlots(params: {
     .gt("expires_at", new Date().toISOString())
     .lte("booking_date", params.date);
 
+  const now = new Date().toISOString();
   const slots = [
-    ...(bookings ?? []),
+    ...(bookings ?? []).filter((b: any) =>
+      // Exclude lapsed awaiting_payment — 15-min window expired
+      !(b.status === "awaiting_payment" && b.expires_at && b.expires_at < now)
+    ),
     ...(tempRes ?? []),
   ].filter((b: any) => {
     const bEnd = b.end_date || b.booking_date;

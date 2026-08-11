@@ -252,7 +252,8 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [daysCount, isMultiDay, endDateStr, state.selectedDate, isResident, selected?.id]);
 
-  const needsTimeSlot = selected?.type === "hourly" || selected?.type === "monthly";
+  const needsTimeSlot = selected?.type === "hourly" || selected?.type === "monthly"
+    || selected?.type === "quarterly" || selected?.type === "half_yearly" || selected?.type === "yearly";
   const hasValidRange = rangeStart !== null && rangeEnd !== null;
   const canProceed = selected && (!needsTimeSlot || hasValidRange);
 
