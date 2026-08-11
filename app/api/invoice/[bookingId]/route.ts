@@ -85,7 +85,7 @@ export async function GET(
   //    BookingInvoice returns a <Document> so we cast through unknown to satisfy the strict type.
   const invoiceElement = createElement(BookingInvoice, {
     booking: booking as unknown as BookingWithFacility,
-    societyName: society?.name ?? "Mahavir Suncity Clubhouse",
+    societyName: society?.name ?? "MS Vardhman Reality",
     societyAddress: society?.address ?? "Mahavir Suncity, Kanchanbagh, Rajnandgaon",
     societyPhone: society?.whatsapp_number ?? "8109991507",
     logoUrl: logoDataUrl,
