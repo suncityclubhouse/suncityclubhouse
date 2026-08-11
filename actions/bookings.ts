@@ -478,10 +478,10 @@ export async function getFacilityAvailability(params: {
     .gt("expires_at", new Date().toISOString())
     .lte("booking_date", maxDate);
 
-  const now = new Date().toISOString();
+  const nowMs = Date.now();
   const validBookings = [
     ...(bookings ?? []).filter((b: any) =>
-      !(b.status === "awaiting_payment" && b.expires_at && b.expires_at < now)
+      !(b.status === "awaiting_payment" && b.expires_at && new Date(b.expires_at).getTime() < nowMs)
     ),
     ...(tempRes ?? [])
   ].filter((b: any) => {
@@ -537,11 +537,11 @@ export async function getBookedTimeSlots(params: {
     .gt("expires_at", new Date().toISOString())
     .lte("booking_date", params.date);
 
-  const now = new Date().toISOString();
+  const nowMs = Date.now();
   const slots = [
     ...(bookings ?? []).filter((b: any) =>
       // Exclude lapsed awaiting_payment — 15-min window expired
-      !(b.status === "awaiting_payment" && b.expires_at && b.expires_at < now)
+      !(b.status === "awaiting_payment" && b.expires_at && new Date(b.expires_at).getTime() < nowMs)
     ),
     ...(tempRes ?? []),
   ].filter((b: any) => {
