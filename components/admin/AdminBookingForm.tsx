@@ -173,8 +173,6 @@ export function AdminBookingForm({ facilities }: AdminBookingFormProps) {
     }
   };
 
-  const todayStr = toDateString(new Date());
-
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-3xl">
 
@@ -231,7 +229,6 @@ export function AdminBookingForm({ facilities }: AdminBookingFormProps) {
             <Input
               type="date"
               value={bookingDate}
-              min={todayStr}
               onChange={(e) => setBookingDate(e.target.value)}
             />
           </div>
