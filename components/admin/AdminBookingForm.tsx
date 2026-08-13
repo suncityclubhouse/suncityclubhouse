@@ -29,7 +29,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createAdminBooking } from "@/actions/bookings";
-import { toDateString } from "@/lib/utils/dates";
 import { formatINR } from "@/lib/utils/formatters";
 import { calcGst } from "@/lib/utils/gst";
 import type { FacilityWithMedia, FacilityPackage } from "@/types/database";
@@ -372,6 +371,16 @@ export function AdminBookingForm({ facilities }: AdminBookingFormProps) {
                 onChange={(e) => setHouseNumber(e.target.value)}
               />
             </div>
+          </div>
+        ) : (
+          <div className="space-y-1.5">
+            <Label>Reference Resident <span className="text-stone-400 font-normal">(optional)</span></Label>
+            <Input
+              placeholder="Name of referring resident"
+              value={referenceResident}
+              onChange={(e) => setReferenceResident(e.target.value)}
+            />
+          </div>
         )}
       </div>
 
