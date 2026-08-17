@@ -748,6 +748,7 @@ export async function createAdminBooking(params: {
   gstPercentage?: number;
   cgstAmount?: number;
   sgstAmount?: number;
+  isGstInclusive?: boolean;
   quantity?: number;
   paymentType: "upi" | "cash" | "complimentary" | "deferred";
   status: "confirmed" | "awaiting_payment";
@@ -848,6 +849,7 @@ export async function createAdminBooking(params: {
       gst_percentage: params.gstPercentage ?? 0,
       cgst_amount: params.cgstAmount ?? 0,
       sgst_amount: params.sgstAmount ?? 0,
+      is_gst_inclusive: params.isGstInclusive ?? true,
       status: params.status,
       payment_type: params.paymentType,
       is_admin_booking: true,

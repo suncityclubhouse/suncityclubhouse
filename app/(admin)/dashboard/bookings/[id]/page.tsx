@@ -94,6 +94,7 @@ export default async function BookingDetailPage({ params }: Props) {
             { label: "Base Amount", value: formatINR(b.base_amount) },
             ...(b.cgst_amount > 0 ? [{ label: `CGST (${(b.gst_percentage ?? 0) / 2}%)`, value: formatINR(b.cgst_amount) }] : []),
             ...(b.sgst_amount > 0 ? [{ label: `SGST (${(b.gst_percentage ?? 0) / 2}%)`, value: formatINR(b.sgst_amount) }] : []),
+            ...((b.gst_percentage ?? 0) > 0 ? [{ label: "GST Type", value: (b as any).is_gst_inclusive === false ? "Exclusive" : "Inclusive" }] : []),
             ...(b.discount_amount > 0 ? [{ label: "Discount", value: `- ${formatINR(b.discount_amount)}` }] : []),
             { label: "Total Amount", value: formatINR(b.total_amount) },
             {

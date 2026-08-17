@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/select";
 import { createAdminBooking } from "@/actions/bookings";
 import { formatINR } from "@/lib/utils/formatters";
-import { calcGst } from "@/lib/utils/gst";
+import { calcGst, type GstRate } from "@/lib/utils/gst";
 import type { FacilityWithMedia, FacilityPackage } from "@/types/database";
 
 interface AdminBookingFormProps {
@@ -78,6 +78,14 @@ export function AdminBookingForm({ facilities }: AdminBookingFormProps) {
   const [amountOverride, setAmountOverride] = useState<string>("");
   const [adminNotes, setAdminNotes] = useState("");
 
+  // GST overrides (initialized from package, overridable by admin)
+  const [gstRate, setGstRate] = useState<GstRate>(0);
+  const [isGstInclusive, setIsGstInclusive] = useState(true);
+
+  // Selected facility object (for category checks)
+  const selectedFacility = facilities.find((f) => f.id === selectedFacilityId) ?? null;
+  const isAccommodation = selectedFacility?.category === "accommodation";
+
   // When facility changes — update packages
   useEffect(() => {
     const facility = facilities.find((f) => f.id === selectedFacilityId);
@@ -86,19 +94,35 @@ export function AdminBookingForm({ facilities }: AdminBookingFormProps) {
     setSelectedPackageId("");
     setSelectedPackage(null);
     setAmountOverride("");
+    setQuantity(1);
   }, [selectedFacilityId, facilities]);
 
-  // When package changes — update amount
+  // When package changes — update amount, GST defaults, times
   useEffect(() => {
     const pkg = availablePackages.find((p) => p.id === selectedPackageId);
     setSelectedPackage(pkg ?? null);
     if (pkg) {
-      setAmountOverride(String(pkg.price));
+      // Auto-fill price based on residency
+      const hasResidentPrice = pkg.resident_price !== null && pkg.resident_price < pkg.price;
+      const price = isResident && hasResidentPrice ? pkg.resident_price! : pkg.price;
+      setAmountOverride(String(price));
+      // Sync GST from package defaults
+      setGstRate((pkg.gst_percentage ?? 0) as GstRate);
+      setIsGstInclusive(pkg.is_gst_inclusive ?? true);
       // Auto-fill times for fixed packages
       if (pkg.start_time) setStartTime(pkg.start_time.slice(0, 5));
       if (pkg.end_time) setEndTime(pkg.end_time.slice(0, 5));
     }
   }, [selectedPackageId, availablePackages]);
+
+  // When residency changes — update amount if a package is selected
+  useEffect(() => {
+    if (selectedPackage && paymentType !== "complimentary") {
+      const hasResidentPrice = selectedPackage.resident_price !== null && selectedPackage.resident_price < selectedPackage.price;
+      const price = isResident && hasResidentPrice ? selectedPackage.resident_price! : selectedPackage.price;
+      setAmountOverride(String(price));
+    }
+  }, [isResident]);
 
   // For complimentary — auto-set amount to 0
   useEffect(() => {
@@ -107,13 +131,12 @@ export function AdminBookingForm({ facilities }: AdminBookingFormProps) {
     }
   }, [paymentType]);
 
-  const totalAmount = parseFloat(amountOverride || "0") * (selectedPackage?.type === "hourly" ? quantity : 1);
   const isHourly = selectedPackage?.type === "hourly";
   const isMultiDay = selectedPackage?.type === "monthly" || selectedPackage?.type === "quarterly" || selectedPackage?.type === "half_yearly" || selectedPackage?.type === "yearly";
+  const usesQuantity = isHourly || isAccommodation;
+  const totalAmount = parseFloat(amountOverride || "0") * (usesQuantity ? quantity : 1);
 
-  // Calculate GST
-  const gstRate = selectedPackage?.gst_percentage ?? 0;
-  const isGstInclusive = selectedPackage?.is_gst_inclusive ?? true;
+  // Calculate GST using admin-overridable values
   const gstBreakdown = calcGst(totalAmount, gstRate, isGstInclusive);
 
   const finalBaseAmount = gstBreakdown.baseAmount;
@@ -144,7 +167,8 @@ export function AdminBookingForm({ facilities }: AdminBookingFormProps) {
         gstPercentage: gstRate,
         cgstAmount: gstBreakdown.cgstAmount,
         sgstAmount: gstBreakdown.sgstAmount,
-        quantity: isHourly ? quantity : 1,
+        isGstInclusive,
+        quantity: usesQuantity ? quantity : 1,
         paymentType,
         status: bookingStatus,
         customerName: customerName.trim(),
@@ -205,12 +229,16 @@ export function AdminBookingForm({ facilities }: AdminBookingFormProps) {
                 <SelectValue placeholder={selectedFacilityId ? "Select package…" : "Select facility first"} />
               </SelectTrigger>
               <SelectContent>
-                {availablePackages.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.name} — {formatINR(p.price)}
-                    {p.type === "hourly" && " /hr"}
-                  </SelectItem>
-                ))}
+                {availablePackages.map((p) => {
+                  const hasRes = p.resident_price !== null && p.resident_price < p.price;
+                  return (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name} — {formatINR(p.price)}
+                      {p.type === "hourly" && " /hr"}
+                      {hasRes && ` (Res: ${formatINR(p.resident_price!)}${p.type === "hourly" ? "/hr" : ""})`}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>
@@ -252,6 +280,21 @@ export function AdminBookingForm({ facilities }: AdminBookingFormProps) {
                 />
               </div>
             </>
+          )}
+          {isAccommodation && (
+            <div className="space-y-1.5">
+              <Label>Number of Rooms *</Label>
+              <Input
+                type="number"
+                min={1}
+                max={selectedFacility?.inventory_count ?? 99}
+                value={quantity}
+                onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+              />
+              <p className="text-xs text-stone-400">
+                Max available: {selectedFacility?.inventory_count ?? "—"} rooms
+              </p>
+            </div>
           )}
         </div>
         {isMultiDay && selectedPackage && (
@@ -421,13 +464,58 @@ export function AdminBookingForm({ facilities }: AdminBookingFormProps) {
               />
             </div>
           </div>
+          {/* GST Controls */}
+          <div className="space-y-1.5">
+            <Label>GST Rate</Label>
+            <Select
+              value={String(gstRate)}
+              onValueChange={(v) => setGstRate(Number(v) as GstRate)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="0">No GST (0%)</SelectItem>
+                <SelectItem value="5">5% GST (CGST 2.5% + SGST 2.5%)</SelectItem>
+                <SelectItem value="18">18% GST (CGST 9% + SGST 9%)</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-stone-400">Defaults from package — override if needed</p>
+          </div>
+          {gstRate !== 0 && (
+            <div className="space-y-1.5">
+              <Label>GST Type</Label>
+              <Select
+                value={isGstInclusive ? "inclusive" : "exclusive"}
+                onValueChange={(v) => setIsGstInclusive(v === "inclusive")}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="inclusive">Inclusive — price already includes GST</SelectItem>
+                  <SelectItem value="exclusive">Exclusive — GST added on top of price</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-stone-400">
+                {isGstInclusive
+                  ? "GST is embedded in the listed price. Customer pays the listed amount."
+                  : "GST is charged on top. Customer pays listed price + GST."}
+              </p>
+            </div>
+          )}
         </div>
         {selectedPackage && (
           <div className="bg-stone-50 rounded-lg px-4 py-3 text-sm flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <span className="text-stone-500">
                 Amount
-                {isHourly ? ` (${quantity} unit${quantity !== 1 ? "s" : ""} × ₹${amountOverride || 0})` : ""}
+                {usesQuantity ? ` (${quantity} ${isAccommodation ? "room" : "unit"}${quantity !== 1 ? "s" : ""} × ₹${amountOverride || 0})` : ""}
+                {gstRate > 0 && (
+                  <span className="ml-1 text-xs font-medium text-stone-400">
+                    ({isGstInclusive ? "GST Inclusive" : "GST Exclusive"})
+                  </span>
+                )}
               </span>
               <span className="font-medium text-stone-700">{formatINR(totalAmount)}</span>
             </div>

@@ -148,6 +148,7 @@ export interface Booking {
   gst_percentage: GstPercentage;
   cgst_amount: number;              // CGST = gst_percentage / 2 of taxable amount
   sgst_amount: number;              // SGST = gst_percentage / 2 of taxable amount
+  is_gst_inclusive: boolean;         // true = price includes GST; false = GST added on top
   // Status
   status: BookingStatus;
   // Payment

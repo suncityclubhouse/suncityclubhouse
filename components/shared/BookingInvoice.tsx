@@ -520,7 +520,7 @@ export function BookingInvoice({
           </View>
           {Number(b.cgst_amount) > 0 && (
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>CGST ({Number(b.gst_percentage ?? 0) / 2}%)</Text>
+              <Text style={styles.summaryLabel}>CGST ({Number(b.gst_percentage ?? 0) / 2}%){b.is_gst_inclusive === false ? ' (Exclusive)' : ' (Inclusive)'}</Text>
               <Text style={styles.summaryValue}>+ {formatINR(Number(b.cgst_amount))}</Text>
             </View>
           )}
