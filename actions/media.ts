@@ -1,9 +1,19 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/types";
 
+async function verifyAdmin() {
+  const serverClient = await createClient();
+  const { data: { user } } = await serverClient.auth.getUser();
+  return user;
+}
+
 export async function deleteMediaItem(mediaId: string): Promise<ActionResult> {
+  const user = await verifyAdmin();
+  if (!user) return { success: false, error: "Unauthorized" };
+
   const db = createAdminClient();
   const { error } = await db.from("facility_media").delete().eq("id", mediaId);
   if (error) return { success: false, error: error.message };
@@ -13,6 +23,9 @@ export async function deleteMediaItem(mediaId: string): Promise<ActionResult> {
 export async function reorderMediaItems(
   items: { id: string; display_order: number }[]
 ): Promise<ActionResult> {
+  const user = await verifyAdmin();
+  if (!user) return { success: false, error: "Unauthorized" };
+
   const db = createAdminClient();
   await Promise.all(
     items.map(({ id, display_order }) =>
@@ -29,6 +42,9 @@ export async function addMediaItem(params: {
   mediaType: "image" | "video";
   displayOrder: number;
 }): Promise<ActionResult<{ id: string }>> {
+  const user = await verifyAdmin();
+  if (!user) return { success: false, error: "Unauthorized" };
+
   const db = createAdminClient();
   const { data, error } = await db
     .from("facility_media")

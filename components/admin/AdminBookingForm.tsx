@@ -58,6 +58,8 @@ export function AdminBookingForm({ facilities }: AdminBookingFormProps) {
 
   // Slot
   const [bookingDate, setBookingDate] = useState("");
+  const [isCustomMultiDay, setIsCustomMultiDay] = useState(false);
+  const [endDate, setEndDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [quantity, setQuantity] = useState(1);
@@ -111,7 +113,9 @@ export function AdminBookingForm({ facilities }: AdminBookingFormProps) {
       setIsGstInclusive(pkg.is_gst_inclusive ?? true);
       // Auto-fill times for fixed packages
       if (pkg.start_time) setStartTime(pkg.start_time.slice(0, 5));
+      else setStartTime("");
       if (pkg.end_time) setEndTime(pkg.end_time.slice(0, 5));
+      else setEndTime("");
     }
   }, [selectedPackageId, availablePackages]);
 
@@ -134,7 +138,17 @@ export function AdminBookingForm({ facilities }: AdminBookingFormProps) {
   const isHourly = selectedPackage?.type === "hourly";
   const isMultiDay = selectedPackage?.type === "monthly" || selectedPackage?.type === "quarterly" || selectedPackage?.type === "half_yearly" || selectedPackage?.type === "yearly";
   const usesQuantity = isHourly || isAccommodation;
-  const totalAmount = parseFloat(amountOverride || "0") * (usesQuantity ? quantity : 1);
+
+  let daysCount = 1;
+  if (isCustomMultiDay && bookingDate && endDate) {
+    const start = new Date(bookingDate);
+    const end = new Date(endDate);
+    if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && end >= start) {
+      daysCount = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    }
+  }
+
+  const totalAmount = parseFloat(amountOverride || "0") * (usesQuantity ? quantity : 1) * daysCount;
 
   // Calculate GST using admin-overridable values
   const gstBreakdown = calcGst(totalAmount, gstRate, isGstInclusive);
@@ -160,8 +174,9 @@ export function AdminBookingForm({ facilities }: AdminBookingFormProps) {
         packageId: selectedPackageId,
         slotType: selectedPackage!.type,
         bookingDate,
-        startTime: isHourly ? startTime : undefined,
-        endTime: isHourly ? endTime : undefined,
+        endDate: isCustomMultiDay ? endDate : undefined,
+        startTime: startTime || undefined,
+        endTime: endTime || undefined,
         baseAmount: finalBaseAmount,
         totalAmount: finalTotalAmount,
         gstPercentage: gstRate,
@@ -252,13 +267,40 @@ export function AdminBookingForm({ facilities }: AdminBookingFormProps) {
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <Label>Booking Date *</Label>
+            <div className="flex items-center justify-between">
+              <Label>Booking Date *</Label>
+              {!isMultiDay && !isHourly && (
+                <label className="text-xs flex items-center gap-1.5 text-stone-500 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isCustomMultiDay}
+                    onChange={(e) => setIsCustomMultiDay(e.target.checked)}
+                    className="rounded border-stone-300"
+                  />
+                  Multiple Days
+                </label>
+              )}
+            </div>
             <Input
               type="date"
               value={bookingDate}
               onChange={(e) => setBookingDate(e.target.value)}
             />
           </div>
+          {isCustomMultiDay && (
+            <div className="space-y-1.5">
+              <Label>End Date *</Label>
+              <Input
+                type="date"
+                min={bookingDate}
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
+              {daysCount > 1 && (
+                <p className="text-xs text-stone-400">Total days: {daysCount}</p>
+              )}
+            </div>
+          )}
           {isHourly && (
             <>
               <div className="space-y-1.5">
@@ -510,7 +552,9 @@ export function AdminBookingForm({ facilities }: AdminBookingFormProps) {
             <div className="flex items-center justify-between">
               <span className="text-stone-500">
                 Amount
-                {usesQuantity ? ` (${quantity} ${isAccommodation ? "room" : "unit"}${quantity !== 1 ? "s" : ""} × ₹${amountOverride || 0})` : ""}
+                {usesQuantity ? ` (${quantity} ${isAccommodation ? "room" : "unit"}${quantity !== 1 ? "s" : ""})` : ""}
+                {daysCount > 1 ? ` (${daysCount} days)` : ""}
+                {` × ₹${amountOverride || 0}`}
                 {gstRate > 0 && (
                   <span className="ml-1 text-xs font-medium text-stone-400">
                     ({isGstInclusive ? "GST Inclusive" : "GST Exclusive"})

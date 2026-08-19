@@ -14,25 +14,33 @@ async function verifyAdmin() {
 }
 
 export async function getExpenses(): Promise<Expense[]> {
+  const user = await verifyAdmin();
+  if (!user) throw new Error("Unauthorized");
+
   const db = createAdminClient();
-  const { data } = await db
+  const { data, error } = await db
     .from("expenses")
     .select("*")
     .eq("society_id", SOCIETY_ID)
     .order("expense_date", { ascending: false });
 
+  if (error) throw new Error(error.message);
   return (data ?? []) as Expense[];
 }
 
 export async function getRecurringTemplates(): Promise<Expense[]> {
+  const user = await verifyAdmin();
+  if (!user) throw new Error("Unauthorized");
+
   const db = createAdminClient();
-  const { data } = await db
+  const { data, error } = await db
     .from("expenses")
     .select("*")
     .eq("society_id", SOCIETY_ID)
     .eq("is_recurring", true)
     .order("expense_category", { ascending: true });
 
+  if (error) throw new Error(error.message);
   return (data ?? []) as Expense[];
 }
 

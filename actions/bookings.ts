@@ -15,6 +15,13 @@ import type { BookingFormSchema } from "@/lib/validations/booking";
 const SOCIETY_ID = process.env.NEXT_PUBLIC_SOCIETY_ID!;
 const ADMIN_EMAIL = process.env.RESEND_FROM_EMAIL!;
 
+// ---- helpers ----
+async function verifyAdmin() {
+  const serverClient = await createClient();
+  const { data: { user } } = await serverClient.auth.getUser();
+  return user;
+}
+
 // ============================================================
 // CREATE BOOKING
 // ============================================================
@@ -250,6 +257,9 @@ export async function uploadPaymentProof(params: {
 export async function getBookings(filters: BookingFilters = {}): Promise<
   ActionResult<{ bookings: Booking[]; total: number }>
 > {
+  const user = await verifyAdmin();
+  if (!user) return { success: false, error: "Unauthorized" };
+
   const db = createAdminClient();
   const page = filters.page ?? 1;
   const pageSize = filters.pageSize ?? 20;
@@ -294,6 +304,9 @@ export async function getBookings(filters: BookingFilters = {}): Promise<
 // ============================================================
 
 export async function getActiveBookings(): Promise<ActionResult<Booking[]>> {
+  const user = await verifyAdmin();
+  if (!user) return { success: false, error: "Unauthorized" };
+
   const db = createAdminClient();
   const today = new Date().toISOString().split("T")[0];
 
@@ -316,6 +329,9 @@ export async function getActiveBookings(): Promise<ActionResult<Booking[]>> {
 // ============================================================
 
 export async function getBookingById(id: string): Promise<ActionResult<Booking>> {
+  const user = await verifyAdmin();
+  if (!user) return { success: false, error: "Unauthorized" };
+
   const db = createAdminClient();
   const { data, error } = await db
     .from("bookings")
@@ -340,7 +356,20 @@ export async function getBookingByRef(ref: string): Promise<ActionResult<Booking
   if (error || !data) {
     return { success: false, error: "Booking not found." };
   }
-  return { success: true, data: data as unknown as Booking };
+
+  const user = await verifyAdmin();
+  const booking = data as unknown as Booking;
+
+  if (!user) {
+    // Sanitize sensitive info for non-admins
+    booking.customer_phone = booking.customer_phone.replace(/.(?=.{4})/g, '*');
+    booking.customer_email = booking.customer_email ? booking.customer_email.replace(/.(?=.*@)/g, '*') : '';
+    booking.admin_notes = null;
+    booking.house_number = booking.house_number ? '***' : null;
+    booking.reference_resident = booking.reference_resident ? '***' : null;
+  }
+
+  return { success: true, data: booking };
 }
 
 // ============================================================
@@ -561,6 +590,9 @@ export async function getBookedTimeSlots(params: {
 // ============================================================
 
 export async function getDashboardKPIs() {
+  const user = await verifyAdmin();
+  if (!user) throw new Error("Unauthorized");
+
   // Admin layout already ensures the user is authenticated before this is called.
   // We use the service-role admin client directly to bypass RLS and fetch real data.
   const db = createAdminClient();
