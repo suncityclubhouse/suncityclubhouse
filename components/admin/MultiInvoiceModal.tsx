@@ -30,6 +30,8 @@ import { formatINR } from "@/lib/utils/formatters";
 import { formatShortDate } from "@/lib/utils/dates";
 import type { Booking } from "@/types/database";
 
+import { getConfirmedBookingsForInvoice } from "@/actions/invoice";
+
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
 function slotDisplay(b: Booking): string {
@@ -85,11 +87,7 @@ export function MultiInvoiceModal({ open, onClose }: Props) {
     let cancelled = false;
     setLoading(true);
 
-    fetch("/api/invoice/multi/list")
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to load");
-        return res.json();
-      })
+    getConfirmedBookingsForInvoice()
       .then((data: BookingRow[]) => {
         if (cancelled) return;
         // Sort by created_at descending (latest first)
