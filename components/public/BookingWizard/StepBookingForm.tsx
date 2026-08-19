@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Loader2, CheckCircle2, ShieldCheck, RefreshCw } from "lucide-react";
+import { Loader2, CheckCircle2, ShieldCheck, RefreshCw, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -324,6 +324,14 @@ export function StepBookingForm({ facility, state, onStateChange, onNext, onBack
               )}
             </div>
           )}
+        </div>
+
+        {/* Advance Payment Notice */}
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex gap-3 text-sm text-blue-800">
+          <Info className="w-5 h-5 text-blue-500 flex-shrink-0" />
+          <p>
+            <strong>Important:</strong> Your booking will only be confirmed once <strong>100% advance payment</strong> is completed on the next screen.
+          </p>
         </div>
 
         <div className="flex justify-between pt-2">

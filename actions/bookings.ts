@@ -8,6 +8,7 @@ import {
   sendBookingConfirmedEmail,
   sendBookingRejectedEmail,
 } from "@/lib/resend";
+import { sendBookingConfirmedWhatsApp } from "@/lib/whatsapp";
 import type { Booking, BookingStatus } from "@/types/database";
 import type { ActionResult, BookingFilters } from "@/types";
 import type { BookingFormSchema } from "@/lib/validations/booking";
@@ -433,7 +434,7 @@ export async function updateBookingStatus(params: {
   if (params.status === "confirmed" || params.status === "rejected") {
     const { data: bookingData } = await db
       .from("bookings")
-      .select("customer_email, customer_name, booking_ref, booking_date, start_time, end_time, facility:facilities(name)")
+      .select("customer_email, customer_name, customer_phone, total_amount, booking_ref, booking_date, start_time, end_time, facility:facilities(name)")
       .eq("id", params.bookingId)
       .single();
 
@@ -449,6 +450,19 @@ export async function updateBookingStatus(params: {
           startTime: bookingData.start_time ?? undefined,
           endTime: bookingData.end_time ?? undefined,
         }).catch((e) => console.error("[updateBookingStatus] confirm email:", e));
+
+        if (bookingData.customer_phone) {
+          await sendBookingConfirmedWhatsApp({
+            phone: bookingData.customer_phone,
+            name: bookingData.customer_name,
+            bookingRef: bookingData.booking_ref,
+            facilityName,
+            date: bookingData.booking_date,
+            amount: String(bookingData.total_amount ?? 0),
+            startTime: bookingData.start_time ?? undefined,
+            endTime: bookingData.end_time ?? undefined,
+          }).catch((e) => console.error("[updateBookingStatus] whatsapp:", e));
+        }
       }
       if (params.status === "rejected") {
         await sendBookingRejectedEmail({
@@ -895,6 +909,21 @@ export async function createAdminBooking(params: {
   if (insertError || !booking) {
     console.error("[createAdminBooking] insert error:", insertError);
     return { success: false, error: "Failed to create booking. Please try again." };
+  }
+
+  // Send WhatsApp if confirmed
+  if (params.status === "confirmed" && params.customerPhone) {
+    const { data: facility } = await db.from("facilities").select("name").eq("id", params.facilityId).single();
+    await sendBookingConfirmedWhatsApp({
+      phone: params.customerPhone,
+      name: params.customerName,
+      bookingRef: booking.booking_ref,
+      facilityName: facility?.name ?? "Facility",
+      date: params.bookingDate,
+      amount: String(params.totalAmount),
+      startTime: params.startTime,
+      endTime: params.endTime,
+    }).catch((e) => console.error("[createAdminBooking] whatsapp:", e));
   }
 
   return {

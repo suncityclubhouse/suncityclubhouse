@@ -13,6 +13,7 @@ import {
   RefreshCw,
   X,
   Camera,
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -233,6 +234,14 @@ export function StepPayment({
       {/* ── Payment section (only when not expired) ── */}
       {!isExpired && (
         <>
+          {/* Advance Payment Notice */}
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex gap-3 text-sm text-blue-800">
+            <Info className="w-5 h-5 text-blue-500 flex-shrink-0" />
+            <p>
+              <strong>Important:</strong> Your booking will only be confirmed once <strong>100% advance payment</strong> is received and verified by our team.
+            </p>
+          </div>
+
           {/* ── AMOUNT CARD ── */}
           <div className="bg-white border border-stone-200 rounded-xl overflow-hidden">
             <div className="px-4 py-3 border-b border-stone-100 flex items-center justify-between">
