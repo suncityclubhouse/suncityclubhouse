@@ -7,7 +7,7 @@
  * lets the admin search & select any subset, then downloads a consolidated PDF.
  */
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import {
   FileText,
@@ -76,24 +76,36 @@ export function MultiInvoiceModal({ open, onClose }: Props) {
     }
   }, [fetched]);
 
-  // Trigger fetch when dialog mounts
+  // Trigger fetch when dialog opens; reset search + selection when closing
   const handleOpenChange = (isOpen: boolean) => {
-    if (!isOpen) { onClose(); return; }
+    if (!isOpen) {
+      setSearch("");
+      setSelected(new Set());
+      onClose();
+      return;
+    }
     fetchBookings();
   };
 
-  // ── Filtered list ─────────────────────────────────────────────────────────
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return bookings;
-    return bookings.filter(
-      (b) =>
-        b.customer_name.toLowerCase().includes(q) ||
-        b.booking_ref.toLowerCase().includes(q) ||
-        b.customer_phone.includes(q) ||
-        (b.facility?.name ?? "").toLowerCase().includes(q)
-    );
-  }, [bookings, search]);
+  // ── Filtered list — computed directly so it always reflects the latest state ─
+  // Safely handle facility being either an object or array (Supabase join shape varies)
+  const getFacilityName = (b: BookingRow): string => {
+    const f = (b as any).facility;
+    if (!f) return "";
+    if (Array.isArray(f)) return (f[0]?.name ?? "").toLowerCase();
+    return (f.name ?? "").toLowerCase();
+  };
+
+  const q = search.trim().toLowerCase();
+  const filtered: BookingRow[] = q
+    ? bookings.filter(
+        (b) =>
+          b.customer_name.toLowerCase().includes(q) ||
+          b.booking_ref.toLowerCase().includes(q) ||
+          b.customer_phone.includes(q) ||
+          getFacilityName(b).includes(q)
+      )
+    : bookings;
 
   // ── Selection helpers ─────────────────────────────────────────────────────
   const toggle = (id: string) =>
