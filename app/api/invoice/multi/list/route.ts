@@ -10,6 +10,8 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
+export const dynamic = "force-dynamic"; // never cache — admin auth required
+
 export async function GET() {
   // Require admin session
   const serverClient = await createClient();
@@ -26,14 +28,14 @@ export async function GET() {
   const { data, error } = await db
     .from("bookings")
     .select(
-      "id, booking_ref, customer_name, customer_phone, customer_email, is_resident, house_number, " +
+      "id, booking_ref, created_at, customer_name, customer_phone, customer_email, is_resident, house_number, " +
       "booking_date, end_date, start_time, end_time, slot_type, quantity, status, " +
       "base_amount, total_amount, gst_percentage, cgst_amount, sgst_amount, is_gst_inclusive, " +
       "event_purpose, payment_type, payment_mode, " +
       "facility:facilities(id,name)"
     )
     .in("status", ["confirmed", "completed"])
-    .order("booking_date", { ascending: false })
+    .order("created_at", { ascending: false })
     .limit(500); // sensible cap
 
   if (error) {
