@@ -44,7 +44,7 @@ const PAYMENT_TYPE_OPTIONS = [
   { value: "deferred", label: "Deferred (Collect Later)" },
 ] as const;
 
-type PaymentType = "upi" | "cash" | "complimentary" | "deferred";
+type PaymentType = "" | "upi" | "cash" | "complimentary" | "deferred";
 
 export function AdminBookingForm({ facilities }: AdminBookingFormProps) {
   const router = useRouter();
@@ -75,7 +75,7 @@ export function AdminBookingForm({ facilities }: AdminBookingFormProps) {
   const [guestCount, setGuestCount] = useState<string>("");
 
   // Booking config
-  const [paymentType, setPaymentType] = useState<PaymentType>("cash");
+  const [paymentType, setPaymentType] = useState<PaymentType>("");
   const [bookingStatus, setBookingStatus] = useState<"confirmed" | "awaiting_payment">("confirmed");
   const [amountOverride, setAmountOverride] = useState<string>("");
   const [adminNotes, setAdminNotes] = useState("");
@@ -126,6 +126,7 @@ export function AdminBookingForm({ facilities }: AdminBookingFormProps) {
       const price = isResident && hasResidentPrice ? selectedPackage.resident_price! : selectedPackage.price;
       setAmountOverride(String(price));
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isResident]);
 
   // For complimentary — auto-set amount to 0
@@ -166,6 +167,8 @@ export function AdminBookingForm({ facilities }: AdminBookingFormProps) {
     if (!customerName.trim()) { toast.error("Customer name is required."); return; }
     if (!customerPhone || customerPhone.length < 10) { toast.error("Please enter a valid 10-digit phone number."); return; }
     if (isResident && !houseNumber.trim()) { toast.error("Please enter the house/flat number for resident booking."); return; }
+    if (!paymentType) { toast.error("Please select a payment type."); return; }
+    if (paymentType !== "complimentary" && (amountOverride === "" || amountOverride === undefined)) { toast.error("Please enter the booking amount."); return; }
 
     setSubmitting(true);
     try {
@@ -478,8 +481,8 @@ export function AdminBookingForm({ facilities }: AdminBookingFormProps) {
           <div className="space-y-1.5">
             <Label>Payment Type *</Label>
             <Select value={paymentType} onValueChange={(v) => setPaymentType(v as PaymentType)}>
-              <SelectTrigger>
-                <SelectValue />
+              <SelectTrigger className={!paymentType ? "border-red-200 bg-red-50" : ""}>
+                <SelectValue placeholder="Select payment type…" />
               </SelectTrigger>
               <SelectContent>
                 {PAYMENT_TYPE_OPTIONS.map((o) => (
@@ -487,24 +490,31 @@ export function AdminBookingForm({ facilities }: AdminBookingFormProps) {
                 ))}
               </SelectContent>
             </Select>
+            {!paymentType && <p className="text-xs text-red-500">Payment type is required</p>}
           </div>
           <div className="space-y-1.5">
             <Label>
-              Amount (₹)
+              Amount (₹) *
               {isHourly ? " per hour" : ""}
               {paymentType === "complimentary" ? " — Auto-set to 0" : ""}
             </Label>
             <div className="relative">
               <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
               <Input
-                className="pl-9"
+                className={`pl-9 ${
+                  paymentType !== "complimentary" && amountOverride === "" ? "border-red-200 bg-red-50" : ""
+                }`}
                 type="number"
                 min={0}
+                placeholder="0"
                 value={amountOverride}
                 onChange={(e) => setAmountOverride(e.target.value)}
                 disabled={paymentType === "complimentary"}
               />
             </div>
+            {paymentType !== "complimentary" && amountOverride === "" && (
+              <p className="text-xs text-red-500">Amount is required</p>
+            )}
           </div>
           {/* GST Controls */}
           <div className="space-y-1.5">

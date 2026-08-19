@@ -122,19 +122,36 @@ export function AdminBookingsTable({ bookings, total, page, pageSize }: Bookings
                   </td>
                   <td className="py-3 px-4 font-medium text-stone-900 whitespace-nowrap">{formatINR(b.total_amount)}</td>
                   <td className="py-3 px-4 whitespace-nowrap">
-                    {(b as any).payment_mode ? (
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                        (b as any).payment_mode === 'cash' ? 'bg-green-100 text-green-800' :
-                        (b as any).payment_mode === 'upi' ? 'bg-violet-100 text-violet-800' :
-                        (b as any).payment_mode === 'cheque' ? 'bg-blue-100 text-blue-800' :
-                        (b as any).payment_mode === 'bank_transfer' ? 'bg-cyan-100 text-cyan-800' :
-                        'bg-stone-100 text-stone-600'
-                      }`}>
-                        {(b as any).payment_mode.replace('_', ' ').toUpperCase()}
-                      </span>
-                    ) : (
-                      <span className="text-stone-300 text-xs">—</span>
-                    )}
+                    {(() => {
+                      const mode = (b as any).payment_mode;
+                      const type = (b as any).payment_type;
+                      const raw = mode ?? type;
+                      if (!raw) return <span className="text-stone-300 text-xs">—</span>;
+                      const colorMap: Record<string, string> = {
+                        cash: 'bg-green-100 text-green-800',
+                        upi: 'bg-violet-100 text-violet-800',
+                        cheque: 'bg-blue-100 text-blue-800',
+                        bank_transfer: 'bg-cyan-100 text-cyan-800',
+                        complimentary: 'bg-emerald-100 text-emerald-800',
+                        deferred: 'bg-amber-100 text-amber-800',
+                      };
+                      const labelMap: Record<string, string> = {
+                        cash: 'Cash',
+                        upi: 'UPI',
+                        cheque: 'Cheque',
+                        bank_transfer: 'Bank Transfer',
+                        complimentary: 'Complimentary',
+                        deferred: 'Deferred',
+                        other: 'Other',
+                      };
+                      const color = colorMap[raw] ?? 'bg-stone-100 text-stone-600';
+                      const label = labelMap[raw] ?? raw.replace(/_/g, ' ').toUpperCase();
+                      return (
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${color}`}>
+                          {label}
+                        </span>
+                      );
+                    })()}
                   </td>
                   <td className="py-3 px-4"><StatusBadge status={b.status} /></td>
                   <td className="py-3 px-4">
