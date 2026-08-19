@@ -5,6 +5,7 @@ import { Plus } from "lucide-react";
 import { getBookings } from "@/actions/bookings";
 import { AdminBookingsTable } from "@/components/admin/BookingTable";
 import { BookingTableSkeleton } from "@/components/shared/LoadingSkeleton";
+import { BookingsActionBar } from "./BookingsActionBar";
 import type { BookingStatus } from "@/types/database";
 
 
@@ -59,14 +60,17 @@ export default async function BookingsPage({ searchParams }: PageProps) {
           <h1 className="font-serif text-2xl font-bold text-stone-900">Bookings</h1>
           <p className="text-sm text-stone-500 mt-1">Manage all booking requests</p>
         </div>
-        <Link
-          href="/dashboard/bookings/new"
-          className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white shadow-sm transition-opacity hover:opacity-90"
-          style={{ background: "linear-gradient(135deg, #07377a, #08428C)" }}
-        >
-          <Plus className="w-4 h-4" />
-          New Booking
-        </Link>
+        <div className="flex items-center gap-2">
+          <BookingsActionBar />
+          <Link
+            href="/dashboard/bookings/new"
+            className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white shadow-sm transition-opacity hover:opacity-90"
+            style={{ background: "linear-gradient(135deg, #07377a, #08428C)" }}
+          >
+            <Plus className="w-4 h-4" />
+            New Booking
+          </Link>
+        </div>
       </div>
       <Suspense fallback={<BookingTableSkeleton />}>
         <BookingsContent searchParams={params} />

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Loader2, CheckCircle2, ShieldCheck, RefreshCw, Info } from "lucide-react";
+import { Loader2, CheckCircle2, ShieldCheck, RefreshCw, Info, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -283,8 +283,8 @@ export function StepBookingForm({ facility, state, onStateChange, onNext, onBack
                       disabled={sendingOtp || !phone || phone.length !== 10}
                       className="w-full sm:w-auto border-emerald-200 text-emerald-700 hover:bg-emerald-50"
                     >
-                      {sendingOtp ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                      Send OTP via SMS
+                      {sendingOtp ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Phone className="w-4 h-4 mr-2" />}
+                      Send OTP via Call
                     </Button>
                   ) : (
                     <div className="flex items-end gap-3 max-w-sm">
@@ -298,6 +298,12 @@ export function StepBookingForm({ facility, state, onStateChange, onNext, onBack
                           maxLength={6}
                           className="text-center tracking-widest text-lg"
                         />
+                        <div className="flex items-start gap-1.5 text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-1">
+                          <Phone className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                          <p className="text-xs leading-snug">
+                            <strong>You will receive a phone call</strong> on your mobile number. Please accept the call — the automated voice will read out your 6-digit OTP.
+                          </p>
+                        </div>
                       </div>
                       <Button 
                         type="button" 

@@ -385,12 +385,11 @@ export function StepPayment({
                       )}
                     </button>
 
-                    {/* Hidden camera input — opens camera on mobile, file picker on desktop */}
+                    {/* Hidden file input — on mobile shows sheet: Camera / Gallery / Files */}
                     <input
                       ref={cameraInputRef}
                       type="file"
                       accept="image/*"
-                      capture="environment"
                       onChange={handleFileChange}
                       className="hidden"
                     />

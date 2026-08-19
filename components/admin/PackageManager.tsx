@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -69,6 +69,11 @@ interface Props {
 export function PackageManager({ facilityId, initialPackages }: Props) {
   const router = useRouter();
   const [packages, setPackages] = useState<FacilityPackage[]>(initialPackages);
+
+  // Sync local state whenever the server re-renders with fresh data (after router.refresh)
+  useEffect(() => {
+    setPackages(initialPackages);
+  }, [initialPackages]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -117,8 +122,27 @@ export function PackageManager({ facilityId, initialPackages }: Props) {
       if (editingId) {
         const result = await updateFacilityPackage(editingId, values);
         if (!result.success) { toast.error(result.error ?? "Failed to update"); return; }
+        // Optimistic update — map camelCase form values back to snake_case to match FacilityPackage
         setPackages((prev) =>
-          prev.map((p) => p.id === editingId ? { ...p, ...values, price: values.price } as any : p)
+          prev.map((p) =>
+            p.id === editingId
+              ? {
+                  ...p,
+                  name: values.name ?? p.name,
+                  type: values.type ?? p.type,
+                  price: values.price ?? p.price,
+                  resident_price: values.residentPrice ?? null,
+                  duration_hours: values.durationHours ?? null,
+                  start_time: values.startTime ?? null,
+                  end_time: values.endTime ?? null,
+                  description: values.description ?? null,
+                  is_active: values.isActive ?? p.is_active,
+                  display_order: values.displayOrder ?? p.display_order,
+                  gst_percentage: values.gstPercentage ?? p.gst_percentage,
+                  is_gst_inclusive: values.isGstInclusive ?? p.is_gst_inclusive,
+                }
+              : p
+          )
         );
         toast.success("Package updated!");
       } else {
