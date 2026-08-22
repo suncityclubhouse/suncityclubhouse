@@ -46,6 +46,27 @@ const PAYMENT_TYPE_OPTIONS = [
 
 type PaymentType = "" | "upi" | "cash" | "complimentary" | "deferred";
 
+// Whole-hour slots matching the public booking grid (6 AM – 10 PM)
+const HOUR_OPTIONS: { value: string; label: string }[] = Array.from(
+  { length: 17 }, // 06:00 through 22:00  (16 start options, 17 end options)
+  (_, i) => {
+    const h = 6 + i;
+    const value = `${String(h).padStart(2, "0")}:00`;
+    const label =
+      h === 0 ? "12:00 AM"
+      : h === 12 ? "12:00 PM"
+      : h < 12 ? `${h}:00 AM`
+      : `${h - 12}:00 PM`;
+    return { value, label };
+  }
+);
+
+/** Round a "HH:MM" string from a package default down to the nearest whole hour */
+function snapToHour(time: string): string {
+  const [h] = time.split(":");
+  return `${h.padStart(2, "0")}:00`;
+}
+
 export function AdminBookingForm({ facilities }: AdminBookingFormProps) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
@@ -111,10 +132,10 @@ export function AdminBookingForm({ facilities }: AdminBookingFormProps) {
       // Sync GST from package defaults
       setGstRate((pkg.gst_percentage ?? 0) as GstRate);
       setIsGstInclusive(pkg.is_gst_inclusive ?? true);
-      // Auto-fill times for fixed packages
-      if (pkg.start_time) setStartTime(pkg.start_time.slice(0, 5));
+      // Auto-fill times for fixed packages, snapped to the nearest whole hour
+      if (pkg.start_time) setStartTime(snapToHour(pkg.start_time.slice(0, 5)));
       else setStartTime("");
-      if (pkg.end_time) setEndTime(pkg.end_time.slice(0, 5));
+      if (pkg.end_time) setEndTime(snapToHour(pkg.end_time.slice(0, 5)));
       else setEndTime("");
     }
   }, [selectedPackageId, availablePackages]);
@@ -304,27 +325,73 @@ export function AdminBookingForm({ facilities }: AdminBookingFormProps) {
               )}
             </div>
           )}
-          {isHourly && (
+          {(isHourly || isMultiDay) && (
             <>
+              {/* ── Start Time (hour-only dropdown) ── */}
               <div className="space-y-1.5">
-                <Label>Start Time *</Label>
-                <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+                <Label>
+                  Start Time{" "}
+                  {isHourly ? "*" : <span className="text-stone-400 font-normal">(optional)</span>}
+                </Label>
+                <Select
+                  value={startTime}
+                  onValueChange={(v) => {
+                    setStartTime(v);
+                    // Reset end time if it is no longer strictly after new start
+                    if (endTime && endTime <= v) setEndTime("");
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select start hour…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {/* Show all hours except the last one (22:00) as start options */}
+                    {HOUR_OPTIONS.slice(0, -1).map((o) => (
+                      <SelectItem key={o.value} value={o.value}>
+                        {o.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
+
+              {/* ── End Time (hour-only dropdown, filtered > startTime) ── */}
               <div className="space-y-1.5">
-                <Label>End Time *</Label>
-                <Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Number of Hours / Units</Label>
-                <Input
-                  type="number"
-                  min={1}
-                  max={24}
-                  value={quantity}
-                  onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-                />
+                <Label>
+                  End Time{" "}
+                  {isHourly ? "*" : <span className="text-stone-400 font-normal">(optional)</span>}
+                </Label>
+                <Select
+                  value={endTime}
+                  onValueChange={setEndTime}
+                  disabled={!startTime}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={startTime ? "Select end hour…" : "Pick start first"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {/* Only show hours strictly after the selected start */}
+                    {HOUR_OPTIONS.filter((o) => o.value > startTime).map((o) => (
+                      <SelectItem key={o.value} value={o.value}>
+                        {o.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </>
+          )}
+          {isHourly && (
+            <div className="space-y-1.5">
+              <Label>Number of Hours / Units</Label>
+              <Input
+                type="number"
+                min={1}
+                max={24}
+                value={quantity}
+                onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+              />
+            </div>
           )}
           {isAccommodation && (
             <div className="space-y-1.5">
