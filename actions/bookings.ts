@@ -43,6 +43,7 @@ export async function createBooking(params: {
   sgstAmount?: number;
   quantity?: number;
   formValues: BookingFormSchema;
+  customerGstNumber?: string; // optional B2B GSTIN
 }): Promise<ActionResult<{ bookingId: string; bookingRef: string; expiresAt: string }>> {
   const db = createAdminClient();
 
@@ -130,6 +131,7 @@ export async function createBooking(params: {
       gst_percentage: params.gstPercentage ?? 0,
       cgst_amount: params.cgstAmount ?? 0,
       sgst_amount: params.sgstAmount ?? 0,
+      customer_gst_number: params.customerGstNumber?.trim().toUpperCase() || null,
       status: "awaiting_payment",
       expires_at: expiresAt,
     })
@@ -286,9 +288,20 @@ export async function getBookings(filters: BookingFilters = {}): Promise<
     query = query.lte("booking_date", filters.dateTo);
   }
   if (filters.search) {
-    query = query.or(
-      `customer_name.ilike.%${filters.search}%,customer_email.ilike.%${filters.search}%,booking_ref.ilike.%${filters.search}%,customer_phone.ilike.%${filters.search}%`
-    );
+    const term = filters.search.trim();
+    // If the search term is a pure number, also search invoice_number directly.
+    // Supabase PostgREST doesn't support casting in .or() text filters,
+    // so we handle numeric-only searches as a separate eq on invoice_number.
+    const isNumeric = /^\d+$/.test(term);
+    if (isNumeric) {
+      query = query.or(
+        `customer_name.ilike.%${term}%,customer_email.ilike.%${term}%,booking_ref.ilike.%${term}%,customer_phone.ilike.%${term}%,invoice_number.eq.${term}`
+      );
+    } else {
+      query = query.or(
+        `customer_name.ilike.%${term}%,customer_email.ilike.%${term}%,booking_ref.ilike.%${term}%,customer_phone.ilike.%${term}%`
+      );
+    }
   }
 
   const { data, count, error } = await query;
@@ -410,6 +423,25 @@ export async function updateBookingStatus(params: {
     update.approved_at = new Date().toISOString();
     if (params.paymentMode) {
       update.payment_mode = params.paymentMode;
+    }
+    // Belt-and-suspenders: assign invoice number here in JS if the DB trigger
+    // hasn't already done it (e.g. running on older DB without the trigger).
+    // The trigger is the primary mechanism; this is a safe fallback.
+    const { data: currentBooking } = await db
+      .from("bookings")
+      .select("invoice_number")
+      .eq("id", params.bookingId)
+      .single();
+    if (!currentBooking?.invoice_number) {
+      const { data: maxRow } = await db
+        .from("bookings")
+        .select("invoice_number")
+        .eq("society_id", SOCIETY_ID)
+        .not("invoice_number", "is", null)
+        .order("invoice_number", { ascending: false })
+        .limit(1)
+        .single();
+      update.invoice_number = ((maxRow as any)?.invoice_number ?? 0) + 1;
     }
   }
   if (params.status === "rejected") {
@@ -862,10 +894,22 @@ export async function createAdminBooking(params: {
 
   // 5. Build update object based on status
   const now = new Date().toISOString();
-  const statusFields =
-    params.status === "confirmed"
-      ? { approved_by: adminId, approved_at: now }
-      : {};
+  let statusFields: Record<string, unknown> = params.status === "confirmed"
+    ? { approved_by: adminId, approved_at: now }
+    : {};
+
+  // If creating directly as confirmed, pre-assign the next invoice number
+  if (params.status === "confirmed") {
+    const { data: maxRow } = await db
+      .from("bookings")
+      .select("invoice_number")
+      .eq("society_id", SOCIETY_ID)
+      .not("invoice_number", "is", null)
+      .order("invoice_number", { ascending: false })
+      .limit(1)
+      .single();
+    statusFields.invoice_number = ((maxRow as any)?.invoice_number ?? 0) + 1;
+  }
 
   // 6. Insert booking
   const { data: booking, error: insertError } = await db

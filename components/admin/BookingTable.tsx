@@ -74,7 +74,7 @@ export function AdminBookingsTable({ bookings, total, page, pageSize }: Bookings
         <div className="relative flex-1 min-w-48">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
           <Input
-            placeholder="Search by name, email, ref, phone…"
+            placeholder="Search by invoice #, name, ref, phone…"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && updateFilter("search", searchInput)}
@@ -97,16 +97,26 @@ export function AdminBookingsTable({ bookings, total, page, pageSize }: Bookings
           <table className="w-full text-sm">
             <thead className="border-b border-stone-100 bg-stone-50">
               <tr>
-                {["Ref", "Customer", "Facility", "Date", "Slot", "Amount", "Payment", "Status", "Actions"].map((h) => (
+                {["Inv #", "Ref", "Customer", "Facility", "Date", "Slot", "Amount", "Payment", "Status", "Actions"].map((h) => (
                   <th key={h} className="text-left py-3 px-4 text-xs font-semibold text-stone-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-50">
               {bookings.length === 0 ? (
-                <tr><td colSpan={9} className="text-center py-12 text-stone-400">No bookings found</td></tr>
+                <tr><td colSpan={10} className="text-center py-12 text-stone-400">No bookings found</td></tr>
               ) : bookings.map((b) => (
                 <tr key={b.id} className="hover:bg-stone-50 transition-colors">
+                  {/* Invoice # — prominent, navy coloured */}
+                  <td className="py-3 px-4 whitespace-nowrap">
+                    {(b as any).invoice_number ? (
+                      <span className="inline-flex items-center justify-center w-9 h-6 rounded-md bg-[#0B3272] text-white text-xs font-bold tracking-wide">
+                        {String((b as any).invoice_number).padStart(2, "0")}
+                      </span>
+                    ) : (
+                      <span className="text-stone-300 text-xs">—</span>
+                    )}
+                  </td>
                   <td className="py-3 px-4 font-mono text-xs text-stone-600 whitespace-nowrap">{b.booking_ref}</td>
                   <td className="py-3 px-4">
                     <div className="font-medium text-stone-900 whitespace-nowrap">{b.customer_name}</div>

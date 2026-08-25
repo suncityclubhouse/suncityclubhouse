@@ -21,6 +21,11 @@ export const bookingFormSchema = z
       .union([z.number().int().min(1).max(1000), z.nan()])
       .transform((v) => (isNaN(v as number) ? undefined : v))
       .optional(),
+    customerGstNumber: z
+      .string()
+      .regex(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/, "Enter a valid 15-character GSTIN")
+      .optional()
+      .or(z.literal("")),
   })
   .refine(
     (data) => !data.isResident || (data.isResident && !!data.houseNumber?.trim()),

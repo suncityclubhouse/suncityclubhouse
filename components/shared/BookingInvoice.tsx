@@ -172,8 +172,9 @@ const styles = StyleSheet.create({
   },
 
   // ── Col widths for main table ───────────────────────────────────────────
-  colDescription: { flex: 3 },
-  colSlotType: { flex: 2 },
+  colDescription: { flex: 2.5 },
+  colRef:        { flex: 1.2 },
+  colSlotType: { flex: 1.8 },
   colDate: { flex: 2 },
   colAmount: { flex: 1.5, textAlign: "right" },
 
@@ -346,6 +347,12 @@ interface Props {
   logoUrl?: string; // base64 or absolute URL
 }
 
+// Format invoice number: single digits get leading zero, rest flow naturally
+function formatInvoiceNumber(n: number | null | undefined): string {
+  if (!n) return "—";
+  return n < 10 ? `0${n}` : String(n);
+}
+
 export function BookingInvoice({
   booking: b,
   societyName = "Suncity Clubhouse",
@@ -388,7 +395,9 @@ export function BookingInvoice({
           <View style={styles.invoiceTitleBlock}>
             <Text style={styles.invoiceLabel}>INVOICE</Text>
             <Text style={styles.invoiceSubLabel}>CLUBHOUSE BOOKING</Text>
-            <Text style={styles.invoiceNumber}>{b.booking_ref}</Text>
+            <Text style={styles.invoiceNumber}>
+              # {formatInvoiceNumber((b as any).invoice_number)}
+            </Text>
             <Text style={{ fontSize: 8, color: SLATE, marginTop: 3 }}>
               Date: {generatedDate}
             </Text>
@@ -441,6 +450,11 @@ export function BookingInvoice({
             <Text style={[styles.metaLine, { marginTop: 2 }]}>
               {b.is_resident ? "Resident Member" : "Non-Resident Guest"}
             </Text>
+            {(b as any).customer_gst_number && (
+              <Text style={[styles.metaLine, { marginTop: 4, fontFamily: "Helvetica-Bold", fontSize: 8 }]}>
+                GSTIN: {(b as any).customer_gst_number}
+              </Text>
+            )}
           </View>
         </View>
 
@@ -450,6 +464,7 @@ export function BookingInvoice({
           {/* Table header */}
           <View style={styles.tableHeader}>
             <Text style={[styles.tableHeaderCell, styles.colDescription]}>Facility / Description</Text>
+            <Text style={[styles.tableHeaderCell, styles.colRef]}>Ref No.</Text>
             <Text style={[styles.tableHeaderCell, styles.colSlotType]}>Slot Type</Text>
             <Text style={[styles.tableHeaderCell, styles.colDate]}>Date & Time</Text>
             <Text style={[styles.tableHeaderCell, styles.colAmount]}>Amount</Text>
@@ -477,6 +492,10 @@ export function BookingInvoice({
                 </Text>
               )}
             </View>
+            {/* Booking Ref column — new */}
+            <Text style={[styles.tableCell, styles.colRef, { fontFamily: "Helvetica-Bold", color: NAVY }]}>
+              {b.booking_ref}
+            </Text>
             <Text style={[styles.tableCell, styles.colSlotType]}>
               {b.slot_type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
               {b.quantity > 1 ? `\n× ${b.quantity} units` : ""}
@@ -503,6 +522,7 @@ export function BookingInvoice({
               <Text style={[styles.tableCell, styles.colDescription, { color: SUCCESS_GREEN }]}>
                 Resident Discount
               </Text>
+              <Text style={[styles.tableCell, styles.colRef]} />
               <Text style={[styles.tableCell, styles.colSlotType]} />
               <Text style={[styles.tableCell, styles.colDate]} />
               <Text style={[styles.tableCell, styles.colAmount, { color: SUCCESS_GREEN }]}>
@@ -593,7 +613,7 @@ export function BookingInvoice({
         {/* ── FOOTER ─────────────────────────────────────────────────────── */}
         <View style={styles.footer} fixed>
           <Text style={styles.footerText}>
-            Generated on {generatedDate} · Booking Ref: {b.booking_ref}
+            Generated on {generatedDate} · Invoice #{formatInvoiceNumber((b as any).invoice_number)} · Ref: {b.booking_ref}
           </Text>
           <Text style={styles.footerBrand}>Mahavir Group — Mahavir Suncity, Rajnandgaon</Text>
         </View>

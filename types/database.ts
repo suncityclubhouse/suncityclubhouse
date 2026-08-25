@@ -159,6 +159,9 @@ export interface Booking {
   payment_verified_at: string | null;
   payment_verified_by: string | null;
   resident_verification_token: string | null;
+  // Invoice
+  invoice_number: number | null;         // sequential; assigned on confirmation; immutable once set
+  customer_gst_number: string | null;    // optional B2B GST number supplied by customer
   // Admin
   admin_notes: string | null;
   rejection_reason: string | null;
