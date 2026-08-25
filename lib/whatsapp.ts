@@ -1,14 +1,5 @@
-import twilio from "twilio";
-
-const accountSid = process.env.TWILIO_ACCOUNT_SID;
-const authToken = process.env.TWILIO_AUTH_TOKEN;
-const fromNumber = process.env.TWILIO_WHATSAPP_FROM || "whatsapp:+14155238886";
-
-let client: twilio.Twilio | null = null;
-
-if (accountSid && authToken) {
-  client = twilio(accountSid, authToken);
-}
+const phoneId = process.env.META_WHATSAPP_PHONE_ID;
+const accessToken = process.env.META_WHATSAPP_ACCESS_TOKEN;
 
 /** Format a 24-hr HH:MM string to 12-hr AM/PM. */
 function formatTime(t: string): string {
@@ -28,39 +19,59 @@ export async function sendBookingConfirmedWhatsApp(params: {
   startTime?: string;
   endTime?: string;
 }) {
-  if (!client) {
-    console.warn("[WhatsApp] Twilio credentials missing. Message not sent.");
+  if (!phoneId || !accessToken) {
+    console.warn("[WhatsApp] Meta API credentials missing. Message not sent.");
     return false;
   }
 
-  // Twilio requires numbers to be in E.164 format.
-  // Assuming Indian numbers, we prepend +91 if not present.
+  // Meta Cloud API requires the country code without '+' or 'whatsapp:' prefix
   let toPhone = params.phone.replace(/\D/g, "");
   if (toPhone.length === 10) {
     toPhone = `91${toPhone}`;
   }
 
-  const timeLine =
-    params.startTime && params.endTime
-      ? `\n⏰ Time: ${formatTime(params.startTime)} – ${formatTime(params.endTime)}`
-      : "";
-
-  const messageBody = `Hello ${params.name}, your booking at Sun City Clubhouse is CONFIRMED! 🎉
-
-📋 Booking Ref: ${params.bookingRef}
-🏛️ Facility: ${params.facilityName}
-📅 Date: ${params.date}${timeLine}
-💰 Amount: ₹${params.amount}
-
-For any queries, contact us at the clubhouse office.`;
+  const timeLine = params.startTime && params.endTime
+    ? `\n⏰ Time: ${formatTime(params.startTime)} – ${formatTime(params.endTime)}`
+    : "";
 
   try {
-    const message = await client.messages.create({
-      body: messageBody,
-      from: fromNumber,
-      to: `whatsapp:+${toPhone}`,
+    const response = await fetch(`https://graph.facebook.com/v19.0/${phoneId}/messages`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        to: toPhone,
+        type: "template",
+        template: {
+          name: "booking_confirmation_full",
+          language: { code: "en_US" },
+          components: [
+            {
+              type: "body",
+              parameters: [
+                { type: "text", text: params.name },
+                { type: "text", text: params.bookingRef },
+                { type: "text", text: params.facilityName },
+                { type: "text", text: params.date + timeLine },
+                { type: "text", text: params.amount }
+              ]
+            }
+          ]
+        }
+      })
     });
-    console.log(`[WhatsApp] Sent confirmation to ${params.phone}, SID: ${message.sid}`);
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error("[WhatsApp] Meta API Error:", data);
+      return false;
+    }
+
+    console.log(`[WhatsApp] Sent confirmation to ${params.phone}, Msg ID: ${data.messages?.[0]?.id}`);
     return true;
   } catch (error) {
     console.error("[WhatsApp] Error sending message:", error);
