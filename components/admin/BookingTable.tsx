@@ -116,9 +116,18 @@ export function AdminBookingsTable({ bookings, total, page, pageSize }: Bookings
                   <td className="py-3 px-4 text-stone-700 whitespace-nowrap">{(b as any).facility?.name ?? "—"}</td>
                   <td className="py-3 px-4 whitespace-nowrap text-stone-600">{formatShortDate(b.booking_date)}</td>
                   <td className="py-3 px-4 whitespace-nowrap text-stone-600 text-xs">
-                    {b.start_time && b.end_time
-                      ? `${formatTimeDisplay(b.start_time)} – ${formatTimeDisplay(b.end_time)}`
-                      : b.slot_type.replace(/_/g, " ")}
+                    {(() => {
+                      const timeStr = b.start_time && b.end_time 
+                        ? `${formatTimeDisplay(b.start_time)} – ${formatTimeDisplay(b.end_time)}` 
+                        : null;
+                      const typeStr = b.slot_type.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase());
+                      
+                      if (b.slot_type === "hourly") {
+                         return timeStr || typeStr;
+                      } else {
+                         return timeStr ? `${typeStr} (${timeStr})` : typeStr;
+                      }
+                    })()}
                   </td>
                   <td className="py-3 px-4 font-medium text-stone-900 whitespace-nowrap">{formatINR(b.total_amount)}</td>
                   <td className="py-3 px-4 whitespace-nowrap">
@@ -242,9 +251,14 @@ export function UpcomingBookingsTable({ bookings }: { bookings: any[] }) {
               <td className="py-3 px-3 text-stone-700">{b.facility?.name ?? "—"}</td>
               <td className="py-3 px-3 text-stone-600">
                 <div>{formatShortDate(b.booking_date)}</div>
-                {b.start_time && (
+                {b.start_time ? (
                   <div className="text-xs text-stone-400">
+                    {b.slot_type !== "hourly" && <span className="capitalize">{b.slot_type.replace(/_/g, " ")}: </span>}
                     {formatTimeDisplay(b.start_time)} – {b.end_time ? formatTimeDisplay(b.end_time) : ""}
+                  </div>
+                ) : (
+                  <div className="text-xs text-stone-400 capitalize">
+                    {b.slot_type.replace(/_/g, " ")}
                   </div>
                 )}
               </td>

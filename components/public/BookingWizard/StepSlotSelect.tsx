@@ -110,6 +110,8 @@ export function StepSlotSelect({ facility, state, onStateChange, onNext, onBack 
   })();
 
   const isSlotPast = (slotStart: string) => {
+    if (selected && selected.type !== "hourly") return false;
+    
     if (!state.selectedDate) return false;
     const todayStr = toDateString(new Date());
     const selectedStr = toDateString(state.selectedDate);
