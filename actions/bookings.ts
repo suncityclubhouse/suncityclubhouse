@@ -968,6 +968,7 @@ export async function createAdminBooking(params: {
       amount: String(params.totalAmount),
       startTime: params.startTime,
       endTime: params.endTime,
+      slotType: params.slotType,
     }).catch((e) => console.error("[createAdminBooking] whatsapp:", e));
   }
 

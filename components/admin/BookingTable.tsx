@@ -48,7 +48,11 @@ export function AdminBookingsTable({ bookings, total, page, pageSize }: Bookings
     const params = new URLSearchParams(searchParams.toString());
     if (value && value !== "all") params.set(key, value);
     else params.delete(key);
-    params.set("page", "1");
+    
+    if (key !== "page") {
+      params.set("page", "1");
+    }
+    
     router.push(`/dashboard/bookings?${params.toString()}`);
   }, [router, searchParams]);
 

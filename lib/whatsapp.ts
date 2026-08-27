@@ -33,14 +33,14 @@ export async function sendBookingConfirmedWhatsApp(params: {
 
   let durationLine = "";
   if (params.slotType === "hourly" && params.startTime && params.endTime) {
-    durationLine = `\n⏰ Time: ${formatTime(params.startTime)} – ${formatTime(params.endTime)}`;
+    durationLine = ` | ${formatTime(params.startTime)} – ${formatTime(params.endTime)}`;
   } else if (params.slotType && params.slotType !== "hourly") {
     // Format "half_yearly" -> "Half Yearly", "monthly" -> "Monthly"
     const formattedSlot = params.slotType.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-    durationLine = `\n⏳ Duration: ${formattedSlot}`;
+    durationLine = ` (${formattedSlot})`;
   } else if (!params.slotType && params.startTime && params.endTime) {
     // Fallback if slotType is not provided but times are
-    durationLine = `\n⏰ Time: ${formatTime(params.startTime)} – ${formatTime(params.endTime)}`;
+    durationLine = ` | ${formatTime(params.startTime)} – ${formatTime(params.endTime)}`;
   }
 
   try {
