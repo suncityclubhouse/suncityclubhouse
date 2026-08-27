@@ -64,7 +64,7 @@ export async function sendBookingConfirmedWhatsApp(params: {
                 { type: "text", text: params.name },
                 { type: "text", text: params.bookingRef },
                 { type: "text", text: params.facilityName },
-                { type: "text", text: params.date + durationLine },
+                { type: "text", text: params.date.split("-").reverse().join("-") + durationLine },
                 { type: "text", text: params.amount }
               ]
             }
