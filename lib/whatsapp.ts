@@ -18,6 +18,7 @@ export async function sendBookingConfirmedWhatsApp(params: {
   amount: string;
   startTime?: string;
   endTime?: string;
+  slotType?: string;
 }) {
   if (!phoneId || !accessToken) {
     console.warn("[WhatsApp] Meta API credentials missing. Message not sent.");
@@ -30,9 +31,17 @@ export async function sendBookingConfirmedWhatsApp(params: {
     toPhone = `91${toPhone}`;
   }
 
-  const timeLine = params.startTime && params.endTime
-    ? `\n⏰ Time: ${formatTime(params.startTime)} – ${formatTime(params.endTime)}`
-    : "";
+  let durationLine = "";
+  if (params.slotType === "hourly" && params.startTime && params.endTime) {
+    durationLine = `\n⏰ Time: ${formatTime(params.startTime)} – ${formatTime(params.endTime)}`;
+  } else if (params.slotType && params.slotType !== "hourly") {
+    // Format "half_yearly" -> "Half Yearly", "monthly" -> "Monthly"
+    const formattedSlot = params.slotType.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    durationLine = `\n⏳ Duration: ${formattedSlot}`;
+  } else if (!params.slotType && params.startTime && params.endTime) {
+    // Fallback if slotType is not provided but times are
+    durationLine = `\n⏰ Time: ${formatTime(params.startTime)} – ${formatTime(params.endTime)}`;
+  }
 
   try {
     const response = await fetch(`https://graph.facebook.com/v19.0/${phoneId}/messages`, {
@@ -46,8 +55,8 @@ export async function sendBookingConfirmedWhatsApp(params: {
         to: toPhone,
         type: "template",
         template: {
-          name: "booking_confirmation_full",
-          language: { code: "en_US" },
+          name: "booking_confirmed",
+          language: { code: "en" },
           components: [
             {
               type: "body",
@@ -55,7 +64,7 @@ export async function sendBookingConfirmedWhatsApp(params: {
                 { type: "text", text: params.name },
                 { type: "text", text: params.bookingRef },
                 { type: "text", text: params.facilityName },
-                { type: "text", text: params.date + timeLine },
+                { type: "text", text: params.date + durationLine },
                 { type: "text", text: params.amount }
               ]
             }

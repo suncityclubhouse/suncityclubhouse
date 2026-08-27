@@ -466,7 +466,7 @@ export async function updateBookingStatus(params: {
   if (params.status === "confirmed" || params.status === "rejected") {
     const { data: bookingData } = await db
       .from("bookings")
-      .select("customer_email, customer_name, customer_phone, total_amount, booking_ref, booking_date, start_time, end_time, facility:facilities(name)")
+      .select("customer_email, customer_name, customer_phone, total_amount, booking_ref, booking_date, start_time, end_time, slot_type, facility:facilities(name)")
       .eq("id", params.bookingId)
       .single();
 
@@ -493,6 +493,7 @@ export async function updateBookingStatus(params: {
             amount: String(bookingData.total_amount ?? 0),
             startTime: bookingData.start_time ?? undefined,
             endTime: bookingData.end_time ?? undefined,
+            slotType: bookingData.slot_type ?? undefined,
           }).catch((e) => console.error("[updateBookingStatus] whatsapp:", e));
         }
       }
