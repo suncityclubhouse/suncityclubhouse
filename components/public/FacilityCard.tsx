@@ -3,13 +3,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, CalendarCheck, Users } from "lucide-react";
-import { formatINR, optimizeCloudinaryUrl } from "@/lib/utils/formatters";
+import { optimizeCloudinaryUrl } from "@/lib/utils/formatters";
 import type { Facility, FacilityPackage } from "@/types/database";
 import { motion } from "framer-motion";
 
 interface FacilityCardProps {
   facility: Facility & {
-    facility_packages?: Pick<FacilityPackage, "price" | "resident_price" | "type">[];
+    facility_packages?: Pick<FacilityPackage, "price" | "type">[];
   };
   index?: number;
 }
@@ -35,10 +35,6 @@ export function FacilityCard({ facility, index = 0 }: FacilityCardProps) {
   const bookUrl   = `/facilities/${facility.slug}/book`;
   const catStyle  = getCatStyle(facility.category);
 
-  // Lowest price across all packages
-  const minPrice = facility.facility_packages?.length
-    ? Math.min(...facility.facility_packages.map((p) => Number(p.price)))
-    : null;
 
   return (
     <motion.article
@@ -98,12 +94,6 @@ export function FacilityCard({ facility, index = 0 }: FacilityCardProps) {
 
         {/* ── Price row + CTAs ── */}
         <div className="mt-4 pt-4 border-t border-slate-100">
-          {minPrice !== null && (
-            <p className="text-xs text-slate-400 mb-3">
-              Starting from{" "}
-              <span className="text-slate-900 font-semibold text-sm">{formatINR(minPrice)}</span>
-            </p>
-          )}
 
           <div className="flex items-center gap-2">
             {/* Primary CTA — full weight */}
