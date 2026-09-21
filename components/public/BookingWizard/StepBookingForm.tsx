@@ -163,8 +163,8 @@ export function StepBookingForm({ facility, state, onStateChange, onNext, onBack
 
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5" noValidate>
         {/* Personal info */}
-        <div className="bg-white border border-stone-200 rounded-xl p-5 space-y-4">
-          <h3 className="text-sm font-semibold text-stone-700 uppercase tracking-wider">Personal Info</h3>
+        <div className="form-section space-y-4">
+          <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Personal Info</h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
@@ -214,8 +214,8 @@ export function StepBookingForm({ facility, state, onStateChange, onNext, onBack
         </div>
 
         {/* Resident info */}
-        <div className="bg-white border border-stone-200 rounded-xl p-5 space-y-4">
-          <h3 className="text-sm font-semibold text-stone-700 uppercase tracking-wider">Residency</h3>
+        <div className="form-section space-y-4">
+          <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Residency</h3>
 
           <div className="flex items-center gap-3 pb-2">
             <div

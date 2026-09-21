@@ -1,7 +1,5 @@
 import Link from "next/link";
-import { Phone } from "lucide-react";
-
-
+import { Phone, MapPin } from "lucide-react";
 import { getWhatsAppUrl } from "@/lib/utils/formatters";
 
 const WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "";
@@ -32,9 +30,10 @@ export function Footer() {
                 { href: "/#facilities", label: "Our Facilities" },
                 { href: "/#about", label: "About Us" },
                 { href: "/#contact", label: "Contact" },
+                { href: "/track-booking", label: "Track Booking" },
                 { href: "/privacy-policy", label: "Privacy Policy" },
-                { href: "/refund-policy", label: "Refund Policy" },
-                { href: "/login", label: "Admin Login" },
+                { href: "/refund-policy", label: "Refund & Cancellation" },
+                { href: "/policies", label: "Booking Policies" },
               ].map((l) => (
                 <li key={l.href}>
                   <Link
@@ -55,6 +54,16 @@ export function Footer() {
               Contact Us
             </h4>
             <ul className="space-y-3">
+              {/* Address */}
+              <li className="flex items-start gap-2 text-sm text-slate-400">
+                <MapPin className="w-4 h-4 flex-shrink-0 mt-0.5 text-slate-500" />
+                <span className="leading-relaxed">
+                  Mahavir Suncity, Kanchan Bagh,<br />
+                  Rajnandgaon, Chhattisgarh
+                </span>
+              </li>
+
+              {/* WhatsApp */}
               {WHATSAPP && (
                 <li>
                   <a
@@ -76,14 +85,22 @@ export function Footer() {
           <p className="text-xs text-slate-500">
             © {year} Suncity Clubhouse. A Mahavir Group Development. All rights reserved.
           </p>
-          <a
-            href="https://mahavirgroupindia.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-slate-600 hover:text-blue-400 transition-colors"
-          >
-            mahavirgroupindia.com
-          </a>
+          <div className="flex items-center gap-4">
+            <a
+              href="https://mahavirgroupindia.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-slate-600 hover:text-blue-400 transition-colors"
+            >
+              mahavirgroupindia.com
+            </a>
+            <Link
+              href="/login"
+              className="text-xs text-slate-700 hover:text-slate-400 transition-colors"
+            >
+              Admin
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

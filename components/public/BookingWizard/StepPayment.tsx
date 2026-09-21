@@ -243,7 +243,7 @@ export function StepPayment({
           </div>
 
           {/* ── AMOUNT CARD ── */}
-          <div className="bg-white border border-stone-200 rounded-xl overflow-hidden">
+          <div className="form-section overflow-hidden p-0">
             <div className="px-4 py-3 border-b border-stone-100 flex items-center justify-between">
               <h3 className="text-sm font-semibold text-stone-700 uppercase tracking-wider">Amount Due</h3>
             </div>
@@ -274,7 +274,7 @@ export function StepPayment({
           </div>
 
           {(UPI_ID || UPI_QR) && (
-            <div className="bg-white border border-stone-200 rounded-xl overflow-hidden">
+            <div className="form-section overflow-hidden p-0">
               <div className="px-4 py-3 border-b border-stone-100">
                 <h3 className="text-sm font-semibold text-stone-700 uppercase tracking-wider">Pay via UPI</h3>
               </div>
@@ -355,7 +355,7 @@ export function StepPayment({
 
           {/* ── UPLOAD PROOF FORM ── */}
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="bg-white border border-stone-200 rounded-xl overflow-hidden">
+            <div className="form-section overflow-hidden p-0">
               <div className="px-4 py-3 border-b border-stone-100">
                 <h3 className="text-sm font-semibold text-stone-700 uppercase tracking-wider">
                   Upload Payment Screenshot

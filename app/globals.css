@@ -182,7 +182,48 @@
   .animate-fade-in {
     animation: fadeInUp 0.8s cubic-bezier(0.16,1,0.3,1) both;
   }
+
+  /* Marquee — horizontal scroll for facility name strip in hero */
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+
+  /* Scroll chevron — gentle float */
+  @keyframes bounce-slow {
+    0%, 100% { transform: translate(-50%, 0);   opacity: 0.4; }
+    50%       { transform: translate(-50%, 6px); opacity: 0.7; }
+  }
+
+  /* Form section card — used in booking wizard + payment screen
+     Gives grouped fields a clear boundary so they don't bleed into
+     the page background. Slightly stronger than default border.  */
+  .form-section {
+    background: #ffffff;
+    border: 1px solid #dde3ed;
+    border-radius: 0.875rem;
+    padding: 1.25rem;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  }
+
+  /* Input fields — sharper border so they read clearly on white forms */
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="number"],
+  input[type="password"] {
+    border-color: #c8d0dc;
+  }
+  input[type="text"]:focus,
+  input[type="email"]:focus,
+  input[type="tel"]:focus,
+  input[type="number"]:focus,
+  input[type="password"]:focus {
+    border-color: #08428C;
+    box-shadow: 0 0 0 3px rgba(8, 66, 140, 0.10);
+  }
 }
+
 
 @theme inline {
   --font-heading: var(--font-sans);
